@@ -339,10 +339,14 @@ textarea{resize:vertical;min-height:80px;}
     <div id="dayScheduleList"></div>
     <hr class="modal-divider">
     <div class="modal-subtitle">➕ 새 일정 추가</div>
-    <div class="form-group"><label class="form-label">제목 *</label><input type="text" id="scheduleTitle" spellcheck="false" placeholder="예: 학부모 상담"></div>
+        <div class="form-group"><label class="form-label">제목 *</label><input type="text" id="scheduleTitle" spellcheck="false" placeholder="예: 학부모 상담"></div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">시작</label><input type="time" id="scheduleTime"></div>
-      <div class="form-group"><label class="form-label">종료</label><input type="time" id="scheduleTimeEnd"></div>
+      <div class="form-group"><label class="form-label">시작 날짜</label><input type="date" id="scheduleDateStart"></div>
+      <div class="form-group"><label class="form-label">종료 날짜 <span style="font-size:0.75rem;color:var(--text-secondary);">(여러 날이면 입력)</span></label><input type="date" id="scheduleDateEnd"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">시작 시간</label><input type="time" id="scheduleTime"></div>
+      <div class="form-group"><label class="form-label">종료 시간</label><input type="time" id="scheduleTimeEnd"></div>
     </div>
     <div class="form-group"><label class="form-label">유형</label><select id="scheduleType"></select></div>
     <div class="form-group"><label class="form-label">메모</label><input type="text" id="scheduleMemo" spellcheck="false" placeholder="간단한 메모"></div>
@@ -353,6 +357,31 @@ textarea{resize:vertical;min-height:80px;}
     </div>
   </div>
 </div>
+<!-- 모달: 일정 수정 -->
+<div class="modal-overlay" id="editScheduleModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 class="modal-title" style="margin-bottom:0;">✏️ 일정 수정</h2>
+      <button class="btn-icon" onclick="closeModal('editScheduleModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editScheduleId">
+      <div class="form-group"><label class="form-label">제목 *</label><input type="text" id="editScheduleTitle" spellcheck="false"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">시작 날짜</label><input type="date" id="editScheduleDateStart"></div>
+        <div class="form-group"><label class="form-label">종료 날짜</label><input type="date" id="editScheduleDateEnd"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">시작 시간</label><input type="time" id="editScheduleTime"></div>
+        <div class="form-group"><label class="form-label">종료 시간</label><input type="time" id="editScheduleTimeEnd"></div>
+      </div>
+      <div class="form-group"><label class="form-label">분류</label><select id="editScheduleType"></select></div>
+      <div class="form-group"><label class="form-label">메모</label><textarea id="editScheduleMemo" rows="2" spellcheck="false" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:0.9rem;resize:vertical;min-height:60px;"></textarea></div>
+      <button class="btn btn-primary" onclick="saveEditSchedule()" style="width:100%;margin-top:4px;">💾 저장하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 모달: 유형 관리 -->
 <div class="modal-overlay" id="typeManagerModal">
   <div class="modal">
@@ -392,7 +421,6 @@ textarea{resize:vertical;min-height:80px;}
     <div class="modal-title">🔖 즐겨찾기 추가</div>
     <div class="form-group"><label class="form-label">이름</label><input type="text" id="bookmarkName" spellcheck="false" placeholder="예: 나이스"></div>
     <div class="form-group"><label class="form-label">URL</label><input type="url" id="bookmarkUrl" spellcheck="false" placeholder="https://..."></div>
-    <div class="form-group"><label class="form-label">아이콘 (이모지)</label><input type="text" id="bookmarkIcon" spellcheck="false" placeholder="📚" maxlength="2"></div>
     <div class="form-group"><label class="form-label">그룹</label><select id="bookmarkGroupId"></select></div>
     <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('bookmarkModal')">취소</button><button class="btn btn-primary" onclick="addBookmark()">저장</button></div>
   </div>
@@ -420,7 +448,6 @@ textarea{resize:vertical;min-height:80px;}
     <div class="modal-title">✏️ 즐겨찾기 수정</div>
     <input type="hidden" id="editBookmarkId">
     <div class="form-group"><label class="form-label">이름</label><input type="text" id="editBookmarkName" spellcheck="false" placeholder="예: 나이스" onkeydown="if(event.key==='Enter')saveEditBookmark()"></div>
-    <div class="form-group"><label class="form-label">아이콘 (이모지)</label><input type="text" id="editBookmarkIcon" spellcheck="false" placeholder="🌐" maxlength="2"></div>
     <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editBookmarkModal')">취소</button><button class="btn btn-primary" onclick="saveEditBookmark()">저장</button></div>
   </div>
 </div>
@@ -637,62 +664,144 @@ function toDateStr(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d
 function renderCalendar(){
   const y=calendarDate.getFullYear(),m=calendarDate.getMonth(),today=new Date();
   document.getElementById('calendarTitle').textContent=`${y}년 ${m+1}월`;
-  const first=new Date(y,m,1),last=new Date(y,m+1,0).getDate(),offset=(first.getDay()+6)%7;
-  const calYM=`${y}-${String(m+1).padStart(2,'0')}`;
 
-  /* 일정 맵 */
-  const scheds=DB.get('schedules'),schedMap={};
-  scheds.forEach(s=>{
-    if(!s.date.startsWith(calYM))return;
-    const d=parseInt(s.date.split('-')[2]);
-    if(!schedMap[d])schedMap[d]=[];
-    schedMap[d].push(s);
+  const last=new Date(y,m+1,0).getDate();
+  const offset=(new Date(y,m,1).getDay()+6)%7;
+  const totalCurrentCells=offset+last;
+  const trailingCount=totalCurrentCells%7===0?0:7-(totalCurrentCells%7);
+  const totalCells=totalCurrentCells+trailingCount;
+
+  /* 그리드 첫 번째 날 (이전 달 포함) */
+  const gridStart=new Date(y,m,1-offset);
+
+  function cellDateStr(i){
+    const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  const visibleStart=cellDateStr(0);
+  const visibleEnd=cellDateStr(totalCells-1);
+
+  /* ── 일정 맵 ── */
+  const schedDayMap={};
+  DB.get('schedules').forEach(s=>{
+    const startStr=s.date,endStr=s.dateEnd||s.date;
+    if(startStr>visibleEnd||endStr<visibleStart)return;
+    const isMulti=startStr!==endStr;
+    const effStart=startStr<visibleStart?visibleStart:startStr;
+    const effEnd=endStr>visibleEnd?visibleEnd:endStr;
+
+    if(!isMulti){
+      if(!schedDayMap[effStart])schedDayMap[effStart]=[];
+      schedDayMap[effStart].push({...s,isMulti:false,showLabel:true});
+      return;
+    }
+
+    /* 여러 날 일정: 날짜 목록 수집 */
+    const days=[];
+    const cur=new Date(effStart+'T12:00:00'),endD=new Date(effEnd+'T12:00:00');
+    while(cur<=endD){
+      days.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`);
+      cur.setDate(cur.getDate()+1);
+    }
+
+    /* 주(row)별 가운데 날짜에 라벨 */
+    const rowGroups={};
+    days.forEach(ds=>{
+      const gd=new Date(ds+'T12:00:00');
+      const diff=Math.round((gd-new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate(),12))/(864e5));
+      const row=Math.floor(diff/7);
+      if(!rowGroups[row])rowGroups[row]=[];
+      rowGroups[row].push(ds);
+    });
+    const labelDays=new Set();
+    Object.values(rowGroups).forEach(rd=>labelDays.add(rd[Math.round((rd.length-1)/2)]));
+
+    days.forEach(ds=>{
+      if(!schedDayMap[ds])schedDayMap[ds]=[];
+      const d=new Date(ds+'T12:00:00');
+      const col=(d.getDay()+6)%7;
+      schedDayMap[ds].push({
+        ...s,isMulti:true,
+        showLabel:labelDays.has(ds),
+        isRowStart:col===0||ds===effStart,
+        isRowEnd:col===6||ds===effEnd
+      });
+    });
   });
 
-  /* ★ 메모 기한 맵 */
-  const memoMap={};
+  /* ── 메모 기한 맵 ── */
+  const memoDateMap={};
   DB.get('memoItems').filter(i=>i.deadline&&!i.completed).forEach(item=>{
-    if(!item.deadline.startsWith(calYM))return;
-    const d=parseInt(item.deadline.split('-')[2]);
-    if(!memoMap[d])memoMap[d]=[];
-    memoMap[d].push(item);
+    const ds=item.deadline;
+    if(ds<visibleStart||ds>visibleEnd)return;
+    if(!memoDateMap[ds])memoDateMap[ds]=[];
+    memoDateMap[ds].push(item);
   });
 
+  /* ── 헤더 ── */
   let headerHtml='<div class="cal-days-header">';
-  ['월','화','수','목','금','토','일'].forEach((d,i)=>{
-    headerHtml+=`<div class="cal-header${i===5?' sat':i===6?' sun':''}">${d}</div>`;
+  ['월','화','수','목','금','토','일'].forEach((lbl,i)=>{
+    headerHtml+=`<div class="cal-header${i===5?' sat':i===6?' sun':''}">${lbl}</div>`;
   });
   headerHtml+='</div>';
 
+  /* ── 바디 ── */
   let bodyHtml='<div class="cal-days-body">';
-  for(let i=0;i<offset;i++)bodyHtml+='<div class="cal-day empty"></div>';
-  for(let d=1;d<=last;d++){
-    const isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
-    const dow=(new Date(y,m,d).getDay()+6)%7,dateStr=toDateStr(y,m,d);
-    let cls='cal-day'+(isToday?' today':dow===5?' saturday':dow===6?' sunday':'');
-    let dots='<div style="width:100%;margin-top:2px;">';
-    const sdots=schedMap[d]||[];
-    const mdots=memoMap[d]||[];
+
+  for(let i=0;i<totalCells;i++){
+    const ds=cellDateStr(i);
+    const d=new Date(ds+'T12:00:00');
+    const dayNum=d.getDate();
+    const isCurrentMonth=d.getMonth()===m&&d.getFullYear()===y;
+    const isToday=today.getFullYear()===d.getFullYear()&&today.getMonth()===d.getMonth()&&today.getDate()===d.getDate();
+    const dow=(d.getDay()+6)%7;
+
+    let cls='cal-day';
+    if(isToday)cls+=' today';
+    else if(dow===5)cls+=' saturday';
+    else if(dow===6)cls+=' sunday';
+
+    const dimStyle=isCurrentMonth?'':'opacity:0.38;';
+
+    const sdots=schedDayMap[ds]||[];
+    const mdots=memoDateMap[ds]||[];
     let shown=0;
-    /* 일정 먼저 (최대 2개) */
+    let dots='<div style="width:100%;margin-top:2px;">';
+
     sdots.forEach(s=>{
       if(shown>=2)return;
-      const t=getScheduleTypes().find(t=>t.id===s.type),color=t?t.color:'#818CF8';
-      dots+=`<div style="font-size:0.58rem;background:${color}33;color:${color};border-radius:3px;padding:1px 3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.title}</div>`;
+      const ti=getScheduleTypes().find(t=>t.id===s.type),color=ti?ti.color:'#818CF8';
+      if(!s.isMulti){
+        dots+=`<div style="font-size:0.58rem;background:${color}33;color:${color};border-radius:3px;padding:0 3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${escHtml(s.title)}</div>`;
+      }else{
+        const{isRowStart,isRowEnd}=s;
+        let br,ml='',mr='';
+        if(isRowStart&&isRowEnd){br='3px';}
+        else if(isRowStart){br='3px 0 0 3px';mr='margin-right:-6px;';}
+        else if(isRowEnd){br='0 3px 3px 0';ml='margin-left:-6px;';}
+        else{br='0';ml='margin-left:-6px;';mr='margin-right:-6px;';}
+        const pl=isRowStart?'3px':'0',pr=isRowEnd?'3px':'0';
+        const label=s.showLabel?escHtml(s.title):'&nbsp;';
+        dots+=`<div style="font-size:0.58rem;background:${color};color:#fff;border-radius:${br};padding:0 ${pr} 0 ${pl};${ml}${mr}margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;min-height:15px;line-height:15px;font-weight:${s.showLabel?'600':'400'};text-align:center;">${label}</div>`;
+      }
       shown++;
     });
-    /* ★ 남은 자리에 메모 기한 표시 */
+
     mdots.forEach(item=>{
       if(shown>=2)return;
       const plainText=(item.text||'').replace(/<[^>]*>/g,'');
       dots+=`<div style="font-size:0.58rem;background:rgba(252,211,77,0.2);color:#D97706;border-radius:3px;padding:1px 3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📝 ${plainText||'메모'}</div>`;
       shown++;
     });
+
     const totalHidden=(sdots.length+mdots.length)-shown;
     if(totalHidden>0)dots+=`<div style="font-size:0.58rem;color:var(--text-secondary);padding:1px 3px;">+${totalHidden}</div>`;
     dots+='</div>';
-    bodyHtml+=`<div class="${cls}" onclick="openDayModal('${dateStr}')"><div class="cal-day-num">${d}</div>${dots}</div>`;
+
+    bodyHtml+=`<div class="${cls}" style="${dimStyle}" onclick="openDayModal('${ds}')"><div class="cal-day-num">${dayNum}</div>${dots}</div>`;
   }
+
   bodyHtml+='</div>';
   document.getElementById('calendarGrid').innerHTML=headerHtml+bodyHtml;
 }
@@ -704,25 +813,28 @@ function openDayModal(dateStr){
   const [y,mo,d]=dateStr.split('-'),dow=['일','월','화','수','목','금','토'];
   document.getElementById('dayModalTitle').textContent=`📅 ${y}년 ${parseInt(mo)}월 ${parseInt(d)}일 (${dow[new Date(dateStr).getDay()]})`;
   document.getElementById('scheduleType').innerHTML=getScheduleTypes().map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+  document.getElementById('scheduleDateStart').value=dateStr;
+  document.getElementById('scheduleDateEnd').value='';
   renderDayScheduleList();
   openModal('dayModal');
 }
 
 function renderDayScheduleList(){
-  const schList=DB.get('schedules').filter(s=>s.date===selectedDateStr);
-  /* ★ 해당 날짜가 기한인 미완료 메모 */
+  /* 여러 날 일정도 포함해서 필터링 */
+  const schList=DB.get('schedules').filter(s=>{
+    const start=s.date;
+    const end=s.dateEnd||s.date;
+    return selectedDateStr>=start&&selectedDateStr<=end;
+  });
   const memoDue=DB.get('memoItems').filter(i=>i.deadline===selectedDateStr&&!i.completed);
   const memoListsData=DB.get('memoLists');
   const c=document.getElementById('dayScheduleList');
-
   if(!schList.length&&!memoDue.length){
     c.innerHTML=`<div style="text-align:center;padding:16px 0;color:var(--text-secondary);font-size:0.9rem;">이 날 일정이 없어요</div>`;
     return;
   }
-
   let html='';
-
-  /* ★ 메모 기한 섹션 */
+  /* 메모 기한 섹션 */
   if(memoDue.length){
     html+=`<div style="background:rgba(252,211,77,0.08);border:1px solid rgba(252,211,77,0.3);border-radius:10px;padding:12px 14px;margin-bottom:12px;">`;
     html+=`<div style="font-size:0.8rem;font-weight:700;color:#FCD34D;margin-bottom:8px;display:flex;align-items:center;gap:6px;">📝 오늘 기한 메모 <span style="font-weight:400;color:var(--text-secondary);">${memoDue.length}개</span></div>`;
@@ -738,20 +850,81 @@ function renderDayScheduleList(){
     });
     html+=`</div>`;
   }
-
   /* 일정 섹션 */
   if(schList.length){
     schList.sort((a,b)=>(a.time||'').localeCompare(b.time||''));
     html+=schList.map(s=>{
       const ti=getScheduleTypes().find(t=>t.id===s.type)||getScheduleTypes()[0];
       const ts=s.time?(s.timeEnd?`${s.time}~${s.timeEnd}`:s.time):'';
-      return `<div class="schedule-item"><div class="schedule-type-bar" style="background:${ti.color};"></div><div class="schedule-info"><div class="schedule-title-text">${s.title}</div>${ts?`<div class="schedule-time">⏰ ${ts}</div>`:''}${s.memo?`<div class="schedule-time">📌 ${s.memo}</div>`:''}</div><span class="schedule-type-badge" style="background:${ti.color}33;color:${ti.color};">${ti.label}</span><button class="btn-icon" onclick="deleteSchedule(${s.id})">🗑️</button></div>`;
-    }).join('');
+      const dr=s.dateEnd&&s.dateEnd!==s.date
+        ?`<div class="schedule-time">📆 ${s.date} ~ ${s.dateEnd}</div>`
+        :'';
+return `<div class="schedule-item"><div class="schedule-type-bar" style="background:${ti.color};"></div><div class="schedule-info"><div class="schedule-title-text">${s.title}</div>${dr}${ts?`<div class="schedule-time">⏰ ${ts}</div>`:''}${s.memo?`<div class="schedule-time">📌 ${s.memo}</div>`:''}</div><span class="schedule-type-badge" style="background:${ti.color}33;color:${ti.color};">${ti.label}</span><button class="btn-icon" onclick="editSchedule(${s.id})" title="수정">✏️</button><button class="btn-icon" onclick="deleteSchedule(${s.id})" title="삭제">🗑️</button></div>`;
+      }).join('');
   }
   c.innerHTML=html;
 }
 
-function addSchedule(){const title=document.getElementById('scheduleTitle').value.trim();if(!title){showToast('❌ 일정 제목을 입력해주세요');return;}const time=document.getElementById('scheduleTime').value,timeEnd=document.getElementById('scheduleTimeEnd').value,type=document.getElementById('scheduleType').value,memo=document.getElementById('scheduleMemo').value.trim();const list=DB.get('schedules');list.push({id:Date.now(),date:selectedDateStr,title,time,timeEnd,type,memo});DB.set('schedules',list);['scheduleTitle','scheduleTime','scheduleTimeEnd','scheduleMemo'].forEach(id=>document.getElementById(id).value='');document.getElementById('scheduleType').selectedIndex=0;renderDayScheduleList();renderCalendar();showToast('✅ 일정이 추가되었습니다');}
+function addSchedule(){
+  const title=document.getElementById('scheduleTitle').value.trim();
+  if(!title){showToast('❌ 일정 제목을 입력해주세요');return;}
+  const dateStart=document.getElementById('scheduleDateStart').value||selectedDateStr;
+  const dateEnd=document.getElementById('scheduleDateEnd').value||'';
+  if(dateEnd&&dateEnd<dateStart){showToast('❌ 종료 날짜는 시작 날짜 이후여야 해요');return;}
+  const time=document.getElementById('scheduleTime').value;
+  const timeEnd=document.getElementById('scheduleTimeEnd').value;
+  const type=document.getElementById('scheduleType').value;
+  const memo=document.getElementById('scheduleMemo').value.trim();
+  const list=DB.get('schedules');
+  list.push({id:Date.now(),date:dateStart,dateEnd:dateEnd||dateStart,title,time,timeEnd,type,memo});
+  DB.set('schedules',list);
+  ['scheduleTitle','scheduleTime','scheduleTimeEnd','scheduleMemo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('scheduleDateEnd').value='';
+  document.getElementById('scheduleDateStart').value=selectedDateStr;
+  document.getElementById('scheduleType').selectedIndex=0;
+  renderDayScheduleList();
+  renderCalendar();
+  showToast('✅ 일정이 추가되었습니다');
+}
+function editSchedule(id){
+  const list=DB.get('schedules');
+  const s=list.find(item=>item.id===id);
+  if(!s)return;
+  document.getElementById('editScheduleId').value=id;
+  document.getElementById('editScheduleTitle').value=s.title||'';
+  document.getElementById('editScheduleDateStart').value=s.date||'';
+  document.getElementById('editScheduleDateEnd').value=(s.dateEnd&&s.dateEnd!==s.date)?s.dateEnd:'';
+  document.getElementById('editScheduleTime').value=s.time||'';
+  document.getElementById('editScheduleTimeEnd').value=s.timeEnd||'';
+  document.getElementById('editScheduleType').innerHTML=getScheduleTypes().map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+  document.getElementById('editScheduleType').value=s.type||getScheduleTypes()[0].id;
+  document.getElementById('editScheduleMemo').value=s.memo||'';
+  openModal('editScheduleModal');
+}
+
+function saveEditSchedule(){
+  const id=parseInt(document.getElementById('editScheduleId').value);
+  const title=document.getElementById('editScheduleTitle').value.trim();
+  if(!title){showToast('❌ 일정 제목을 입력해주세요');return;}
+  const dateStart=document.getElementById('editScheduleDateStart').value;
+  const dateEnd=document.getElementById('editScheduleDateEnd').value;
+  if(!dateStart){showToast('❌ 시작 날짜를 입력해주세요');return;}
+  if(dateEnd&&dateEnd<dateStart){showToast('❌ 종료 날짜는 시작 날짜 이후여야 해요');return;}
+  const time=document.getElementById('editScheduleTime').value;
+  const timeEnd=document.getElementById('editScheduleTimeEnd').value;
+  const type=document.getElementById('editScheduleType').value;
+  const memo=document.getElementById('editScheduleMemo').value.trim();
+  const list=DB.get('schedules');
+  const idx=list.findIndex(item=>item.id===id);
+  if(idx===-1){showToast('❌ 일정을 찾을 수 없어요');return;}
+  list[idx]={...list[idx],title,date:dateStart,dateEnd:dateEnd||dateStart,time,timeEnd,type,memo};
+  DB.set('schedules',list);
+  closeModal('editScheduleModal');
+  renderDayScheduleList();
+  renderCalendar();
+  showToast('✅ 일정이 수정되었습니다');
+}
+
 function deleteSchedule(id){if(!confirm('정말 삭제할까요?'))return;DB.set('schedules',DB.get('schedules').filter(s=>s.id!==id));renderDayScheduleList();renderCalendar();}
 function openTypeManager(){renderTypeList();openModal('typeManagerModal');}
 function renderTypeList(){document.getElementById('typeList').innerHTML=getScheduleTypes().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);"><div style="width:20px;height:20px;border-radius:50%;background:${t.color};flex-shrink:0;"></div><span style="flex:1;">${t.label}</span><button class="btn-icon" onclick="deleteScheduleType('${t.id}')">🗑️</button></div>`).join('');}
@@ -965,11 +1138,44 @@ function openEditGroupModal(id){const g=DB.get('bookmarkGroups').find(g=>g.id===
 function saveEditGroup(){const id=Number(document.getElementById('editGroupId').value),name=document.getElementById('editGroupName').value.trim();if(!name){showToast('❌ 이름을 입력해주세요');return;}const groups=DB.get('bookmarkGroups'),idx=groups.findIndex(g=>g.id===id);if(idx!==-1){groups[idx].name=name;DB.set('bookmarkGroups',groups);}closeModal('editGroupModal');renderBookmarks();showToast('✅ 수정되었습니다');}
 function deleteGroup(id){if(!confirm('그룹을 삭제하면 즐겨찾기가 미분류로 이동해요. 계속할까요?'))return;DB.set('bookmarkGroups',DB.get('bookmarkGroups').filter(g=>g.id!==id));DB.set('bookmarks',DB.get('bookmarks').map(b=>b.groupId===id?{...b,groupId:null}:b));renderBookmarks();}
 function openAddBookmarkModal(){const groups=DB.get('bookmarkGroups');document.getElementById('bookmarkGroupId').innerHTML='<option value="">📌 미분류</option>'+groups.map(g=>`<option value="${g.id}">${escHtml(g.name)}</option>`).join('');openModal('bookmarkModal');}
-function addBookmark(){const name=document.getElementById('bookmarkName').value.trim(),url=document.getElementById('bookmarkUrl').value.trim(),icon=document.getElementById('bookmarkIcon').value.trim()||'🌐',gVal=document.getElementById('bookmarkGroupId').value,groupId=gVal?Number(gVal):null;if(!name||!url){showToast('❌ 이름과 URL을 입력해주세요');return;}const bms=DB.get('bookmarks');bms.push({id:Date.now(),name,url,icon,groupId});DB.set('bookmarks',bms);closeModal('bookmarkModal');renderBookmarks();updateNavBadges();showToast('✅ 추가되었습니다');}
+function addBookmark(){
+  const name=document.getElementById('bookmarkName').value.trim();
+  const url=document.getElementById('bookmarkUrl').value.trim();
+  const gVal=document.getElementById('bookmarkGroupId').value;
+  const groupId=gVal?Number(gVal):null;
+  if(!name||!url){showToast('❌ 이름과 URL을 입력해주세요');return;}
+  let icon='🌐';
+  try{
+    const domain=new URL(url).hostname;
+    icon=`https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  }catch(e){}
+  const bms=DB.get('bookmarks');
+  bms.push({id:Date.now(),name,url,icon,groupId});
+  DB.set('bookmarks',bms);
+  closeModal('bookmarkModal');
+  renderBookmarks();
+  updateNavBadges();
+  showToast('✅ 추가되었습니다');
+}
 function deleteBookmark(id){DB.set('bookmarks',DB.get('bookmarks').filter(b=>b.id!==id));renderBookmarks();updateNavBadges();}
-function openEditBookmarkModal(id){const bm=DB.get('bookmarks').find(b=>b.id===id);if(!bm)return;document.getElementById('editBookmarkId').value=id;document.getElementById('editBookmarkName').value=bm.name;document.getElementById('editBookmarkIcon').value=bm.icon||'🌐';openModal('editBookmarkModal');}
-function saveEditBookmark(){const id=Number(document.getElementById('editBookmarkId').value),name=document.getElementById('editBookmarkName').value.trim(),icon=document.getElementById('editBookmarkIcon').value.trim()||'🌐';if(!name){showToast('❌ 이름을 입력해주세요');return;}const bms=DB.get('bookmarks'),idx=bms.findIndex(b=>b.id===id);if(idx!==-1){bms[idx].name=name;bms[idx].icon=icon;DB.set('bookmarks',bms);}closeModal('editBookmarkModal');renderBookmarks();showToast('✅ 수정되었습니다');}
-function bmCardHtml(b){return `<div class="bm-card" draggable="true" ondragstart="bmDragStart(event,${b.id})" ondragend="bmDragEnd()" ondragover="event.stopPropagation();event.preventDefault()" ondrop="bmCardDrop(event,${b.id})" onclick="window.open('${b.url.replace(/'/g,"\\'")}','_blank')" title="${escHtml(b.name)}\n${escHtml(b.url)}"><div class="bm-card-icon">${b.icon||'🌐'}</div><div class="bm-card-name">${escHtml(b.name)}</div><button class="bm-card-del" onclick="event.stopPropagation();deleteBookmark(${b.id})">✕</button><button class="bm-card-edit" onclick="event.stopPropagation();openEditBookmarkModal(${b.id})">✏</button></div>`;}
+function openEditBookmarkModal(id){const bm=DB.get('bookmarks').find(b=>b.id===id);if(!bm)return;document.getElementById('editBookmarkId').value=id;document.getElementById('editBookmarkName').value=bm.name;openModal('editBookmarkModal');}
+function saveEditBookmark(){
+  const id=Number(document.getElementById('editBookmarkId').value);
+  const name=document.getElementById('editBookmarkName').value.trim();
+  if(!name){showToast('❌ 이름을 입력해주세요');return;}
+  const bms=DB.get('bookmarks'),idx=bms.findIndex(b=>b.id===id);
+  if(idx!==-1){bms[idx].name=name;DB.set('bookmarks',bms);}
+  closeModal('editBookmarkModal');
+  renderBookmarks();
+  showToast('✅ 수정되었습니다');
+}
+function bmCardHtml(b){
+  const isUrl=b.icon&&b.icon.startsWith('http');
+  const iconHtml=isUrl
+    ?`<img src="${escHtml(b.icon)}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;image-rendering:-webkit-optimize-contrast;" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='🌐';">`
+    :(b.icon||'🌐');
+  return `<div class="bm-card" draggable="true" ondragstart="bmDragStart(event,${b.id})" ondragend="bmDragEnd()" ondragover="event.stopPropagation();event.preventDefault()" ondrop="bmCardDrop(event,${b.id})" onclick="window.open('${b.url.replace(/'/g,"\\'")}','_blank')" title="${escHtml(b.name)}\n${escHtml(b.url)}"><div class="bm-card-icon">${iconHtml}</div><div class="bm-card-name">${escHtml(b.name)}</div><button class="bm-card-del" onclick="event.stopPropagation();deleteBookmark(${b.id})">✕</button><button class="bm-card-edit" onclick="event.stopPropagation();openEditBookmarkModal(${b.id})">✏</button></div>`;
+}
 function bmDragStart(e,id){dragBmId=id;dragGrpId=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const el=document.querySelector(`.bm-card[ondragstart*="bmDragStart(event,${id})"]`);if(el)el.classList.add('dragging');},0);}
 function bmDragEnd(){dragBmId=null;document.querySelectorAll('.bm-card.dragging').forEach(el=>el.classList.remove('dragging'));}
 function bmCardDrop(e,targetId){e.preventDefault();e.stopPropagation();if(dragBmId===null||dragBmId===targetId)return;const bms=DB.get('bookmarks'),src=bms.find(b=>b.id===dragBmId),tgt=bms.find(b=>b.id===targetId);if(!src||!tgt)return;src.groupId=tgt.groupId;const fi=bms.findIndex(b=>b.id===dragBmId);bms.splice(fi,1);const ti=bms.findIndex(b=>b.id===targetId);bms.splice(ti,0,src);DB.set('bookmarks',bms);renderBookmarks();}
@@ -1424,9 +1630,8 @@ function buildDrawerNav(){
       <span class="d-emoji">${t.emoji}</span>
       <span>${t.name}</span>
     </button>`).join('');
-  const de=document.getElementById('drawerEmoji'),dn=document.getElementById('drawerAppName');
-  const he=document.getElementById('headerEmoji'),hn=document.getElementById('headerName');
-  if(de&&he)de.textContent=he.textContent;
+    const dn=document.getElementById('drawerAppName');
+  const hn=document.getElementById('headerName');
   if(dn&&hn)dn.textContent=hn.textContent;
 }
 
@@ -1473,15 +1678,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 <!-- ── 모바일 드로어 네비게이션 ── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobileDrawer">
-  <div class="drawer-header">
-    <div class="drawer-app-info">
-      <span id="drawerEmoji" style="font-size:1.6rem;">📚</span>
-      <div>
-        <div style="font-weight:700;font-size:0.97rem;" id="drawerAppName">Kosick</div>
-        <div style="font-size:0.72rem;color:var(--text-secondary);">교사용 올인원 대시보드</div>
-      </div>
-    </div>
-    <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+    <div class="drawer-header" style="justify-content:center;position:relative;">
+    <div id="drawerAppName" style="font-weight:700;font-size:1.1rem;text-align:center;">Kosick</div>
+    <button class="drawer-close-btn" onclick="closeDrawer()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);">✕</button>
   </div>
   <nav class="drawer-nav-list" id="drawerNavList"></nav>
   <div class="drawer-footer">
