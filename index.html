@@ -206,7 +206,8 @@ textarea{resize:vertical;min-height:80px;}
 @media(max-width:600px){
   .main{padding:12px;}
   .card{padding:12px;}
-  .form-row{flex-direction:column;}
+  .form-row .form-group{min-width:0;}
+  input[type="date"],input[type="time"]{padding:8px 2px;font-size:0.75rem;min-width:0;}
   /* 시간표 모바일: 가로 스크롤 제거, 한눈에 표시 */
   .timetable{overflow-x:visible;}
   .timetable-grid{grid-template-columns:22px repeat(5,1fr);gap:2px;min-width:0;}
