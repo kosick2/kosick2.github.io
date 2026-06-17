@@ -1326,7 +1326,7 @@ function addBookmark(){
   let icon='🌐';
   try{
     const domain=new URL(url).hostname;
-    icon=`https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    icon=`https://${domain}/apple-touch-icon.png`;
   }catch(e){}
   const bms=DB.get('bookmarks');
   bms.push({id:Date.now(),name,url,icon,groupId});
@@ -1348,11 +1348,43 @@ function saveEditBookmark(){
   renderBookmarks();
   showToast('✅ 수정되었습니다');
 }
+function bmIconFallback(img){
+  const domain=img.dataset.domain;
+  if(!domain){if(img.parentNode)img.parentNode.innerHTML='🌐';return;}
+  img.style.visibility='hidden';
+  if(img._bmTimer)clearTimeout(img._bmTimer);
+  const tried=parseInt(img.dataset.tried||'0');
+  img.dataset.tried=String(tried+1);
+  const sources=[
+    `https://${domain}/favicon.ico`,
+    `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=256`,
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=256`,
+    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+  ];
+  if(tried<sources.length){
+    img.onload=()=>{
+      clearTimeout(img._bmTimer);
+      if(img.naturalWidth<5||img.naturalHeight<5){bmIconFallback(img);}
+      else{img.style.visibility='visible';}
+    };
+    img.onerror=()=>{
+      clearTimeout(img._bmTimer);
+      bmIconFallback(img);
+    };
+    img.src=sources[tried];
+    img._bmTimer=setTimeout(()=>{
+      img.onerror=null;img.onload=null;
+      bmIconFallback(img);
+    },4000);
+  }else{
+    if(img.parentNode)img.parentNode.innerHTML='🌐';
+  }
+}
 function bmCardHtml(b){
-  const isUrl=b.icon&&b.icon.startsWith('http');
-  const iconHtml=isUrl
-    ?`<img src="${escHtml(b.icon)}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;image-rendering:-webkit-optimize-contrast;" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='🌐';">`
-    :(b.icon||'🌐');
+  let bmDomain='';try{bmDomain=new URL(b.url).hostname;}catch(e){}
+  const iconHtml=bmDomain
+  ?`<img src="https://${bmDomain}/apple-touch-icon.png" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" loading="lazy" data-domain="${escHtml(bmDomain)}" data-tried="0" onerror="bmIconFallback(this)" onload="if(this.naturalWidth<5||this.naturalHeight<5)bmIconFallback(this)">`
+  :(b.icon||'🌐');
   return `<div class="bm-card" draggable="true" ondragstart="bmDragStart(event,${b.id})" ondragend="bmDragEnd()" ondragover="event.stopPropagation();event.preventDefault()" ondrop="bmCardDrop(event,${b.id})" onclick="window.open('${b.url.replace(/'/g,"\\'")}','_blank')" title="${escHtml(b.name)}\n${escHtml(b.url)}"><div class="bm-card-icon">${iconHtml}</div><div class="bm-card-name">${escHtml(b.name)}</div><button class="bm-card-del" onclick="event.stopPropagation();deleteBookmark(${b.id})">✕</button><button class="bm-card-edit" onclick="event.stopPropagation();openEditBookmarkModal(${b.id})">✏</button></div>`;
 }
 function bmDragStart(e,id){dragBmId=id;dragGrpId=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const el=document.querySelector(`.bm-card[ondragstart*="bmDragStart(event,${id})"]`);if(el)el.classList.add('dragging');},0);}
