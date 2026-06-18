@@ -865,8 +865,13 @@ function reorderArr(key,fromId,toId,renderFn){const arr=DB.get(key),fi=arr.findI
 
 /* ── 캘린더 ── */
 let calendarDate=new Date(),selectedDateStr='';
-const DEFAULT_TYPES=[{id:'work',label:'업무/수업',color:'#818CF8'},{id:'event',label:'행사/외부',color:'#34D399'},{id:'exam',label:'시험/평가',color:'#F87171'},{id:'personal',label:'개인',color:'#FCD34D'}];
-function getScheduleTypes(){const s=localStorage.getItem('scheduleTypes');return s?JSON.parse(s):DEFAULT_TYPES;}
+const DEFAULT_TYPES=[{id:'none',label:'유형없음',color:'#374151'}];
+function getScheduleTypes(){
+  const s=localStorage.getItem('scheduleTypes');
+  const types=s?JSON.parse(s):[...DEFAULT_TYPES];
+  if(!types.find(t=>t.id==='none'))types.unshift({id:'none',label:'유형없음',color:'#374151'});
+  return types;
+}
 function saveScheduleTypes(t){localStorage.setItem('scheduleTypes',JSON.stringify(t));}
 function toDateStr(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
@@ -980,7 +985,7 @@ function renderCalendar(){
 
     sdots.forEach(s=>{
       if(shown>=2)return;
-      const ti=getScheduleTypes().find(t=>t.id===s.type),color=ti?ti.color:'#818CF8';
+            const ti=getScheduleTypes().find(t=>t.id===s.type)||{color:'#374151',label:'유형없음'};const color=ti.color;
       if(!s.isMulti){
         dots+=`<div style="font-size:0.58rem;background:${color}33;color:${color};border-radius:3px;padding:0 3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${escHtml(s.title)}</div>`;
       }else{
@@ -1136,9 +1141,19 @@ function saveEditSchedule(){
 
 function deleteSchedule(id){if(!confirm('정말 삭제할까요?'))return;DB.set('schedules',DB.get('schedules').filter(s=>s.id!==id));renderDayScheduleList();renderCalendar();}
 function openTypeManager(){renderTypeList();openModal('typeManagerModal');}
-function renderTypeList(){document.getElementById('typeList').innerHTML=getScheduleTypes().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);"><div style="width:20px;height:20px;border-radius:50%;background:${t.color};flex-shrink:0;"></div><span style="flex:1;">${t.label}</span><button class="btn-icon" onclick="deleteScheduleType('${t.id}')">🗑️</button></div>`).join('');}
+function renderTypeList(){document.getElementById('typeList').innerHTML=getScheduleTypes().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);"><div style="width:20px;height:20px;border-radius:50%;background:${t.color};border:1px solid rgba(255,255,255,0.2);flex-shrink:0;"></div><span style="flex:1;">${t.label}</span>${t.id!=='none'?`<button class="btn-icon" onclick="deleteScheduleType('${t.id}')">🗑️</button>`:`<span style="font-size:0.72rem;color:var(--text-secondary);padding:0 6px;">기본</span>`}</div>`).join('');}
 function addScheduleType(){const name=document.getElementById('newTypeName').value.trim(),color=document.getElementById('newTypeColor').value;if(!name){showToast('❌ 유형 이름을 입력해주세요');return;}const types=getScheduleTypes();types.push({id:'custom_'+Date.now(),label:name,color});saveScheduleTypes(types);document.getElementById('newTypeName').value='';renderTypeList();}
-function deleteScheduleType(id){if(DEFAULT_TYPES.find(t=>t.id===id)){showToast('❌ 기본 유형은 삭제할 수 없어요');return;}saveScheduleTypes(getScheduleTypes().filter(t=>t.id!==id));renderTypeList();}
+function deleteScheduleType(id){
+  if(id==='none'){showToast('❌ 유형없음은 삭제할 수 없어요');return;}
+  if(!confirm('이 유형을 삭제할까요?\n해당 유형의 기존 일정은 "유형없음"으로 변경됩니다.'))return;
+  const updated=DB.get('schedules').map(s=>s.type===id?{...s,type:'none'}:s);
+  DB.set('schedules',updated);
+  saveScheduleTypes(getScheduleTypes().filter(t=>t.id!=='none'&&t.id!==id));
+  renderTypeList();
+  renderCalendar();
+  if(document.getElementById('dayModal').classList.contains('active'))renderDayScheduleList();
+  showToast('✅ 유형이 삭제되었습니다');
+}
 
 /* ── 홈 ── */
 function updateHome(){
