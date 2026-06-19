@@ -848,7 +848,7 @@ const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'메모',students
 }
 function showStudentTab(id,btn){document.querySelectorAll('.student-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sub-nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');({classSection:renderClasses,evalSection:renderEvalList,counselingSection:renderCounseling}[id])?.();}
 function openModal(id){document.getElementById(id).classList.add('active');}
-function closeModal(id){document.getElementById(id).classList.remove('active');document.getElementById(id).querySelectorAll('input:not([type=hidden]),textarea').forEach(el=>{if(el.type!=='color')el.value='';});const s=document.getElementById(id).querySelector('select');if(s)s.selectedIndex=0;}
+function closeModal(id){document.getElementById(id).classList.remove('active');document.getElementById(id).querySelectorAll('input:not([type=hidden]),textarea').forEach(el=>{if(el.type!=='color')el.value='';});document.getElementById(id).querySelectorAll('select').forEach(s=>s.selectedIndex=0);}
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{
   if(e.target!==ov)return;
   if(ov.id==='scoreModal'){closeScoreModal();}
@@ -885,12 +885,12 @@ function reorderArr(key,fromId,toId,renderFn){const arr=DB.get(key),fi=arr.findI
 let calendarDate=new Date(),selectedDateStr='';
 const DEFAULT_TYPES=[{id:'none',label:'유형없음',color:'#374151'}];
 function getScheduleTypes(){
-  const s=localStorage.getItem('scheduleTypes');
-  const types=s?JSON.parse(s):[...DEFAULT_TYPES];
+  const types=DB.get('scheduleTypes');
+  if(!types.length)return[...DEFAULT_TYPES];
   if(!types.find(t=>t.id==='none'))types.unshift({id:'none',label:'유형없음',color:'#374151'});
   return types;
 }
-function saveScheduleTypes(t){localStorage.setItem('scheduleTypes',JSON.stringify(t));}
+function saveScheduleTypes(t){DB.set('scheduleTypes',t);}
 function toDateStr(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
 function renderCalendar(){
@@ -1269,9 +1269,9 @@ function memoItemHtml(item,color,isCompleted){
 const dragAttrs=!isCompleted?`ondragstart="memoItemDragStart(event,${item.id})" ondragover="memoItemDragOver(event,${item.id},this)" ondragleave="this.classList.remove('drag-over-memo')" ondrop="memoItemDrop(event,${item.id})" ondragend="this.removeAttribute('draggable')"`:'' ;  return `<div class="memo-item" id="memoItem_${item.id}" ${dragAttrs}>
 ${!isCompleted?`<div class="memo-drag-handle" title="드래그로 순서 변경" onmousedown="this.closest('.memo-item').setAttribute('draggable','true')" ontouchstart="this.closest('.memo-item').setAttribute('draggable','true')">⠿</div>`:'<div style="width:10px;flex-shrink:0;"></div>'}    <button class="memo-check-btn" style="${cs}" onclick="toggleMemoItem(${item.id})">${isCompleted?'✓':''}</button>
     <div class="memo-item-body">
-      <div class="${tc}" contenteditable="${ed}" spellcheck="false" data-text-id="${item.id}" data-placeholder="항목..." onkeydown="handleMemoTextKeydown(event,${item.id},this)" oninput="updateMemoText(${item.id},this.innerHTML)"></div>
+      <div class="${tc}" contenteditable="${ed}" spellcheck="false" data-text-id="${item.id}" data-placeholder="항목..." onkeydown="handleMemoTextKeydown(event,${item.id},this)"></div>
       ${!isCompleted?`${getDeadlineBadgeHtml(item)}<div id="dlWrap_${item.id}" style="display:none;margin-top:4px;"><input type="date" value="${item.deadline||''}" style="font-size:0.75rem;padding:3px 8px;width:160px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;" onchange="updateMemoDeadline(${item.id},this.value)"></div>`:''}
-      <div class="memo-item-detail" contenteditable="${ed}" spellcheck="false" data-id="${item.id}" data-placeholder="세부 사항..." onkeydown="handleDetailKeydown(event,${item.id},this)" oninput="updateMemoDetail(${item.id},this.innerHTML)"></div>
+      <div class="memo-item-detail" contenteditable="${ed}" spellcheck="false" data-id="${item.id}" data-placeholder="세부 사항..." onkeydown="handleDetailKeydown(event,${item.id},this)"></div>
     </div>
     <div class="memo-item-actions">
       ${!isCompleted?`<button class="btn-icon" onclick="setMemoDeadline(${item.id})" title="기한 설정" style="font-size:0.78rem;width:28px;height:28px;">📅</button><button class="star-btn${item.priority?' on':''}" onclick="togglePriority(${item.id})" title="${item.priority?'우선순위 해제':'우선순위 설정'}">${item.priority?'⭐':'☆'}</button>`:''}
@@ -1340,7 +1340,7 @@ function renderMemoSection(){
     });
     body+=`</div>`;
     const ci=items.filter(i=>i.completed);
-    if(ci.length){body+=`<div class="card" style="margin-top:14px;border-top:3px solid #6B7280;background:rgba(107,114,128,0.1);"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:10px;height:10px;border-radius:50%;background:#6B7280;flex-shrink:0;"></div><span style="font-size:1rem;font-weight:700;color:#9CA3AF;">✅ 완료</span><span style="font-size:0.82rem;color:var(--text-secondary);">${ci.length}개</span></div>`;lists.forEach(list=>{const gi=ci.filter(i=>i.listId===list.id);if(!gi.length)return;body+=`<div style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin:8px 0 4px;">${escHtml(list.name)}</div>`;gi.forEach(item=>body+=memoItemHtml(item,list.color,true));});body+=`</div>`;}
+if(ci.length){body+=`<div class="card" style="margin-top:14px;border-top:3px solid #6B7280;background:rgba(107,114,128,0.1);"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:10px;height:10px;border-radius:50%;background:#6B7280;flex-shrink:0;"></div><span style="font-size:1rem;font-weight:700;color:#9CA3AF;">✅ 완료</span><span style="font-size:0.82rem;color:var(--text-secondary);">${ci.length}개</span></div><div style="max-height:520px;overflow-y:auto;padding-right:4px;">`;lists.forEach(list=>{const gi=ci.filter(i=>i.listId===list.id);if(!gi.length)return;body+=`<div style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin:8px 0 4px;">${escHtml(list.name)}</div>`;gi.forEach(item=>body+=memoItemHtml(item,list.color,true));});body+=`</div></div>`;}
   }
   document.getElementById('memoContent').innerHTML=g+pSection+body;
   document.querySelectorAll('[data-text-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.textId));if(f)el.innerHTML=f.text||'';});
@@ -2307,10 +2307,10 @@ import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app
 import{getFirestore,doc,setDoc,getDoc}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyCqoVkHtnEsQRwExsthe4sASWID5H2bzuQ",authDomain:"kosick-dashboard.firebaseapp.com",projectId:"kosick-dashboard",storageBucket:"kosick-dashboard.firebasestorage.app",messagingSenderId:"990702080590",appId:"1:990702080590:web:9fe9a356db03c0eea4291f"};
 const fb=initializeApp(cfg),fs=getFirestore(fb);
-const DK=['schedules','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms'];
-const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','theme'];
+const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms'];
+const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','theme','homeroomMyClassId'];
 const ref=doc(fs,'kosick','data');
-function syncAll(){const p={};DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));SK.forEach(k=>p[k]=localStorage.getItem(k)||'');p._savedAt=Date.now();setDoc(ref,p).catch(console.error);}
+function syncAll(){const p={};DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));SK.forEach(k=>p[k]=localStorage.getItem(k)||'');p._savedAt=Date.now();localStorage.setItem('_savedAt',p._savedAt);setDoc(ref,p).catch(console.error);}
 window._syncSettings=syncAll;
 async function loadData(){
   try{
