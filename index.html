@@ -1160,7 +1160,7 @@ function saveEditSchedule(){
 function deleteSchedule(id){if(!confirm('정말 삭제할까요?'))return;DB.set('schedules',DB.get('schedules').filter(s=>s.id!==id));renderDayScheduleList();renderCalendar();}
 function openTypeManager(){renderTypeList();openModal('typeManagerModal');}
 function renderTypeList(){document.getElementById('typeList').innerHTML=getScheduleTypes().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);"><div style="width:20px;height:20px;border-radius:50%;background:${t.color};border:1px solid rgba(255,255,255,0.2);flex-shrink:0;"></div><span style="flex:1;">${t.label}</span>${t.id!=='none'?`<button class="btn-icon" onclick="deleteScheduleType('${t.id}')">🗑️</button>`:`<span style="font-size:0.72rem;color:var(--text-secondary);padding:0 6px;">기본</span>`}</div>`).join('');}
-function addScheduleType(){const name=document.getElementById('newTypeName').value.trim(),color=document.getElementById('newTypeColor').value;if(!name){showToast('❌ 유형 이름을 입력해주세요');return;}const types=getScheduleTypes();types.push({id:'custom_'+Date.now(),label:name,color});saveScheduleTypes(types);document.getElementById('newTypeName').value='';renderTypeList();}
+function addScheduleType(){const name=document.getElementById('newTypeName').value.trim(),color=document.getElementById('newTypeColor').value;if(!name){showToast('❌ 유형 이름을 입력해주세요');return;}const types=getScheduleTypes();types.push({id:'custom_'+Date.now(),label:name,color});saveScheduleTypes(types);document.getElementById('newTypeName').value='';renderTypeList();showToast('✅ 유형이 추가되었습니다');}
 function deleteScheduleType(id){
   if(id==='none'){showToast('❌ 유형없음은 삭제할 수 없어요');return;}
   if(!confirm('이 유형을 삭제할까요?\n해당 유형의 기존 일정은 "유형없음"으로 변경됩니다.'))return;
@@ -1359,14 +1359,16 @@ function toggleMemoItem(id){
   if(document.getElementById('home').classList.contains('active'))renderCalendar();
   showToast(item.completed?'✅ 완료!':'↩️ 목록으로 돌아왔습니다');
 }
-function updateMemoText(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.text=html;DB.set('memoItems',items);}
-function updateMemoDetail(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.detail=html;DB.set('memoItems',items);}
+let _memoToastTimer=null;
+function updateMemoText(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.text=html;DB.set('memoItems',items);clearTimeout(_memoToastTimer);_memoToastTimer=setTimeout(()=>showToast('✅ 저장되었습니다'),200);}
+function updateMemoDetail(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.detail=html;DB.set('memoItems',items);clearTimeout(_memoToastTimer);_memoToastTimer=setTimeout(()=>showToast('✅ 저장되었습니다'),200);}
 function deleteMemoItem(id){
-  if(!confirm('이 항목을 삭제할까요?'))return; /* ← 확인창 추가 */
+  if(!confirm('이 항목을 삭제할까요?'))return;
   DB.set('memoItems',DB.get('memoItems').filter(i=>i.id!==id));
   updateNavBadges();
   renderMemoSection();
   renderCalendar();
+  showToast('✅ 항목이 삭제되었습니다');
 }
 function deleteList(id){if(!confirm('이 목록과 모든 항목을 삭제할까요?'))return;DB.set('memoLists',DB.get('memoLists').filter(l=>l.id!==id));DB.set('memoItems',DB.get('memoItems').filter(i=>i.listId!==id));updateNavBadges();renderMemoSection();if(document.getElementById('home').classList.contains('active'))renderCalendar();showToast('✅ 목록이 삭제되었습니다');}
 
@@ -1379,7 +1381,7 @@ function openAddGroupModal(){openModal('addGroupModal');}
 function saveNewGroup(){const name=document.getElementById('newGroupName').value.trim();if(!name){showToast('❌ 이름을 입력해주세요');return;}const groups=DB.get('bookmarkGroups');groups.push({id:Date.now(),name});DB.set('bookmarkGroups',groups);closeModal('addGroupModal');renderBookmarks();showToast('✅ 그룹이 만들어졌습니다');}
 function openEditGroupModal(id){const g=DB.get('bookmarkGroups').find(g=>g.id===id);if(!g)return;document.getElementById('editGroupId').value=id;document.getElementById('editGroupName').value=g.name;openModal('editGroupModal');}
 function saveEditGroup(){const id=Number(document.getElementById('editGroupId').value),name=document.getElementById('editGroupName').value.trim();if(!name){showToast('❌ 이름을 입력해주세요');return;}const groups=DB.get('bookmarkGroups'),idx=groups.findIndex(g=>g.id===id);if(idx!==-1){groups[idx].name=name;DB.set('bookmarkGroups',groups);}closeModal('editGroupModal');renderBookmarks();showToast('✅ 수정되었습니다');}
-function deleteGroup(id){if(!confirm('그룹을 삭제하면 즐겨찾기가 미분류로 이동해요. 계속할까요?'))return;DB.set('bookmarkGroups',DB.get('bookmarkGroups').filter(g=>g.id!==id));DB.set('bookmarks',DB.get('bookmarks').map(b=>b.groupId===id?{...b,groupId:null}:b));renderBookmarks();}
+function deleteGroup(id){if(!confirm('그룹을 삭제하면 즐겨찾기가 미분류로 이동해요. 계속할까요?'))return;DB.set('bookmarkGroups',DB.get('bookmarkGroups').filter(g=>g.id!==id));DB.set('bookmarks',DB.get('bookmarks').map(b=>b.groupId===id?{...b,groupId:null}:b));renderBookmarks();showToast('✅ 그룹이 삭제되었습니다');}
 function openAddBookmarkModal(){const groups=DB.get('bookmarkGroups');document.getElementById('bookmarkGroupId').innerHTML='<option value="">📌 미분류</option>'+groups.map(g=>`<option value="${g.id}">${escHtml(g.name)}</option>`).join('');openModal('bookmarkModal');}
 function addBookmark(){
   const name=document.getElementById('bookmarkName').value.trim();
@@ -1492,7 +1494,7 @@ const CTYPES={academic:{label:'📚 학업',cls:'ctype-academic'},career:{label:
 function openNewCounselingModal(){document.getElementById('counselingEditId').value='';document.getElementById('counselingModalTitle').textContent='👥 상담기록 추가';document.getElementById('counselingDate').value=new Date().toISOString().split('T')[0];openModal('counselingModal');}
 function saveCounseling(){const id=document.getElementById('counselingEditId').value,sn=document.getElementById('studentNameInput').value.trim(),date=document.getElementById('counselingDate').value,type=document.getElementById('counselingType').value,content=document.getElementById('counselingContent').value.trim(),fu=document.getElementById('counselingFollowup').value.trim();if(!sn||!content){showToast('❌ 이름과 내용을 입력해주세요');return;}let cs=DB.get('counselings');if(id){cs=cs.map(c=>c.id==id?{...c,studentName:sn,date,type,content,followup:fu}:c);}else{cs.push({id:Date.now(),studentName:sn,date,type,content,followup:fu});}DB.set('counselings',cs);closeModal('counselingModal');renderCounseling();updateNavBadges();showToast('✅ 저장되었습니다');}
 function editCounseling(id){const c=DB.get('counselings').find(c=>c.id===id);if(!c)return;document.getElementById('counselingEditId').value=id;document.getElementById('studentNameInput').value=c.studentName;document.getElementById('counselingDate').value=c.date;document.getElementById('counselingType').value=c.type;document.getElementById('counselingContent').value=c.content;document.getElementById('counselingFollowup').value=c.followup||'';document.getElementById('counselingModalTitle').textContent='👥 상담기록 수정';openModal('counselingModal');}
-function deleteCounseling(id){if(!confirm('삭제할까요?'))return;DB.set('counselings',DB.get('counselings').filter(c=>c.id!==id));renderCounseling();updateNavBadges();}
+function deleteCounseling(id){if(!confirm('삭제할까요?'))return;DB.set('counselings',DB.get('counselings').filter(c=>c.id!==id));renderCounseling();updateNavBadges();showToast('✅ 상담기록이 삭제되었습니다');}
 function renderCounseling(filter=''){const list=DB.get('counselings').filter(c=>c.studentName.toLowerCase().includes(filter.toLowerCase())).reverse(),c=document.getElementById('counselingList');if(!list.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>상담기록을 추가해보세요!</p></div>';return;}c.innerHTML=list.map(co=>{const t=CTYPES[co.type]||CTYPES.other;return `<div class="counseling-card" id="counselingCard_${co.id}"><div class="counseling-header"><div class="student-name">👤 ${co.studentName}</div><div style="font-size:0.82rem;color:var(--text-secondary);">${co.date}</div></div><span class="counseling-type-badge ${t.cls}">${t.label}</span><div class="counseling-content">${co.content}</div>${co.followup?`<div style="margin-top:10px;padding:8px 12px;background:rgba(79,70,229,0.1);border-radius:8px;font-size:0.85rem;color:var(--primary-light);">📌 ${co.followup}</div>`:''}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;"><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem;" onclick="editCounseling(${co.id})">✏️ 수정</button><button class="btn btn-danger" onclick="deleteCounseling(${co.id})">🗑️ 삭제</button></div></div>`;}).join('');}
 function searchCounseling(val){renderCounseling(val);}
 
@@ -1519,7 +1521,7 @@ function renderClasses(){
 function openEditClassModal(id){const cls=DB.get('classes').find(c=>c.id===id);if(!cls)return;document.getElementById('editClassId').value=id;document.getElementById('editClassGrade').value=cls.grade;document.getElementById('editClassNum').value=cls.classNum;openModal('editClassModal');}
 function saveEditClass(){const id=Number(document.getElementById('editClassId').value),grade=document.getElementById('editClassGrade').value.trim(),num=document.getElementById('editClassNum').value.trim();if(!grade||!num){showToast('❌ 학년과 반을 입력해주세요');return;}const classes=DB.get('classes'),idx=classes.findIndex(c=>c.id===id);if(idx!==-1){classes[idx].grade=grade;classes[idx].classNum=num;DB.set('classes',classes);}closeModal('editClassModal');renderClasses();showToast('✅ 학급이 수정되었습니다');}
 function saveNewClass(){const grade=document.getElementById('newClassGrade').value.trim(),num=document.getElementById('newClassNum').value.trim();if(!grade||!num){showToast('❌ 학년과 반을 입력해주세요');return;}const classes=DB.get('classes');classes.push({id:Date.now(),grade,classNum:num,students:[]});DB.set('classes',classes);closeModal('addClassModal');renderClasses();showToast('✅ 학급이 추가되었습니다');}
-function deleteClass(id){if(!confirm('이 학급을 삭제할까요?'))return;DB.set('classes',DB.get('classes').filter(c=>c.id!==id));DB.set('evaluations',DB.get('evaluations').map(ev=>({...ev,classRecords:(ev.classRecords||[]).filter(cr=>cr.classId!==id)})));renderClasses();}
+function deleteClass(id){if(!confirm('이 학급을 삭제할까요?'))return;DB.set('classes',DB.get('classes').filter(c=>c.id!==id));DB.set('evaluations',DB.get('evaluations').map(ev=>({...ev,classRecords:(ev.classRecords||[]).filter(cr=>cr.classId!==id)})));renderClasses();showToast('✅ 학급이 삭제되었습니다');}
 function openClassDetail(classId){const cls=DB.get('classes').find(c=>c.id===classId);if(!cls)return;document.getElementById('classDetailTitle').textContent=`🏫 ${cls.grade}학년 ${cls.classNum}반`;document.getElementById('classDetailId').value=classId;renderStudentList(classId);openModal('classDetailModal');setTimeout(()=>document.getElementById('newStudentNumber').focus(),100);}
 function renderStudentList(classId){const cls=DB.get('classes').find(c=>c.id===classId),c=document.getElementById('studentList');if(!cls||!cls.students.length){c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-secondary);">학생을 추가해보세요</div>`;return;}const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));c.innerHTML=sorted.map(s=>`<div style="display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);"><input type="number" value="${s.number??''}" min="1" placeholder="번호" style="width:100%;padding:4px 6px;font-size:0.82rem;text-align:center;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);" onchange="updateStudentNumber(${classId},${s.id},this.value)"><span style="font-size:0.92rem;font-weight:500;">${s.name}</span><button class="btn-icon" onclick="deleteStudent(${classId},${s.id})">✕</button></div>`).join('');}
 function updateStudentNumber(classId,studentId,value){const classes=DB.get('classes'),cls=classes.find(c=>c.id===classId);if(!cls)return;const s=cls.students.find(s=>s.id===studentId);if(!s)return;s.number=value===''?null:Number(value);DB.set('classes',classes);renderStudentList(classId);showToast('✅ 번호가 저장되었습니다');}
@@ -1571,7 +1573,7 @@ function saveEditEval(){
   if(idx!==-1){const first=_evalSessions[0];const removedIds=window._removedSessionIds||[];const updatedCR=(evals[idx].classRecords||[]).map(cr=>({...cr,records:(cr.records||[]).map(r=>{const sd={...(r.sessionData||{})};_evalSessions.forEach(s=>{if(!sd[s.id])sd[s.id]={submitted:false,score:''};});removedIds.forEach(rid=>delete sd[rid]);return{...r,sessionData:sd};})}));evals[idx]={...evals[idx],title,subject,date:first.date||'',maxScore:first.maxScore||100,sessions:[..._evalSessions],classRecords:updatedCR};DB.set('evaluations',evals);}
   window._removedSessionIds=[];closeModal('editEvalModal');renderEvalList();showToast('✅ 수정되었습니다');
 }
-function deleteEval(id){if(!confirm('삭제할까요?'))return;DB.set('evaluations',DB.get('evaluations').filter(e=>e.id!==id));renderEvalList();}
+function deleteEval(id){if(!confirm('삭제할까요?'))return;DB.set('evaluations',DB.get('evaluations').filter(e=>e.id!==id));renderEvalList();showToast('✅ 수행평가가 삭제되었습니다');}
 function renderEvalList(){
   const evals=DB.get('evaluations'),classes=DB.get('classes'),chips=document.getElementById('classChipsArea');
   if(classes.length){chips.innerHTML=`<div style="margin-bottom:18px;padding:14px 16px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);"><div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:10px;">👇 학급을 수행평가 카드 안으로 <strong>드래그</strong>하면 해당 반이 추가됩니다</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${classes.map(cls=>`<div class="class-chip" draggable="true" ondragstart="onClassDragStart(event,${cls.id})">🏫 ${cls.grade}학년 ${cls.classNum}반 <span style="font-size:0.72rem;color:var(--text-secondary);">${cls.students.length}명</span></div>`).join('')}</div></div>`;}
@@ -1593,9 +1595,9 @@ const scoreInfo=sessions.length>1
   const rows=records.map(cr=>{
     const cls=classes.find(c=>c.id===cr.classId);if(!cls)return '';
     const total=(cr.records||[]).length;
-    let allSubmitted=0;(cr.records||[]).forEach(r=>{const sd=r.sessionData||{};if(sessions.every(s=>(sd[s.id]||{}).submitted))allSubmitted++;});
+    let allSubmitted=0;(cr.records||[]).forEach(r=>{const sd=r.sessionData||{};if(sessions.every(s=>{const d=sd[s.id]||{};return d.submitted||(d.score!==''&&d.score!==undefined);}))allSubmitted++;});
         const totalSlots=total*sessions.length;
-    let totalSubmitted=0;(cr.records||[]).forEach(r=>{const sd=r.sessionData||{};sessions.forEach(s=>{if((sd[s.id]||{}).submitted)totalSubmitted++;});});
+    let totalSubmitted=0;(cr.records||[]).forEach(r=>{const sd=r.sessionData||{};sessions.forEach(s=>{const d=sd[s.id]||{};if(d.submitted||(d.score!==''&&d.score!==undefined))totalSubmitted++;});});
     const pct=totalSlots?Math.round(totalSubmitted/totalSlots*100):0;
     /* ★ 변경: 합산 평균 계산 */
     const combinedScores=(cr.records||[]).map(r=>{
@@ -1632,18 +1634,19 @@ const scoreInfo=sessions.length>1
   </div>`;
 }
 function addClassToEval(evalId,classId){const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===evalId);if(!ev){showToast('❌ 수행평가를 찾을 수 없어요');return;}if(!ev.classRecords)ev.classRecords=[];if(ev.classRecords.find(cr=>cr.classId===classId)){showToast('이미 추가된 반이에요');return;}const cls=DB.get('classes').find(c=>c.id===classId);if(!cls){showToast('❌ 학급을 찾을 수 없어요');return;}const sessions=ev.sessions||[{id:'session_'+ev.id,name:'1차시',date:ev.date,maxScore:ev.maxScore}];const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));const records=sorted.map(s=>{const sessionData={};sessions.forEach(sess=>{sessionData[sess.id]={submitted:false,score:''};});return{studentId:s.id,sessionData};});ev.classRecords.push({classId,records});DB.set('evaluations',evals);renderEvalList();showToast(`✅ ${cls.grade}학년 ${cls.classNum}반이 추가되었습니다`);}
-function removeClassFromEval(evalId,classId){if(!confirm('이 반을 제거할까요?'))return;const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===evalId);if(!ev)return;ev.classRecords=(ev.classRecords||[]).filter(cr=>cr.classId!==classId);DB.set('evaluations',evals);renderEvalList();}
+function removeClassFromEval(evalId,classId){if(!confirm('이 반을 제거할까요?'))return;const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===evalId);if(!ev)return;ev.classRecords=(ev.classRecords||[]).filter(cr=>cr.classId!==classId);DB.set('evaluations',evals);renderEvalList();showToast('✅ 반이 제거되었습니다');}
 let _recordSaveTimer=null;
 let scoreModalEvalId=null,scoreModalClassId=null;
 let _criteriaTimer=null;
 function saveEvalCriteria(){
   const inp=document.getElementById('evalCriteriaInput');
-  if(!inp||!scoreModalEvalId)return;
+  if(!inp||!scoreModalEvalId||!currentScoreSessionId)return;
   clearTimeout(_criteriaTimer);
   _criteriaTimer=setTimeout(()=>{
     const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===scoreModalEvalId);
     if(!ev)return;
-    ev.criteria=inp.value;
+    if(!ev.sessionCriteria)ev.sessionCriteria={};
+    ev.sessionCriteria[currentScoreSessionId]=inp.value;
     DB.set('evaluations',evals);
     showToast('✅ 기준이 저장되었습니다');
   },800);
@@ -1651,9 +1654,9 @@ function saveEvalCriteria(){
 function closeScoreModal(){
   clearTimeout(_criteriaTimer);
   const inp=document.getElementById('evalCriteriaInput');
-  if(inp&&scoreModalEvalId){
+  if(inp&&scoreModalEvalId&&currentScoreSessionId){
     const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===scoreModalEvalId);
-    if(ev){ev.criteria=inp.value;DB.set('evaluations',evals);}
+    if(ev){if(!ev.sessionCriteria)ev.sessionCriteria={};ev.sessionCriteria[currentScoreSessionId]=inp.value;DB.set('evaluations',evals);}
   }
   closeModal('scoreModal');
 }
@@ -1667,11 +1670,22 @@ function openScoreModal(evalId,classId){
   document.getElementById('scoreModalMeta').innerHTML=`${ev.subject?`📚 ${ev.subject} &nbsp;·&nbsp;`:''}총 <strong>${sessions.length}차시</strong> 구성`;
   renderScoreSessionTabs(ev,classId);renderScoreTable(evalId,classId,currentScoreSessionId);updateScoreStats(evalId,classId,currentScoreSessionId);
   const criteriaInp=document.getElementById('evalCriteriaInput');
-  if(criteriaInp)criteriaInp.value=ev.criteria||'';
+  if(criteriaInp)criteriaInp.value=(ev.sessionCriteria||{})[currentScoreSessionId]||ev.criteria||'';
   openModal('scoreModal');
 }
 function renderScoreSessionTabs(ev,classId){const sessions=ev.sessions||[];const tabsContainer=document.getElementById('scoreModalTabs');if(!tabsContainer)return;if(sessions.length<=1){tabsContainer.innerHTML='';return;}tabsContainer.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;flex-wrap:wrap;">${sessions.map(s=>`<button onclick="switchScoreSession('${s.id}',${ev.id},${classId})" id="tab_${s.id}" style="padding:7px 16px;border:1px solid var(--border);border-radius:20px;background:${s.id===currentScoreSessionId?'var(--primary)':'var(--surface2)'};color:${s.id===currentScoreSessionId?'white':'var(--text-secondary)'};cursor:pointer;font-size:0.82rem;white-space:nowrap;font-family:inherit;transition:all 0.2s;">${escHtml(s.name)} <span style="font-size:0.72rem;opacity:0.8;">${s.maxScore}점</span>${s.date?`<span style="font-size:0.68rem;opacity:0.7;margin-left:2px;">${s.date}</span>`:''}</button>`).join('')}</div>`;}
-function switchScoreSession(sessionId,evalId,classId){currentScoreSessionId=sessionId;const ev=DB.get('evaluations').find(e=>e.id===evalId);renderScoreSessionTabs(ev,classId);renderScoreTable(evalId,classId,sessionId);updateScoreStats(evalId,classId,sessionId);}
+function switchScoreSession(sessionId,evalId,classId){
+  const inp=document.getElementById('evalCriteriaInput');
+  if(inp&&scoreModalEvalId&&currentScoreSessionId){
+    clearTimeout(_criteriaTimer);
+    const evals=DB.get('evaluations'),ev2=evals.find(e=>e.id===scoreModalEvalId);
+    if(ev2){if(!ev2.sessionCriteria)ev2.sessionCriteria={};ev2.sessionCriteria[currentScoreSessionId]=inp.value;DB.set('evaluations',evals);}
+  }
+  currentScoreSessionId=sessionId;
+  const ev=DB.get('evaluations').find(e=>e.id===evalId);
+  if(inp)inp.value=(ev.sessionCriteria||{})[sessionId]||'';
+  renderScoreSessionTabs(ev,classId);renderScoreTable(evalId,classId,sessionId);updateScoreStats(evalId,classId,sessionId);
+}
 function renderScoreTable(evalId,classId,sessionId){
   const ev=DB.get('evaluations').find(e=>e.id===evalId),cls=DB.get('classes').find(c=>c.id===classId),cr=(ev?.classRecords||[]).find(r=>r.classId===classId);
   if(!ev||!cls||!cr)return;
@@ -1706,7 +1720,7 @@ function updateScoreStats(evalId,classId,sessionId){
     }).filter(v=>v!==null);
     const combinedSubmitted=(cr.records||[]).filter(r=>{
       const sd=r.sessionData||{};
-      return sessions.every(s=>(sd[s.id]||{}).submitted);
+      return sessions.every(s=>{const d=sd[s.id]||{};return d.submitted||(d.score!==''&&d.score!==undefined);});
     }).length;
     if(combinedScores.length>0){
       const cAvg=(combinedScores.reduce((a,b)=>a+b,0)/combinedScores.length).toFixed(1);
@@ -1757,7 +1771,7 @@ function renderTimetable(){
 function openTimetableEdit(day,period){const cell=DB.get('timetable')[`${day}_${period}`];document.getElementById('timetableDay').value=day;document.getElementById('timetablePeriod').value=period;document.getElementById('className').value=cell?.name||'';document.getElementById('classRoom').value=cell?.room||'';document.getElementById('timetableModalTitle').textContent=`📅 ${DAYS[day]}요일 ${period}교시`;selectedCellColor=cell?.color||'#818CF8';renderTimetableColorPicker();openModal('timetableEditModal');}
 function saveTimetableCell(){const day=document.getElementById('timetableDay').value,period=document.getElementById('timetablePeriod').value,name=document.getElementById('className').value.trim(),room=document.getElementById('classRoom').value.trim();if(!name){showToast('❌ 과목명을 입력해주세요');return;}const tt=DB.get('timetable');tt[`${day}_${period}`]={name,room,color:selectedCellColor,isFree:false};DB.set('timetable',tt);closeModal('timetableEditModal');renderTimetable();renderMiniTimetable();showToast('✅ 저장되었습니다');}
 function setFreePeriod(){const day=document.getElementById('timetableDay').value,period=document.getElementById('timetablePeriod').value,tt=DB.get('timetable');tt[`${day}_${period}`]={name:'공강',room:'',color:'#FFFFFF',isFree:true};DB.set('timetable',tt);closeModal('timetableEditModal');renderTimetable();renderMiniTimetable();showToast('✅ 공강으로 설정되었습니다');}
-function clearTimetableCell(){const day=document.getElementById('timetableDay').value,period=document.getElementById('timetablePeriod').value,tt=DB.get('timetable');delete tt[`${day}_${period}`];DB.set('timetable',tt);closeModal('timetableEditModal');renderTimetable();renderMiniTimetable();}
+function clearTimetableCell(){const day=document.getElementById('timetableDay').value,period=document.getElementById('timetablePeriod').value,tt=DB.get('timetable');delete tt[`${day}_${period}`];DB.set('timetable',tt);closeModal('timetableEditModal');renderTimetable();renderMiniTimetable();showToast('✅ 수업이 삭제되었습니다');}
 renderTimetable();
 
 /* ── 모바일 터치 드래그 ── */
