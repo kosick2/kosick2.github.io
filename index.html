@@ -1814,7 +1814,7 @@ renderTimetable();
 
 /* ── 당겨서 새로고침 (Pull to Refresh) ── */
 (function(){
-  let startY=0,curY=0,pulling=false,released=false;
+  let startY=0,curY=0,pulling=false,released=false,trackPull=false;
   const THRESHOLD=75;
   let ind=null;
 
@@ -1885,15 +1885,18 @@ renderTimetable();
   document.addEventListener('touchstart',e=>{
     /* 모달이 열려있으면 작동 안 함 */
     if(document.querySelector('.modal-overlay.active'))return;
-        if(window.scrollY>0)return;
+            trackPull=false;
+    if(window.scrollY>0)return;
     /* 헤더 영역에서만 당겨서 새로고침 작동 */
     if(!e.target.closest('.header'))return;
     startY=e.touches[0].clientY;
     curY=startY;
     pulling=false;released=false;
+    trackPull=true;
   },{passive:true});
 
-  document.addEventListener('touchmove',e=>{
+    document.addEventListener('touchmove',e=>{
+    if(!trackPull)return;
     if(document.querySelector('.modal-overlay.active'))return;
     if(window.scrollY>0){pulling=false;return;}
     curY=e.touches[0].clientY;
