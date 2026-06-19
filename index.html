@@ -1885,7 +1885,9 @@ renderTimetable();
   document.addEventListener('touchstart',e=>{
     /* 모달이 열려있으면 작동 안 함 */
     if(document.querySelector('.modal-overlay.active'))return;
-    if(window.scrollY>0)return;
+        if(window.scrollY>0)return;
+    /* 헤더 영역에서만 당겨서 새로고침 작동 */
+    if(!e.target.closest('.header'))return;
     startY=e.touches[0].clientY;
     curY=startY;
     pulling=false;released=false;
