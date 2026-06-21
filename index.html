@@ -26,7 +26,7 @@ body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;backgrou
 .header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .header-date{font-size:0.82rem;color:var(--text-secondary);white-space:nowrap;}
 .nav-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 20px;background:none;border:none;color:var(--text-secondary);cursor:pointer;border-radius:var(--radius);transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
-.nav-btn.active{color:var(--primary-light);background:rgba(79,70,229,0.1);}
+.nav-btn.active{color:var(--text);background:rgba(79,70,229,0.1);}
 .nav-btn:hover{color:var(--text);background:var(--surface2);}
 .nav-icon{font-size:1.2rem;}.nav-label{font-size:0.72rem;}
 .nav-badge{position:absolute;top:2px;right:2px;background:#EF4444;color:white;font-size:0.6rem;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;}
@@ -303,8 +303,9 @@ textarea{resize:vertical;min-height:80px;}
   <span class="mobile-tab-title" id="mobileTabTitle">홈</span>
   <div class="header-right">
     <div class="header-date" id="currentDate"></div>
+    <button id="saveBtn" onclick="manualSave()" title="수동 저장" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:0 12px;height:34px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all 0.2s;flex-shrink:0;">💾 저장</button>
     <button id="themeToggleBtn" onclick="toggleTheme()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">🌙</button>
-    <button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" title="메뉴">☰</button>
+<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" title="메뉴" style="position:relative;">☰<span id="hamburgerBadge" style="display:none;position:absolute;top:2px;right:2px;background:#EF4444;color:white;font-size:0.6rem;font-weight:700;min-width:15px;height:15px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;"></span></button>
   </div>
 </header>
 <main class="main">
@@ -782,8 +783,10 @@ function _flushMemoEl(el){
   clearTimeout(el._saveTimer);
   const textId=el.dataset.textId;
   const detailId=el.dataset.id;
-  if(textId)updateMemoText(Number(textId),el.innerHTML);
-  else if(detailId)updateMemoDetail(Number(detailId),el.innerHTML);
+  let html=el.innerHTML;
+  if(!el.textContent.trim()){html='';el.innerHTML='';}
+  if(textId)updateMemoText(Number(textId),html);
+  else if(detailId)updateMemoDetail(Number(detailId),html);
   showToast('✅ 저장되었습니다');
 }
 
@@ -829,6 +832,29 @@ initHeaderTitle();
 function updateTitlePreview(){const e=document.getElementById('titleEmoji').value||'📚',n=document.getElementById('titleName').value||'Kosick',p=document.getElementById('colorPrimary').value,s=document.getElementById('colorSecondary').value;document.getElementById('titlePreviewEmoji').textContent=e;const el=document.getElementById('titlePreviewText');el.textContent=n;el.style.color='';el.style.webkitTextStroke='';el.style.paintOrder='';document.getElementById('colorPrimaryHex').textContent=p;document.getElementById('colorSecondaryHex').textContent=s;}
 function openTitleEditor(){document.getElementById('titleEmoji').value=localStorage.getItem('titleEmoji')||'📚';document.getElementById('titleName').value=localStorage.getItem('titleName')||'Kosick';document.getElementById('colorPrimary').value=localStorage.getItem('colorPrimary')||'#818CF8';document.getElementById('colorSecondary').value=localStorage.getItem('colorSecondary')||'#10B981';updateTitlePreview();['titleEmoji','titleName','colorPrimary','colorSecondary'].forEach(id=>document.getElementById(id).oninput=updateTitlePreview);openModal('titleEditorModal');}
 function saveTitle(){const e=document.getElementById('titleEmoji').value.trim()||'📚',n=document.getElementById('titleName').value.trim()||'Kosick',p=document.getElementById('colorPrimary').value,s=document.getElementById('colorSecondary').value;localStorage.setItem('titleEmoji',e);localStorage.setItem('titleName',n);localStorage.setItem('colorPrimary',p);localStorage.setItem('colorSecondary',s);initHeaderTitle();initColors();if(window._syncSettings)window._syncSettings();closeModal('titleEditorModal');showToast('✅ 저장되었습니다');}
+function manualSave(){
+  const btn=document.getElementById('saveBtn');
+  if(btn){btn.textContent='💾 저장중...';btn.disabled=true;btn.style.color='var(--primary-light)';}
+  /* ① contenteditable 중 저장 안 된 내용 먼저 강제 flush */
+  document.querySelectorAll('[contenteditable="true"]').forEach(el=>{
+    if(!_dirtyEls.has(el))return;
+    clearTimeout(el._saveTimer);
+    _flushMemoEl(el);
+  });
+  /* ② 전체 localStorage → Firebase 동기화 */
+  if(window._manualSave){
+    setTimeout(()=>{
+      window._manualSave();
+      setTimeout(()=>{
+        if(btn){btn.textContent='💾 저장';btn.disabled=false;btn.style.color='';}
+        showToast('✅ 수동 저장 완료!');
+      },1500);
+    },150);
+  }else{
+    if(btn){btn.textContent='💾 저장';btn.disabled=false;}
+    showToast('❌ 저장 모듈 초기화 중입니다. 잠시 후 다시 시도해주세요.');
+  }
+}
 function toggleTheme(){const l=document.body.classList.toggle('light');document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark');if(window._syncSettings)window._syncSettings();}
 (function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.getElementById('themeToggleBtn').textContent='☀️';}})();
 function showSection(id,btn){
@@ -878,6 +904,9 @@ function updateNavBadges(){
     el.textContent=cnt>99?'99+':cnt;
     el.classList.toggle('show',cnt>0);
   });
+  const totalCnt=memoCnt+homeroomCnt;
+  const hb=document.getElementById('hamburgerBadge');
+  if(hb){hb.textContent=totalCnt>99?'99+':totalCnt;hb.style.display=totalCnt>0?'flex':'none';}
 }
 function reorderArr(key,fromId,toId,renderFn){const arr=DB.get(key),fi=arr.findIndex(x=>x.id===fromId),ti=arr.findIndex(x=>x.id===toId);if(fi===-1||ti===-1||fi===ti)return;const [mv]=arr.splice(fi,1);arr.splice(ti,0,mv);DB.set(key,arr);renderFn();showToast('✅ 순서가 변경되었습니다');}
 
@@ -1344,8 +1373,8 @@ if(ci.length){body+=`<div class="card" style="margin-top:14px;border-top:3px sol
   }
   document.getElementById('memoContent').innerHTML=g+pSection+body;
   document.querySelectorAll('[data-text-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.textId));if(f)el.innerHTML=f.text||'';});
-  document.querySelectorAll('[data-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.id));if(f&&f.detail)el.innerHTML=f.detail;});
-  updateNavBadges();
+  
+  updateNavBadges();document.querySelectorAll('[data-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.id));const d=f?.detail||'';el.innerHTML=(d&&d.trim()!==''&&d!=='<br>')?d:'';});
 }
 function addMemoItemToList(listId,inputEl){const text=inputEl.value.trim();if(!text)return;inputEl.value='';const items=DB.get('memoItems');items.push({id:Date.now(),listId,text,detail:'',completed:false,priority:false,deadline:''});DB.set('memoItems',items);updateNavBadges();renderMemoSection();showToast('✅ 항목이 추가되었습니다');setTimeout(()=>{const el=document.getElementById(`newMemoItemInput_${listId}`);if(el)el.focus();},30);}
 function toggleMemoItem(id){
@@ -1635,7 +1664,7 @@ const scoreInfo=sessions.length>1
 }
 function addClassToEval(evalId,classId){const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===evalId);if(!ev){showToast('❌ 수행평가를 찾을 수 없어요');return;}if(!ev.classRecords)ev.classRecords=[];if(ev.classRecords.find(cr=>cr.classId===classId)){showToast('이미 추가된 반이에요');return;}const cls=DB.get('classes').find(c=>c.id===classId);if(!cls){showToast('❌ 학급을 찾을 수 없어요');return;}const sessions=ev.sessions||[{id:'session_'+ev.id,name:'1차시',date:ev.date,maxScore:ev.maxScore}];const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));const records=sorted.map(s=>{const sessionData={};sessions.forEach(sess=>{sessionData[sess.id]={submitted:false,score:''};});return{studentId:s.id,sessionData};});ev.classRecords.push({classId,records});DB.set('evaluations',evals);renderEvalList();showToast(`✅ ${cls.grade}학년 ${cls.classNum}반이 추가되었습니다`);}
 function removeClassFromEval(evalId,classId){if(!confirm('이 반을 제거할까요?'))return;const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===evalId);if(!ev)return;ev.classRecords=(ev.classRecords||[]).filter(cr=>cr.classId!==classId);DB.set('evaluations',evals);renderEvalList();showToast('✅ 반이 제거되었습니다');}
-let _recordSaveTimer=null;
+let _recordSaveTimer=null,_renderEvalTimer=null;
 let scoreModalEvalId=null,scoreModalClassId=null;
 let _criteriaTimer=null;
 function saveEvalCriteria(){
@@ -1694,7 +1723,7 @@ function renderScoreTable(evalId,classId,sessionId){
   const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
   document.getElementById('scoreTableBody').innerHTML=sorted.map(s=>{const r=(cr.records||[]).find(r=>r.studentId===s.id)||{sessionData:{}};const sd=(r.sessionData||{})[sessionId]||{submitted:false,score:''};return `<tr><td style="padding:8px 6px;border-bottom:1px solid var(--border);font-size:0.85rem;font-weight:600;color:var(--primary-light);text-align:center;">${s.number??'-'}</td><td style="padding:8px 6px;border-bottom:1px solid var(--border);font-weight:500;">${s.name}</td><td style="padding:8px 6px;border-bottom:1px solid var(--border);text-align:center;"><input type="checkbox" ${sd.submitted?'checked':''} style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary);" onchange="updateRecord(${evalId},${classId},${s.id},'submitted',this.checked,'${sessionId}')"></td><td style="padding:8px 6px;border-bottom:1px solid var(--border);"><input type="number" value="${sd.score}" min="0" max="${session.maxScore}" placeholder="-" style="width:80px;padding:5px 8px;font-size:0.85rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);" oninput="updateRecord(${evalId},${classId},${s.id},'score',this.value,'${sessionId}')"></td></tr>`;}).join('');
 }
-function updateRecord(evalId,classId,studentId,field,value,sessionId){const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===evalId);if(!ev)return;const cr=(ev.classRecords||[]).find(r=>r.classId===classId);if(!cr)return;let rec=(cr.records||[]).find(r=>r.studentId===studentId);if(!rec){rec={studentId,sessionData:{}};if(!cr.records)cr.records=[];cr.records.push(rec);}if(!rec.sessionData)rec.sessionData={};if(!rec.sessionData[sessionId])rec.sessionData[sessionId]={submitted:false,score:''};rec.sessionData[sessionId][field]=value;DB.set('evaluations',evals);updateScoreStats(evalId,classId,sessionId);renderEvalList();clearTimeout(_recordSaveTimer);_recordSaveTimer=setTimeout(()=>showToast('✅ 점수가 저장되었습니다'),800);}
+function updateRecord(evalId,classId,studentId,field,value,sessionId){const evals=DB.get('evaluations'),ev=evals.find(e=>e.id===evalId);if(!ev)return;const cr=(ev.classRecords||[]).find(r=>r.classId===classId);if(!cr)return;let rec=(cr.records||[]).find(r=>r.studentId===studentId);if(!rec){rec={studentId,sessionData:{}};if(!cr.records)cr.records=[];cr.records.push(rec);}if(!rec.sessionData)rec.sessionData={};if(!rec.sessionData[sessionId])rec.sessionData[sessionId]={submitted:false,score:''};rec.sessionData[sessionId][field]=value;DB.set('evaluations',evals);updateScoreStats(evalId,classId,sessionId);clearTimeout(_renderEvalTimer);_renderEvalTimer=setTimeout(()=>renderEvalList(),1200);clearTimeout(_recordSaveTimer);_recordSaveTimer=setTimeout(()=>showToast('✅ 점수가 저장되었습니다'),800);}
 function updateScoreStats(evalId,classId,sessionId){
   const ev=DB.get('evaluations').find(e=>e.id===evalId),stats=document.getElementById('scoreStats');
   if(!ev||!stats)return;
@@ -1947,11 +1976,22 @@ function buildDrawerNav(){
   const list=document.getElementById('drawerNavList');
   if(!list)return;
   const activeId=document.querySelector('.section.active')?.id||'home';
-  list.innerHTML=DRAWER_SECTIONS.map(t=>`
-    <button class="drawer-nav-item${activeId===t.id?' active':''}" data-section="${t.id}" onclick="showSection('${t.id}',null)">
+  const _today=new Date();_today.setHours(0,0,0,0);
+  const _todayStr=_today.toISOString().split('T')[0];
+  const _tomorrowStr=new Date(_today.getTime()+864e5).toISOString().split('T')[0];
+  const _memoItems=DB.get('memoItems').filter(i=>!i.completed);
+  const _memoCnt=_memoItems.filter(i=>i.priority||(i.deadline&&(i.deadline===_todayStr||i.deadline===_tomorrowStr))).length;
+  const _attRecs=DB.get('attendanceRecords').filter(r=>!r.documented);
+  const _hrCnt=_attRecs.filter(r=>r.deadline&&(r.deadline===_todayStr||r.deadline===_tomorrowStr)).length;
+  const _badgeMap={memos:_memoCnt,homeroom:_hrCnt};
+  list.innerHTML=DRAWER_SECTIONS.map(t=>{
+    const cnt=_badgeMap[t.id]||0;
+    return `<button class="drawer-nav-item${activeId===t.id?' active':''}" data-section="${t.id}" onclick="showSection('${t.id}',null)">
       <span class="d-emoji">${t.emoji}</span>
       <span>${t.name}</span>
-    </button>`).join('');
+      ${cnt>0?`<span class="d-badge">${cnt>99?'99+':cnt}</span>`:''}
+    </button>`;
+  }).join('');
     const dn=document.getElementById('drawerAppName');
   const hn=document.getElementById('headerName');
   if(dn&&hn)dn.textContent=hn.textContent;
@@ -2346,7 +2386,14 @@ async function loadData(){
     showToast('☁️ 데이터 불러오기 완료');
   }catch(e){console.error('불러오기 실패:',e);}
 }
-const _s=DB.set.bind(DB);DB.set=(k,v)=>{_s(k,v);syncAll();};
+window._manualSave=syncAll;
+let _debounceTimer=null;
+const _s=DB.set.bind(DB);
+DB.set=(k,v)=>{
+  _s(k,v);
+  clearTimeout(_debounceTimer);
+  _debounceTimer=setTimeout(syncAll,1500);
+};
 loadData();
 </script>
 </body>
