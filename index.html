@@ -16,7 +16,7 @@
 :root{--primary:#4F46E5;--primary-light:#818CF8;--secondary:#10B981;--background:#0F172A;--surface:#1E293B;--surface2:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;--border:#334155;--danger:#EF4444;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
 body.light{--background:#F1F5F9;--surface:#FFFFFF;--surface2:#E2E8F0;--text:#0F172A;--text-secondary:#64748B;--border:#CBD5E1;--shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
 body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--background);color:var(--text);min-height:100vh;}
-.header{background:var(--surface);padding:0 20px;height:58px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.header{background:var(--background);padding:0 20px;height:58px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;position:sticky;top:0;z-index:100;}
 .header-left{flex-shrink:0;}
 .header-title{display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap;}
 .header-title-emoji{font-size:1.2rem;line-height:1;}
@@ -197,12 +197,17 @@ textarea{resize:vertical;min-height:80px;}
 .empty-state p{font-size:0.9rem;}
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 .section-title{font-size:1.2rem;font-weight:700;}
+.fab-save{position:fixed;bottom:24px;left:20px;width:58px;height:58px;border-radius:50%;background:rgba(15,23,42,0.5);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);z-index:500;transition:all 0.2s;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0.5;}
+.fab-save:hover{background:rgba(79,70,229,0.7);transform:scale(1.1);opacity:1;}
+.fab-save:active{transform:scale(0.93);}
+body.light .fab-save{background:rgba(241,245,249,0.5);color:var(--text);border:1px solid rgba(0,0,0,0.12);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface2);color:var(--text);padding:12px 24px;border-radius:30px;font-size:0.9rem;z-index:2000;transition:transform 0.3s;border:1px solid var(--border);}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .items-list{display:flex;flex-direction:column;gap:12px;}
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--background);}
 ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:3px;}
+[contenteditable]{-webkit-spell-check:false;spell-check:false;}
 .score-modal-layout{display:grid;grid-template-columns:1fr 290px;gap:16px;align-items:start;}
 @media(max-width:700px){.score-modal-layout{grid-template-columns:1fr;}}
 /* ── 모바일 반응형 ── */
@@ -218,7 +223,8 @@ textarea{resize:vertical;min-height:80px;}
   .timetable-cell{padding:5px 2px;min-height:40px;font-size:0.64rem;gap:1px;border-radius:5px;}
   .timetable-period{padding:5px 2px;font-size:0.6rem;border-radius:5px;}
   .class-name{font-size:0.64rem;line-height:1.2;}
-  .class-room{display:none;}
+    .class-room{display:none;}
+  .cal-day{height:78px;}
 }
 /* ═══ 모바일 드로어 네비게이션 ═══ */
 .hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);font-size:1.4rem;line-height:1;transition:background 0.2s;flex-shrink:0;}
@@ -226,7 +232,7 @@ textarea{resize:vertical;min-height:80px;}
 .mobile-tab-title{display:none;font-weight:700;font-size:1.05rem;color:var(--text);text-align:center;}
 .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1200;backdrop-filter:blur(3px);opacity:0;transition:opacity 0.3s;pointer-events:none;}
 .drawer-overlay.open{opacity:1;pointer-events:all;}
-.mobile-drawer{position:fixed;top:0;right:-300px;width:280px;height:100dvh;background:var(--surface);z-index:1201;transition:right 0.32s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(0,0,0,0.35);}
+.mobile-drawer{position:fixed;top:0;right:-300px;width:280px;height:100dvh;background:var(--surface);z-index:1201;transition:right 0.32s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(0,0,0,0.35);border-radius:20px 0 0 20px;}
 .mobile-drawer.open{right:0;}
 .drawer-header{padding:22px 16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .drawer-app-info{display:flex;align-items:center;gap:8px;}
@@ -237,15 +243,16 @@ textarea{resize:vertical;min-height:80px;}
 .drawer-nav-item:hover{background:var(--surface2);}
 .drawer-nav-item.active{background:rgba(129,140,248,0.18);color:var(--primary-light);font-weight:700;border-right:3px solid var(--primary);}
 .drawer-nav-item .d-emoji{font-size:1.25rem;width:28px;text-align:center;flex-shrink:0;}
-.drawer-nav-item .d-badge{margin-left:auto;background:var(--primary);color:white;font-size:0.68rem;font-weight:700;border-radius:20px;padding:2px 7px;min-width:18px;text-align:center;}
-.drawer-footer{padding:10px 0 16px;border-top:1px solid var(--border);flex-shrink:0;}
-.drawer-theme-btn{display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer;width:100%;background:none;border:none;color:var(--text);font-size:0.95rem;font-weight:500;transition:background 0.15s;text-align:left;}
-.drawer-theme-btn:hover{background:var(--surface2);}
+.drawer-nav-item .d-badge{margin-left:auto;background:#EF4444;color:white;font-size:0.68rem;font-weight:700;border-radius:20px;padding:2px 7px;min-width:18px;text-align:center;}
+.drawer-footer{padding:12px 16px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:flex-start;}
+.drawer-theme-btn{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:1.15rem;line-height:42px;transition:all 0.2s;padding:0;text-align:center;}
+.drawer-theme-btn span{display:block;width:100%;text-align:center;line-height:42px;}
+.drawer-theme-btn:hover{background:var(--primary);border-color:var(--primary);}
 @media(max-width:768px){
   .hamburger-btn{display:flex;align-items:center;justify-content:center;}
   .header-right{margin-left:auto;position:relative;z-index:2;}
   .drawer-overlay{display:block;}
-  .mobile-tab-title{display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;white-space:nowrap;}
+  .mobile-tab-title{display:none !important;}
   /* 기존 탭 버튼 + 테마 토글 숨기기 */
   .header-nav{display:none !important;}
   #themeToggleBtn{display:none !important;}
@@ -282,36 +289,26 @@ textarea{resize:vertical;min-height:80px;}
   .hr-event-bar{font-size:0.52rem;}
   .hr-dot{width:5px;height:5px;}
 }
+/* ── 탭 전용 FAB ── */
+.tab-fab-wrap{position:fixed;bottom:24px;right:24px;flex-direction:column;align-items:flex-end;gap:10px;z-index:500;}
+.tab-fab-main{width:58px;height:58px;border-radius:50%;background:rgba(15,23,42,0.5);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15);cursor:pointer;font-size:1.5rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:all 0.25s;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.tab-fab-main:hover{background:rgba(79,70,229,0.7);transform:scale(1.08);}
+.tab-fab-main:active{transform:scale(0.93);}
+.tab-fab-items{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.tab-fab-item{opacity:0;transform:translateY(12px);transition:opacity 0.22s ease,transform 0.22s ease;pointer-events:none;}
+.tab-fab-item.show{opacity:1;transform:translateY(0);pointer-events:all;}
+.tab-fab-item button{white-space:nowrap;padding:10px 20px;border-radius:30px;border:1px solid rgba(255,255,255,0.15);background:rgba(15,23,42,0.75);color:rgba(255,255,255,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:background 0.2s;font-family:inherit;}
+.tab-fab-item button:hover{background:rgba(79,70,229,0.7);}
+body.light .tab-fab-main{background:rgba(241,245,249,0.5);color:var(--text);border:1px solid rgba(0,0,0,0.12);}
+body.light .tab-fab-item button{background:rgba(255,255,255,0.9);color:var(--text);border:1px solid rgba(0,0,0,0.12);}
 </style>
-  <style>
-    @font-face {
-      font-family: 'NanumSquareNeo';
-      src: url('fonts/NanumSquareNeoOTF-Eb.woff2') format('woff2'),
-           url('fonts/NanumSquareNeoOTF-Eb.otf') format('opentype');
-      font-weight: 800;
-      font-style: normal;
-    }
-    @font-face {
-      font-family: 'NanumSquareNeo';
-      src: url('fonts/NanumSquareNeoOTF-Rg.woff2') format('woff2'),
-           url('fonts/NanumSquareNeoOTF-Rg.otf') format('opentype');
-      font-weight: 400;
-      font-style: normal;
-    }
-    body {
-      font-family: 'NanumSquareNeo', sans-serif;
-      font-weight: 400;
-    }
-    [contenteditable] b,[contenteditable] strong{font-weight:800 !important;}
-  </style>
 </head>
 <body>
 <header class="header">
   <div class="header-left">
-    <div class="header-title" id="headerTitle" onclick="openTitleEditor()">
-      <span class="header-title-emoji" id="headerEmoji">📚</span>
-      <span class="header-title-text" id="headerName">Kosick</span>
-    </div>
+    <span class="header-title-emoji" id="headerEmoji" style="display:none;">📚</span>
+    <span class="header-title-text" id="headerName" style="display:none;">Kosick</span>
+    <div id="headerSectionTitle" style="font-size:1.05rem;font-weight:700;display:flex;align-items:center;gap:5px;">🏠 홈</div>
   </div>
   <nav class="header-nav">
   <button class="nav-btn active" onclick="showSection('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">홈</span></button>
@@ -323,8 +320,6 @@ textarea{resize:vertical;min-height:80px;}
 </nav>
   <span class="mobile-tab-title" id="mobileTabTitle">홈</span>
   <div class="header-right">
-    <div class="header-date" id="currentDate"></div>
-    <button id="saveBtn" onclick="manualSave()" title="수동 저장" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:0 12px;height:34px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all 0.2s;flex-shrink:0;">💾 저장</button>
     <button id="themeToggleBtn" onclick="toggleTheme()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">🌙</button>
 <button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" title="메뉴" style="position:relative;">☰<span id="hamburgerBadge" style="display:none;position:absolute;top:2px;right:2px;background:#EF4444;color:white;font-size:0.6rem;font-weight:700;min-width:15px;height:15px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;"></span></button>
   </div>
@@ -347,19 +342,11 @@ textarea{resize:vertical;min-height:80px;}
     </div>
   </section>
   <section id="bookmarks" class="section">
-    <div class="section-header">
-      <div class="section-title">🔖 즐겨찾기</div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-secondary" onclick="openAddGroupModal()">+ 그룹</button>
-        <button class="btn btn-primary" onclick="openAddBookmarkModal()">+ 즐겨찾기</button>
-      </div>
-    </div>
     <div class="search-box"><span class="search-icon">🔍</span><input type="text" spellcheck="false" placeholder="즐겨찾기 검색..." oninput="searchBookmarks(this.value)"></div>
     <div id="bookmarkList"></div>
   </section>
   <section id="memos" class="section"><div id="memoContent"></div></section>
   <section id="students" class="section">
-    <div class="section-header"><div class="section-title">👨‍🎓 학생 관리</div></div>
     <div class="sub-nav">
       <button class="sub-nav-btn active" onclick="showStudentTab('classSection',this)">🏫 학급 관리</button>
       <button class="sub-nav-btn" onclick="showStudentTab('evalSection',this)">📊 수행평가</button>
@@ -368,29 +355,23 @@ textarea{resize:vertical;min-height:80px;}
     <div id="classSection" class="student-tab active">
       <div class="section-header" style="margin-bottom:16px;">
         <div style="font-size:1rem;font-weight:600;">학급 목록 <span style="font-size:0.75rem;color:var(--text-secondary);font-weight:400;">⠿ 드래그로 순서 변경</span></div>
-        <button class="btn btn-primary" onclick="openModal('addClassModal')">+ 학급 추가</button>
       </div>
       <div id="classListContent"></div>
     </div>
     <div id="evalSection" class="student-tab">
       <div class="section-header" style="margin-bottom:16px;">
         <div style="font-size:1rem;font-weight:600;">수행평가 목록 <span style="font-size:0.75rem;color:var(--text-secondary);font-weight:400;">⠿ 드래그로 순서 변경</span></div>
-        <button class="btn btn-primary" onclick="openAddEvalModal()">+ 수행평가 추가</button>
       </div>
       <div id="classChipsArea"></div>
       <div id="evalListContent"></div>
     </div>
     <div id="counselingSection" class="student-tab">
-      <div class="section-header" style="margin-bottom:16px;"><div style="font-size:1rem;font-weight:600;">상담기록</div><button class="btn btn-primary" onclick="openNewCounselingModal()">+ 추가</button></div>
+<div class="section-header" style="margin-bottom:16px;"><div style="font-size:1rem;font-weight:600;">상담기록</div></div>
       <div class="search-box"><span class="search-icon">🔍</span><input type="text" spellcheck="false" placeholder="학생 이름 검색..." oninput="searchCounseling(this.value)"></div>
       <div id="counselingList" class="items-list"></div>
     </div>
   </section>
   <section id="homeroom" class="section">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div class="section-title" style="margin-bottom:0;">👩‍🏫 담임</div>
-    <div id="hrMyClassDisplay"></div>
-  </div>
   <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:16px;">
     <button class="cal-nav-btn" onclick="changeHrMonth(-1)" style="width:38px;height:38px;font-size:1.3rem;">‹</button>
     <div id="hrCalendarTitle" style="min-width:150px;text-align:center;font-size:1.1rem;font-weight:700;color:var(--text);"></div>
@@ -414,7 +395,6 @@ textarea{resize:vertical;min-height:80px;}
   <div class="hr-unsubmitted" id="hrUnsubmittedAlert"></div>
 </section>
   <section id="timetable" class="section">
-    <div class="section-header"><div class="section-title">📅 시간표</div></div>
     <div class="card"><div class="timetable"><div class="timetable-grid" id="timetableGrid"></div></div></div>
     <p style="font-size:0.82rem;color:var(--text-secondary);text-align:center;margin-top:8px;">셀을 클릭하면 수업을 추가/수정할 수 있어요</p>
   </section>
@@ -802,6 +782,12 @@ textarea{resize:vertical;min-height:80px;}
     </div>
   </div>
 </div>
+<!-- ── 탭 전용 FAB ── -->
+<div class="tab-fab-wrap" id="tabFabWrap" style="display:none;">
+  <div class="tab-fab-items" id="tabFabItems"></div>
+  <button class="tab-fab-main" id="tabFabMain" onclick="toggleTabFab()">+</button>
+</div>
+<button class="fab-save" id="saveBtn" onclick="manualSave()" title="저장">💾</button>
 <div class="toast" id="toast"></div>
 <script>
 /* ── 유틸 ── */
@@ -891,8 +877,7 @@ document.addEventListener('touchstart',e=>{
   try{const bms=JSON.parse(localStorage.getItem('bookmarks')||'[]');const m=bms.map(b=>({groupId:null,...b}));if(JSON.stringify(m)!==JSON.stringify(bms))localStorage.setItem('bookmarks',JSON.stringify(m));}catch(e){}
   try{const items=JSON.parse(localStorage.getItem('memoItems')||'[]');let ch=false;const m=items.map(i=>{if(i.priority===undefined){i.priority=false;ch=true;}if(i.deadline===undefined){i.deadline='';ch=true;}return i;});if(ch)localStorage.setItem('memoItems',JSON.stringify(m));}catch(e){}
 })();
-function updateDate(){const n=new Date(),d=['일','월','화','수','목','금','토'];document.getElementById('currentDate').textContent=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 (${d[n.getDay()]})`;}
-updateDate();
+function updateDate(){const el=document.getElementById('currentDate');if(!el)return;const n=new Date(),d=['일','월','화','수','목','금','토'];el.textContent=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 (${d[n.getDay()]})`;}
 function initColors(){const p=localStorage.getItem('colorPrimary')||'#818CF8',s=localStorage.getItem('colorSecondary')||'#10B981';document.documentElement.style.setProperty('--primary',p);document.documentElement.style.setProperty('--primary-light',p);document.documentElement.style.setProperty('--secondary',s);}
 initColors();
 function initHeaderTitle(){const e=localStorage.getItem('titleEmoji')||'📚',n=localStorage.getItem('titleName')||'Kosick';document.getElementById('headerEmoji').textContent=e;const el=document.getElementById('headerName');el.textContent=n;el.style.color='';el.style.webkitTextStroke='';el.style.paintOrder='';}
@@ -902,7 +887,7 @@ function openTitleEditor(){document.getElementById('titleEmoji').value=localStor
 function saveTitle(){const e=document.getElementById('titleEmoji').value.trim()||'📚',n=document.getElementById('titleName').value.trim()||'Kosick',p=document.getElementById('colorPrimary').value,s=document.getElementById('colorSecondary').value;localStorage.setItem('titleEmoji',e);localStorage.setItem('titleName',n);localStorage.setItem('colorPrimary',p);localStorage.setItem('colorSecondary',s);initHeaderTitle();initColors();if(window._syncSettings)window._syncSettings();closeModal('titleEditorModal');showToast('✅ 저장되었습니다');}
 function manualSave(){
   const btn=document.getElementById('saveBtn');
-  if(btn){btn.textContent='💾 저장중...';btn.disabled=true;btn.style.color='var(--primary-light)';}
+  if(btn){btn.textContent='⏳';btn.disabled=true;btn.style.opacity='0.7';}
   /* ① contenteditable 중 저장 안 된 내용 먼저 강제 flush */
   document.querySelectorAll('[contenteditable="true"]').forEach(el=>{
     if(!_dirtyEls.has(el))return;
@@ -914,12 +899,12 @@ function manualSave(){
     setTimeout(()=>{
       window._manualSave();
       setTimeout(()=>{
-        if(btn){btn.textContent='💾 저장';btn.disabled=false;btn.style.color='';}
+        if(btn){btn.textContent='💾';btn.disabled=false;btn.style.opacity='';}
         showToast('✅ 수동 저장 완료!');
       },1500);
     },150);
   }else{
-    if(btn){btn.textContent='💾 저장';btn.disabled=false;}
+    if(btn){btn.textContent='💾';btn.disabled=false;}
     showToast('❌ 저장 모듈 초기화 중입니다. 잠시 후 다시 시도해주세요.');
   }
 }
@@ -932,15 +917,19 @@ function showSection(id,btn){
   if(btn)btn.classList.add('active');
   /* ★ 모바일 탭 제목 업데이트 */
 const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'메모',students:'학생관리',timetable:'시간표',homeroom:'담임'};
+  const SECTION_EMOJIS={home:'🏠',bookmarks:'🔖',memos:'📝',students:'👨‍🎓',timetable:'📅',homeroom:'👩‍🏫'};
   const titleEl=document.getElementById('mobileTabTitle');
   if(titleEl)titleEl.textContent=SECTION_NAMES[id]||id;
+  const secTitleEl=document.getElementById('headerSectionTitle');
+  if(secTitleEl)secTitleEl.textContent=(SECTION_EMOJIS[id]||'')+' '+(SECTION_NAMES[id]||id);
   /* ★ 드로어 활성 항목 업데이트 */
   document.querySelectorAll('.drawer-nav-item').forEach(b=>b.classList.toggle('active',b.dataset.section===id));
   /* ★ 드로어 닫기 */
   closeDrawer();
 ({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[id])?.();
+updateTabFab(id);
 }
-function showStudentTab(id,btn){document.querySelectorAll('.student-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sub-nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');({classSection:renderClasses,evalSection:renderEvalList,counselingSection:renderCounseling}[id])?.();}
+function showStudentTab(id,btn){document.querySelectorAll('.student-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sub-nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');({classSection:renderClasses,evalSection:renderEvalList,counselingSection:renderCounseling}[id])?.();updateStudentsFab();}
 function openModal(id){document.getElementById(id).classList.add('active');}
 function closeModal(id){document.getElementById(id).classList.remove('active');document.getElementById(id).querySelectorAll('input:not([type=hidden]),textarea').forEach(el=>{if(el.type!=='color')el.value='';});document.getElementById(id).querySelectorAll('select').forEach(s=>s.selectedIndex=0);}
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{
@@ -995,7 +984,7 @@ function renderCalendar(){
   document.getElementById('calendarTitle').textContent=`${y}년 ${m+1}월`;
 
   const last=new Date(y,m+1,0).getDate();
-  const offset=(new Date(y,m,1).getDay()+6)%7;
+  const offset=new Date(y,m,1).getDay();
   const totalCurrentCells=offset+last;
   const trailingCount=totalCurrentCells%7===0?0:7-(totalCurrentCells%7);
   const totalCells=totalCurrentCells+trailingCount;
@@ -1049,7 +1038,7 @@ function renderCalendar(){
     days.forEach(ds=>{
       if(!schedDayMap[ds])schedDayMap[ds]=[];
       const d=new Date(ds+'T12:00:00');
-      const col=(d.getDay()+6)%7;
+      const col=d.getDay();
       schedDayMap[ds].push({
         ...s,isMulti:true,
         showLabel:labelDays.has(ds),
@@ -1070,8 +1059,8 @@ function renderCalendar(){
 
   /* ── 헤더 ── */
   let headerHtml='<div class="cal-days-header">';
-  ['월','화','수','목','금','토','일'].forEach((lbl,i)=>{
-    headerHtml+=`<div class="cal-header${i===5?' sat':i===6?' sun':''}">${lbl}</div>`;
+  ['일','월','화','수','목','금','토'].forEach((lbl,i)=>{
+    headerHtml+=`<div class="cal-header${i===6?' sat':i===0?' sun':''}">${lbl}</div>`;
   });
   headerHtml+='</div>';
 
@@ -1084,13 +1073,11 @@ function renderCalendar(){
     const dayNum=d.getDate();
     const isCurrentMonth=d.getMonth()===m&&d.getFullYear()===y;
     const isToday=today.getFullYear()===d.getFullYear()&&today.getMonth()===d.getMonth()&&today.getDate()===d.getDate();
-    const dow=(d.getDay()+6)%7;
-
+    const dow=d.getDay();
     let cls='cal-day';
     if(isToday)cls+=' today';
-    else if(dow===5)cls+=' saturday';
-    else if(dow===6)cls+=' sunday';
-
+    else if(dow===6)cls+=' saturday';
+    else if(dow===0)cls+=' sunday';
     const dimStyle=isCurrentMonth?'':'opacity:0.38;';
 
     const sdots=schedDayMap[ds]||[];
@@ -1350,8 +1337,8 @@ function clearMemoDeadline(id){
   if(document.getElementById('home').classList.contains('active'))renderCalendar();
   showToast('✅ 기한이 제거되었습니다');
 }
-function handleMemoTextKeydown(e,id,el){if(e.key==='Enter'){e.preventDefault();return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('styleWithCSS',false,false);document.execCommand('bold');setTimeout(()=>updateMemoText(id,el.innerHTML),0);}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');setTimeout(()=>updateMemoText(id,el.innerHTML),0);}}
-function handleDetailKeydown(e,id,el){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('styleWithCSS',false,false);document.execCommand('bold');setTimeout(()=>updateMemoDetail(id,el.innerHTML),0);return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');setTimeout(()=>updateMemoDetail(id,el.innerHTML),0);return;}if(e.key==='Enter')setTimeout(()=>updateMemoDetail(id,el.innerHTML),0);}
+function handleMemoTextKeydown(e,id,el){if(e.key==='Enter'){e.preventDefault();return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');updateMemoText(id,el.innerHTML);}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');updateMemoText(id,el.innerHTML);}}
+function handleDetailKeydown(e,id,el){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');updateMemoDetail(id,el.innerHTML);return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');updateMemoDetail(id,el.innerHTML);return;}if(e.key==='Enter')setTimeout(()=>updateMemoDetail(id,el.innerHTML),0);}
 function openAddListModal(){selectedListColor=LIST_COLORS[0];document.getElementById('listColorPicker').innerHTML=LIST_COLORS.map(c=>`<div class="color-option ${c===selectedListColor?'selected':''}" style="background:${c};" onclick="selectListColor('${c}',this)"></div>`).join('');openModal('addListModal');}
 function selectListColor(color,el){selectedListColor=color;document.querySelectorAll('#listColorPicker .color-option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');}
 function saveNewList(){const name=document.getElementById('newListName').value.trim();if(!name){showToast('❌ 목록 이름을 입력해주세요');return;}const lists=DB.get('memoLists'),nl={id:Date.now(),name,color:selectedListColor};lists.push(nl);DB.set('memoLists',lists);closeModal('addListModal');renderMemoSection();updateNavBadges();showToast('✅ 목록이 만들어졌습니다');}
@@ -2317,7 +2304,7 @@ function renderHrCalendar(){
   const y=hrCalDate.getFullYear(),m=hrCalDate.getMonth(),today=new Date();
   document.getElementById('hrCalendarTitle').textContent=`${y}년 ${m+1}월`;
   const last=new Date(y,m+1,0).getDate();
-  const offset=(new Date(y,m,1).getDay()+6)%7;
+  const offset=new Date(y,m,1).getDay();
   const totalCells=offset+last+(((offset+last)%7===0)?0:7-((offset+last)%7));
   const gridStart=new Date(y,m,1-offset);
   function cds(i){const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -2335,7 +2322,7 @@ function renderHrCalendar(){
   specialProgs.forEach(sp=>{const cur=new Date(sp.startDate+'T12:00:00'),end=new Date(sp.endDate+'T12:00:00');while(cur<=end){const ds=cur.toISOString().split('T')[0];initDay(ds);dayMap[ds].special.push(sp);cur.setDate(cur.getDate()+1);}});
   counselings.forEach(c=>{initDay(c.date);dayMap[c.date].counseling.push(c);});
   let hHtml='';
-  ['월','화','수','목','금','토','일'].forEach((lbl,i)=>{hHtml+=`<div class="cal-header${i===5?' sat':i===6?' sun':''}">${lbl}</div>`;});
+  ['일','월','화','수','목','금','토'].forEach((lbl,i)=>{hHtml+=`<div class="cal-header${i===6?' sat':i===0?' sun':''}">${lbl}</div>`;});
   document.getElementById('hrCalDaysHeader').innerHTML=hHtml;
   let bHtml='';
   for(let i=0;i<totalCells;i++){
@@ -2343,12 +2330,12 @@ function renderHrCalendar(){
     const dayNum=d.getDate();
     const isCurMonth=d.getMonth()===m&&d.getFullYear()===y;
     const isToday=today.getFullYear()===d.getFullYear()&&today.getMonth()===d.getMonth()&&today.getDate()===d.getDate();
-    const dow=(d.getDay()+6)%7;
+    const dow=d.getDay();
     let cls='hr-cal-day';
     if(!isCurMonth)cls+=' empty';
     else if(isToday)cls+=' today';
-    else if(dow===5)cls+=' saturday';
-    else if(dow===6)cls+=' sunday';
+    else if(dow===6)cls+=' saturday';
+    else if(dow===0)cls+=' sunday';
     const ev=dayMap[ds]||{};
     let dots='<div class="hr-event-dots">';
     const attTypes=[...new Set((ev.att||[]).map(a=>a.type))];
@@ -2551,19 +2538,75 @@ function saveSpecialProg(){
   showToast('✅ 등록되었습니다');
 }
 function deleteSpecialProg(id){if(!confirm('삭제할까요?'))return;DB.set('specialPrograms',DB.get('specialPrograms').filter(s=>s.id!==id));renderHrCalendar();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('✅ 삭제되었습니다');}
+/* ── 탭 전용 FAB ── */
+let _tabFabOpen=false;
+function updateTabFab(sectionId){
+  const wrap=document.getElementById('tabFabWrap');
+  if(!wrap)return;
+  const fabSections=['homeroom','students','bookmarks'];
+  if(!fabSections.includes(sectionId)){wrap.style.display='none';closeTabFab();return;}
+  wrap.style.display='flex';
+  closeTabFab();
+  const main=document.getElementById('tabFabMain');
+  const items=document.getElementById('tabFabItems');
+  if(!main||!items)return;
+  if(sectionId==='homeroom'){
+    main.textContent='⚙️';
+    items.innerHTML=`<div class="tab-fab-item"><button onclick="openHrClassSetting();closeTabFab()">🏫 담임 학급 설정</button></div>`;
+  }else if(sectionId==='students'){
+    main.textContent='+';
+    updateStudentsFab();
+  }else if(sectionId==='bookmarks'){
+    main.textContent='+';
+    items.innerHTML=`<div class="tab-fab-item"><button onclick="openAddGroupModal();closeTabFab()">📁 + 그룹</button></div><div class="tab-fab-item"><button onclick="openAddBookmarkModal();closeTabFab()">🔖 + 즐겨찾기</button></div>`;
+  }
+}
+function updateStudentsFab(){
+  const items=document.getElementById('tabFabItems');
+  if(!items)return;
+  const activeTab=document.querySelector('.student-tab.active');
+  if(!activeTab)return;
+  const tabId=activeTab.id;
+  if(tabId==='classSection'){items.innerHTML=`<div class="tab-fab-item"><button onclick="openModal('addClassModal');closeTabFab()">🏫 + 학급 추가</button></div>`;}
+  else if(tabId==='evalSection'){items.innerHTML=`<div class="tab-fab-item"><button onclick="openAddEvalModal();closeTabFab()">📊 + 수행평가 추가</button></div>`;}
+  else if(tabId==='counselingSection'){items.innerHTML=`<div class="tab-fab-item"><button onclick="openNewCounselingModal();closeTabFab()">💬 + 상담 추가</button></div>`;}
+}
+function toggleTabFab(){
+  _tabFabOpen=!_tabFabOpen;
+  const main=document.getElementById('tabFabMain');
+  const items=document.getElementById('tabFabItems');
+  if(!main||!items)return;
+  if(_tabFabOpen){
+    const allItems=[...items.querySelectorAll('.tab-fab-item')].reverse();
+    allItems.forEach((el,i)=>setTimeout(()=>el.classList.add('show'),i*70));
+    main.style.transform=main.textContent.trim()==='+'?'rotate(45deg)':'rotate(90deg)';
+    main.style.background='rgba(79,70,229,0.7)';
+  }else{
+    closeTabFab();
+  }
+}
+function closeTabFab(){
+  _tabFabOpen=false;
+  const items=document.getElementById('tabFabItems');
+  const main=document.getElementById('tabFabMain');
+  if(items)items.querySelectorAll('.tab-fab-item').forEach(el=>el.classList.remove('show'));
+  if(main){main.style.transform='';main.style.background='';}
+}
+document.addEventListener('click',e=>{
+  if(_tabFabOpen&&!e.target.closest('#tabFabWrap'))closeTabFab();
+});
 </script>
 <!-- ── 모바일 드로어 네비게이션 ── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobileDrawer">
-    <div class="drawer-header" style="justify-content:center;position:relative;">
-    <div id="drawerAppName" style="font-weight:700;font-size:1.1rem;text-align:center;">Kosick</div>
-    <button class="drawer-close-btn" onclick="closeDrawer()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);">✕</button>
+    <div class="drawer-header" style="justify-content:space-between;">
+    <div id="drawerAppName" style="font-weight:700;font-size:1.1rem;">Kosick</div>
+    <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
   </div>
   <nav class="drawer-nav-list" id="drawerNavList"></nav>
   <div class="drawer-footer">
-    <button class="drawer-theme-btn" onclick="toggleTheme();updateDrawerThemeBtn();">
-      <span class="d-emoji" id="drawerThemeIcon">🌙</span>
-      <span id="drawerThemeLabel">라이트 모드로 전환</span>
+    <button class="drawer-theme-btn" onclick="toggleTheme();updateDrawerThemeBtn();" title="테마 전환">
+      <span id="drawerThemeIcon">🌙</span>
     </button>
   </div>
 </div>
