@@ -15,6 +15,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--primary:#4F46E5;--primary-light:#818CF8;--secondary:#10B981;--background:#0F172A;--surface:#1E293B;--surface2:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;--border:#334155;--danger:#EF4444;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
 body.light{--background:#F1F5F9;--surface:#FFFFFF;--surface2:#E2E8F0;--text:#0F172A;--text-secondary:#64748B;--border:#CBD5E1;--shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
+html{background:var(--background);}
 body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--background);color:var(--text);min-height:100vh;}
 .header{background:var(--background);padding:0 20px;padding-left:calc(20px + env(safe-area-inset-left));padding-right:calc(20px + env(safe-area-inset-right));height:calc(58px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;position:sticky;top:0;z-index:100;}
 .header-left{flex-shrink:0;}
@@ -841,7 +842,6 @@ function _flushMemoEl(el){
   if(!el.textContent.trim()){html='';el.innerHTML='';}
   if(textId)updateMemoText(Number(textId),html);
   else if(detailId)updateMemoDetail(Number(detailId),html);
-  showToast('✅ 저장되었습니다');
 }
 
 /* ① 타이핑 중 → 0.8초 뒤 자동저장 */
@@ -908,8 +908,8 @@ function manualSave(){
     showToast('❌ 저장 모듈 초기화 중입니다. 잠시 후 다시 시도해주세요.');
   }
 }
-function toggleTheme(){const l=document.body.classList.toggle('light');document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark');if(window._syncSettings)window._syncSettings();}
-(function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.getElementById('themeToggleBtn').textContent='☀️';}})();
+function toggleTheme(){const l=document.body.classList.toggle('light');document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark');document.querySelector('meta[name="theme-color"]').setAttribute('content',l?'#F1F5F9':'#0F172A');if(window._syncSettings)window._syncSettings();}
+(function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.getElementById('themeToggleBtn').textContent='☀️';document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');}})();
 function showSection(id,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -2615,36 +2615,66 @@ document.addEventListener('click',e=>{
 </div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import{getFirestore,doc,setDoc,getDoc}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import{getFirestore,doc,setDoc,getDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyCqoVkHtnEsQRwExsthe4sASWID5H2bzuQ",authDomain:"kosick-dashboard.firebaseapp.com",projectId:"kosick-dashboard",storageBucket:"kosick-dashboard.firebasestorage.app",messagingSenderId:"990702080590",appId:"1:990702080590:web:9fe9a356db03c0eea4291f"};
 const fb=initializeApp(cfg),fs=getFirestore(fb);
 const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms'];
 const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','theme','homeroomMyClassId'];
 const ref=doc(fs,'kosick','data');
-function syncAll(){const p={};DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));SK.forEach(k=>p[k]=localStorage.getItem(k)||'');p._savedAt=Date.now();localStorage.setItem('_savedAt',p._savedAt);setDoc(ref,p).catch(console.error);}
+let _isSaving=false;
+function syncAll(){
+  const p={};
+  DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));
+  SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
+  p._savedAt=Date.now();
+  _isSaving=true;
+  setDoc(ref,p)
+    .then(()=>{localStorage.setItem('_savedAt',p._savedAt);_isSaving=false;})
+    .catch(e=>{console.error('저장 실패:',e);showToast('❌ 저장 실패! 네트워크를 확인해주세요.');_isSaving=false;});
+}
 window._syncSettings=syncAll;
+function applyRemoteData(data){
+  DK.forEach(k=>{if(data[k]!==undefined)localStorage.setItem(k,JSON.stringify(data[k]));});
+  SK.forEach(k=>{if(data[k]!==undefined&&data[k]!=='')localStorage.setItem(k,data[k]);});
+  localStorage.setItem('_savedAt',Number(data._savedAt||0));
+  initHeaderTitle();initColors();
+  const l=localStorage.getItem('theme')==='light';
+  document.body.classList.toggle('light',l);
+  document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';
+  const activeId=document.querySelector('.section.active')?.id;
+  if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();
+}
 async function loadData(){
   try{
     const snap=await getDoc(ref);
-    if(!snap.exists()){syncAll();return;}
-    const data=snap.data();
-    const localTime=Number(localStorage.getItem('_savedAt')||0);
-    const fireTime=Number(data._savedAt||0);
-    if(fireTime>localTime){
-      DK.forEach(k=>{if(data[k]!==undefined)localStorage.setItem(k,JSON.stringify(data[k]));});
-      SK.forEach(k=>{if(data[k]!==undefined&&data[k]!=='')localStorage.setItem(k,data[k]);});
-      localStorage.setItem('_savedAt',fireTime);
-    }else{syncAll();}
+    if(!snap.exists()){syncAll();}
+    else{
+      const data=snap.data();
+      const localTime=Number(localStorage.getItem('_savedAt')||0);
+      const fireTime=Number(data._savedAt||0);
+      if(fireTime>localTime){applyRemoteData(data);}
+      else{syncAll();}
+    }
     initHeaderTitle();initColors();
     const l=localStorage.getItem('theme')==='light';
     document.body.classList.toggle('light',l);
     document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';
     updateHome();
     showToast('☁️ 데이터 불러오기 완료');
-    }catch(e){
+  }catch(e){
     console.error('불러오기 실패:',e);
     showToast('❌ Firebase 데이터를 불러오지 못했습니다. 설정을 확인해주세요.');
   }
+  onSnapshot(ref,(snap)=>{
+    if(!snap.exists()||_isSaving)return;
+    const data=snap.data();
+    const localTime=Number(localStorage.getItem('_savedAt')||0);
+    const fireTime=Number(data._savedAt||0);
+    if(fireTime>localTime){
+      applyRemoteData(data);
+      showToast('🔄 다른 기기에서 변경사항이 반영되었습니다');
+    }
+  });
 }
 window._manualSave=syncAll;
 let _debounceTimer=null;
