@@ -2624,11 +2624,14 @@ const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','theme','home
 const ref=doc(fs,'kosick','data');
 let _isSaving=false;
 let _firebaseLoaded=false;
+let _firebaseReady=false;
 function syncAll(){
+  if(!_firebaseReady){console.warn('🛡️ 안전장치: Firebase 미로드 상태에서 저장 차단');showToast('⏳ 데이터 로딩 중... 잠시 후 자동 저장됩니다');return;}
   const p={};
   DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));
-  if(_firebaseLoaded){const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});if(!_hasData){console.warn('🛡️ 안전장치: 로컬이 비어있어 Firebase 덮어쓰기 차단');return;}}
-  SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
+  const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
+  if(!_hasData){console.warn('🛡️ 안전장치: 로컬이 비어있어 Firebase 덮어쓰기 차단');showToast('⚠️ 데이터가 비어있어 저장이 차단되었습니다');return;}
+SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
 p._savedAt=Date.now();
   _isSaving=true;
   setDoc(ref,p)
@@ -2652,6 +2655,7 @@ const activeId=document.querySelector('.section.active')?.id;
 async function loadData(){
   try{
     const snap=await getDoc(ref);
+    _firebaseReady=true;
     if(!snap.exists()){syncAll();}
     else{
       _firebaseLoaded=true;
