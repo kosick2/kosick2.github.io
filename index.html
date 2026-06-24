@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Kosick</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="shortcut icon" href="logo.png">
@@ -16,7 +16,7 @@
 :root{--primary:#4F46E5;--primary-light:#818CF8;--secondary:#10B981;--background:#0F172A;--surface:#1E293B;--surface2:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;--border:#334155;--danger:#EF4444;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
 body.light{--background:#F1F5F9;--surface:#FFFFFF;--surface2:#E2E8F0;--text:#0F172A;--text-secondary:#64748B;--border:#CBD5E1;--shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
 body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--background);color:var(--text);min-height:100vh;}
-.header{background:var(--background);padding:0 20px;height:58px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;position:sticky;top:0;z-index:100;}
+.header{background:var(--background);padding:0 20px;padding-left:calc(20px + env(safe-area-inset-left));padding-right:calc(20px + env(safe-area-inset-right));height:calc(58px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;position:sticky;top:0;z-index:100;}
 .header-left{flex-shrink:0;}
 .header-title{display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap;}
 .header-title-emoji{font-size:1.2rem;line-height:1;}
@@ -951,7 +951,7 @@ function updateNavBadges(){
   ).length;
 
   // 담임: 서류 마감이 오늘/내일이고 미제출인 것
-  const attRecs=DB.get('attendanceRecords').filter(r=>!r.documented);
+const attRecs=DB.get('attendanceRecords').filter(r=>!r.documented&&!r.missedSubmission);
   const homeroomCnt=attRecs.filter(r=>
     r.deadline&&(r.deadline===todayStr||r.deadline===tomorrowStr)
   ).length;
@@ -2179,7 +2179,7 @@ function buildDrawerNav(){
   const _tomorrowStr=new Date(_today.getTime()+864e5).toISOString().split('T')[0];
   const _memoItems=DB.get('memoItems').filter(i=>!i.completed);
   const _memoCnt=_memoItems.filter(i=>i.priority||(i.deadline&&(i.deadline===_todayStr||i.deadline===_tomorrowStr))).length;
-  const _attRecs=DB.get('attendanceRecords').filter(r=>!r.documented);
+  const _attRecs=DB.get('attendanceRecords').filter(r=>!r.documented&&!r.missedSubmission);
   const _hrCnt=_attRecs.filter(r=>r.deadline&&(r.deadline===_todayStr||r.deadline===_tomorrowStr)).length;
   const _badgeMap={memos:_memoCnt,homeroom:_hrCnt};
   list.innerHTML=DRAWER_SECTIONS.map(t=>{
@@ -2317,7 +2317,7 @@ function renderHrCalendar(){
   const counselings=DB.get('counselings').filter(c=>!hrSelectedClassId||classStudentNames.has(c.studentName));
   const dayMap={};
   function initDay(ds){if(!dayMap[ds])dayMap[ds]={att:[],counseling:[],fieldtrip:[],special:[],deadline:[]};}
-  attRecs.forEach(r=>{initDay(r.date);dayMap[r.date].att.push(r);if(r.deadline&&!r.documented){initDay(r.deadline);dayMap[r.deadline].deadline.push(r);}});
+attRecs.forEach(r=>{initDay(r.date);dayMap[r.date].att.push(r);if(r.deadline&&!r.documented&&!r.missedSubmission){initDay(r.deadline);dayMap[r.deadline].deadline.push(r);}});
   fieldTrips.forEach(ft=>{const cur=new Date(ft.startDate+'T12:00:00'),end=new Date(ft.endDate+'T12:00:00');while(cur<=end){const ds=cur.toISOString().split('T')[0];initDay(ds);dayMap[ds].fieldtrip.push(ft);cur.setDate(cur.getDate()+1);}});
   specialProgs.forEach(sp=>{const cur=new Date(sp.startDate+'T12:00:00'),end=new Date(sp.endDate+'T12:00:00');while(cur<=end){const ds=cur.toISOString().split('T')[0];initDay(ds);dayMap[ds].special.push(sp);cur.setDate(cur.getDate()+1);}});
   counselings.forEach(c=>{initDay(c.date);dayMap[c.date].counseling.push(c);});
@@ -2379,7 +2379,7 @@ function renderHrDayContent(){
   const ds=hrSelectedDate;
   const classes=DB.get('classes');
   const attRecs=DB.get('attendanceRecords').filter(r=>r.date===ds&&(!hrSelectedClassId||r.classId===hrSelectedClassId));
-  const deadlineRecs=DB.get('attendanceRecords').filter(r=>r.deadline===ds&&!r.documented&&(!hrSelectedClassId||r.classId===hrSelectedClassId));
+const deadlineRecs=DB.get('attendanceRecords').filter(r=>r.deadline===ds&&!r.documented&&!r.missedSubmission&&(!hrSelectedClassId||r.classId===hrSelectedClassId));
   const allCounselings=DB.get('counselings').filter(c=>c.date===ds);
   const classStudentNames=new Set();
   if(hrSelectedClassId){const cls=classes.find(c=>c.id===hrSelectedClassId);if(cls)cls.students.forEach(s=>classStudentNames.add(s.name));}
@@ -2389,16 +2389,14 @@ function renderHrDayContent(){
   let html='';
   if(deadlineRecs.length){
     html+=`<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 14px;margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;color:#EF4444;margin-bottom:8px;">⚠️ 오늘 서류 마감 (${deadlineRecs.length}건)</div>`;
-    deadlineRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];
-      html+=`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid rgba(239,68,68,0.2);"><span style="background:${at?.color};color:${at?.textColor};padding:2px 8px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);font-size:0.75rem;">사유일: ${r.date}</span><button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료">✅</button></div>`;});
-    html+=`</div>`;
-  }
+        deadlineRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];
+html+=`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid rgba(239,68,68,0.2);"><span style="background:${at?.color};color:${at?.textColor};padding:2px 8px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);font-size:0.75rem;">사유일: ${r.date}</span><button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료">✅</button></div>`;
+    });html+=`</div>`;}
   if(attRecs.length){
     html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);">📋 출결 기록</div>`;
-    attRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];const ds2=getDeadlineStatus(r.deadline);
-      html+=`<div class="hr-att-item"><span class="hr-att-badge" style="background:${at?.color};color:${at?.textColor};">${at?.label}</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.88rem;">${stud?.name||'?'}</div>${r.note?`<div style="font-size:0.75rem;color:var(--text-secondary);">${r.note}</div>`:''}<div style="font-size:0.72rem;color:var(--text-secondary);">마감: ${r.deadline} <span class="hr-deadline-badge ${ds2.cls}">${ds2.text}</span></div></div>${r.documented?'<span style="font-size:0.75rem;color:#10B981;white-space:nowrap;">✅완료</span>':`<button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료">✅</button>`}<button class="btn-icon" onclick="deleteAttRecord(${r.id})">✕</button></div>`;});
-    html+=`</div>`;
-  }
+        attRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];const ds2=getDeadlineStatus(r.deadline);
+html+=`<div class="hr-att-item"><span class="hr-att-badge" style="background:${at?.color};color:${at?.textColor};">${at?.label}</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.88rem;">${stud?.name||'?'}</div>${r.note?`<div style="font-size:0.75rem;color:var(--text-secondary);">${r.note}</div>`:''}<div style="font-size:0.72rem;color:var(--text-secondary);">마감: ${r.deadline} <span class="hr-deadline-badge ${ds2.cls}">${ds2.text}</span></div></div>${r.documented?'<span style="font-size:0.75rem;color:#10B981;white-space:nowrap;">✅완료</span>':r.missedSubmission?`<span style="font-size:0.75rem;color:#94A3B8;white-space:nowrap;">📋미제출</span><button class="btn-icon" onclick="cancelMissedSubmission(${r.id})" title="미제출 취소">↩️</button>`:`<button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료">✅</button>`}<button class="btn-icon" onclick="deleteAttRecord(${r.id})">✕</button></div>`;
+    });html+=`</div>`;}
   if(counselings.length){
     html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);">💜 상담 기록</div>`;
     const CTYPES2={academic:{label:'📚 학업'},career:{label:'🎯 진로'},personal:{label:'💙 개인/생활'},other:{label:'📋 기타'}};
@@ -2435,19 +2433,21 @@ function goToCounseling(counselingId){
 function renderHrUnsubmitted(){
   const c=document.getElementById('hrUnsubmittedAlert');if(!c)return;
   const today=new Date();today.setHours(0,0,0,0);
-  const recs=DB.get('attendanceRecords').filter(r=>(!hrSelectedClassId||r.classId===hrSelectedClassId)&&!r.documented);
-  if(!recs.length){c.innerHTML='';return;}
   const classes=DB.get('classes');
+const recs=DB.get('attendanceRecords').filter(r=>(!hrSelectedClassId||r.classId===hrSelectedClassId)&&!r.documented&&!r.missedSubmission);
+const missedRecs=DB.get('attendanceRecords').filter(r=>(!hrSelectedClassId||r.classId===hrSelectedClassId)&&r.missedSubmission);
+  if(!recs.length&&!missedRecs.length){c.innerHTML='';return;}
   const overdue=recs.filter(r=>new Date(r.deadline+'T00:00:00')<today);
   const urgent=recs.filter(r=>{const diff=Math.ceil((new Date(r.deadline+'T00:00:00')-today)/864e5);return diff>=0&&diff<=2;});
   const normal=recs.filter(r=>Math.ceil((new Date(r.deadline+'T00:00:00')-today)/864e5)>2);
   function recRow(r,borderColor){const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];const ds=getDeadlineStatus(r.deadline);
-    return `<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid ${borderColor};flex-wrap:wrap;"><span style="background:${at?.color};color:${at?.textColor};padding:1px 7px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);">${r.date}</span><span class="hr-deadline-badge ${ds.cls}" style="margin-left:auto;">${ds.text}</span><button class="btn-icon" style="font-size:0.7rem;" onclick="markDocumented(${r.id})" title="제출완료">✅</button><button class="btn-icon" style="font-size:0.7rem;" onclick="deleteAttRecord(${r.id})">✕</button></div>`;}
-  let html='<div class="card" style="margin-bottom:0;"><div class="card-title">📋 서류 미제출 현황</div>';
+return `<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid ${borderColor};flex-wrap:wrap;"><span style="background:${at?.color};color:${at?.textColor};padding:1px 7px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);">${r.date}</span><span class="hr-deadline-badge ${ds.cls}" style="margin-left:auto;">${ds.text}</span><button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" style="font-size:0.7rem;" onclick="markDocumented(${r.id})" title="제출완료">✅</button><button class="btn-icon" style="font-size:0.7rem;" onclick="deleteAttRecord(${r.id})">✕</button></div>`;}
+    let html=recs.length?'<div class="card" style="margin-bottom:0;"><div class="card-title">📋 서류 미제출 현황</div>':'';
   if(overdue.length){html+=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(239,68,68,0.1);border-radius:8px;border-left:3px solid #EF4444;"><div style="font-size:0.82rem;font-weight:700;color:#EF4444;margin-bottom:6px;">🚨 기한 초과 (${overdue.length}건)</div>${overdue.map(r=>recRow(r,'rgba(239,68,68,0.2)')).join('')}</div>`;}
   if(urgent.length){html+=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(252,211,77,0.1);border-radius:8px;border-left:3px solid #FCD34D;"><div style="font-size:0.82rem;font-weight:700;color:#D97706;margin-bottom:6px;">⏰ 곧 마감 (${urgent.length}건)</div>${urgent.map(r=>recRow(r,'rgba(252,211,77,0.2)')).join('')}</div>`;}
   if(normal.length){html+=`<div style="padding:10px 12px;background:var(--surface2);border-radius:8px;"><div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">📄 미제출 (${normal.length}건)</div>${normal.map(r=>recRow(r,'var(--border)')).join('')}</div>`;}
-  html+='</div>';
+  if(recs.length)html+='</div>';
+  if(missedRecs.length){html+=buildMissedRecordsHtml(missedRecs,classes);}
   c.innerHTML=html;
 }
 /* 출결 추가 */
@@ -2478,6 +2478,9 @@ function saveAttRecord(){
   showToast('✅ 출결 기록이 추가되었습니다');
 }
 function markDocumented(id){const recs=DB.get('attendanceRecords');const rec=recs.find(r=>r.id===id);if(rec){rec.documented=true;DB.set('attendanceRecords',recs);}renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('✅ 제출완료 처리되었습니다');}
+function markMissedSubmission(id){const recs=DB.get('attendanceRecords');const rec=recs.find(r=>r.id===id);if(rec){rec.missedSubmission=true;DB.set('attendanceRecords',recs);}renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('📋 미제출 처리되었습니다');}
+function cancelMissedSubmission(id){const recs=DB.get('attendanceRecords');const rec=recs.find(r=>r.id===id);if(rec){rec.missedSubmission=false;DB.set('attendanceRecords',recs);}renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('↩️ 미제출이 취소되었습니다');}
+function buildMissedRecordsHtml(missedRecs,classes){let html=`<div class="card" style="margin-top:12px;margin-bottom:0;border-top:3px solid #94A3B8;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0;"><div class="card-title" style="margin-bottom:0;">📋 미제출 처리된 기록 <span style="font-size:0.78rem;color:var(--text-secondary);font-weight:400;">${missedRecs.length}건</span></div><button onclick="const b=document.getElementById('missedRecordsBody');const show=b.style.display==='none';b.style.display=show?'block':'none';this.textContent=show?'접기 ▲':'펼치기 ▼';" style="font-size:0.78rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);cursor:pointer;white-space:nowrap;">펼치기 ▼</button></div><div id="missedRecordsBody" style="display:none;margin-top:10px;">`;missedRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];html+=`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;"><span style="background:${at?.color};color:${at?.textColor};padding:1px 7px;border-radius:20px;font-size:0.72rem;opacity:0.7;">${at?.label}</span><span style="font-weight:600;color:var(--text-secondary);">${stud?.name||'?'}</span><span style="color:var(--text-secondary);font-size:0.75rem;">${r.date}</span><span style="font-size:0.72rem;color:#94A3B8;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,0.15);margin-left:auto;">📋 미제출</span><button class="btn-icon" style="font-size:0.75rem;" onclick="cancelMissedSubmission(${r.id})" title="미제출 취소">↩️</button><button class="btn-icon" style="font-size:0.7rem;" onclick="deleteAttRecord(${r.id})">✕</button></div>`;});html+=`</div></div>`;return html;}
 function deleteAttRecord(id){if(!confirm('삭제할까요?'))return;DB.set('attendanceRecords',DB.get('attendanceRecords').filter(r=>r.id!==id));renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('✅ 삭제되었습니다');}
 /* 현체 */
 function openAddFieldTripModal(){
