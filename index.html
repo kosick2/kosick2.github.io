@@ -15,7 +15,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--primary:#4F46E5;--primary-light:#818CF8;--secondary:#10B981;--background:#0F172A;--surface:#1E293B;--surface2:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;--border:#334155;--danger:#EF4444;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
 body.light{--background:#F1F5F9;--surface:#FFFFFF;--surface2:#E2E8F0;--text:#0F172A;--text-secondary:#64748B;--border:#CBD5E1;--shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
-html{background:var(--background);}
+html{background:#0F172A;}html.light{background:#F1F5F9;}
 body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--background);color:var(--text);min-height:100vh;}
 .header{background:var(--background);padding:0 20px;padding-left:calc(20px + env(safe-area-inset-left));padding-right:calc(20px + env(safe-area-inset-right));height:calc(58px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;position:sticky;top:0;z-index:100;}
 .header-left{flex-shrink:0;}
@@ -908,8 +908,8 @@ function manualSave(){
     showToast('❌ 저장 모듈 초기화 중입니다. 잠시 후 다시 시도해주세요.');
   }
 }
-function toggleTheme(){const l=document.body.classList.toggle('light');document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark');document.querySelector('meta[name="theme-color"]').setAttribute('content',l?'#F1F5F9':'#0F172A');if(window._syncSettings)window._syncSettings();}
-(function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.getElementById('themeToggleBtn').textContent='☀️';document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');}})();
+function toggleTheme(){const l=document.body.classList.toggle('light');document.documentElement.classList.toggle('light',l);document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark');document.querySelector('meta[name="theme-color"]').setAttribute('content',l?'#F1F5F9':'#0F172A');if(window._syncSettings)window._syncSettings();}
+(function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.documentElement.classList.add('light');document.getElementById('themeToggleBtn').textContent='☀️';document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');}})();
 function showSection(id,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -2640,8 +2640,10 @@ function applyRemoteData(data){
   initHeaderTitle();initColors();
   const l=localStorage.getItem('theme')==='light';
   document.body.classList.toggle('light',l);
+  document.documentElement.classList.toggle('light',l);
   document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';
-  const activeId=document.querySelector('.section.active')?.id;
+  document.querySelector('meta[name="theme-color"]').setAttribute('content',l?'#F1F5F9':'#0F172A');
+const activeId=document.querySelector('.section.active')?.id;
   if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();
 }
 async function loadData(){
@@ -2658,6 +2660,7 @@ async function loadData(){
     initHeaderTitle();initColors();
     const l=localStorage.getItem('theme')==='light';
     document.body.classList.toggle('light',l);
+    document.documentElement.classList.toggle('light',l);
     document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';
     updateHome();
     showToast('☁️ 데이터 불러오기 완료');
