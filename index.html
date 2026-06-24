@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kosick">
 <meta name="theme-color" content="#0F172A">
+<script>if(localStorage.getItem('theme')==='light')document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--primary:#4F46E5;--primary-light:#818CF8;--secondary:#10B981;--background:#0F172A;--surface:#1E293B;--surface2:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;--border:#334155;--danger:#EF4444;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
@@ -2622,11 +2623,13 @@ const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','
 const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','theme','homeroomMyClassId'];
 const ref=doc(fs,'kosick','data');
 let _isSaving=false;
+let _firebaseLoaded=false;
 function syncAll(){
   const p={};
   DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));
+  if(_firebaseLoaded){const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});if(!_hasData){console.warn('🛡️ 안전장치: 로컬이 비어있어 Firebase 덮어쓰기 차단');return;}}
   SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
-  p._savedAt=Date.now();
+p._savedAt=Date.now();
   _isSaving=true;
   setDoc(ref,p)
     .then(()=>{localStorage.setItem('_savedAt',p._savedAt);_isSaving=false;})
@@ -2651,10 +2654,12 @@ async function loadData(){
     const snap=await getDoc(ref);
     if(!snap.exists()){syncAll();}
     else{
+      _firebaseLoaded=true;
       const data=snap.data();
       const localTime=Number(localStorage.getItem('_savedAt')||0);
       const fireTime=Number(data._savedAt||0);
-      if(fireTime>localTime){applyRemoteData(data);}
+      const _localHasData=DK.some(k=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');if(!v)return false;return Array.isArray(v)?v.length>0:(typeof v==='object'&&Object.keys(v).length>0);}catch(e){return false;}});
+      if(fireTime>=localTime||!_localHasData){applyRemoteData(data);}
       else{syncAll();}
     }
     initHeaderTitle();initColors();
