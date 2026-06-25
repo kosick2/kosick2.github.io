@@ -14,6 +14,7 @@
 <script>if(localStorage.getItem('theme')==='light'){document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');document.documentElement.classList.add('light');document.documentElement.style.background='#F1F5F9';}else{document.documentElement.style.background='#0F172A';}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
+#topSafeArea{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--background);z-index:200;pointer-events:none;}
 :root{--primary:#4F46E5;--primary-light:#818CF8;--secondary:#10B981;--background:#0F172A;--surface:#1E293B;--surface2:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;--border:#334155;--danger:#EF4444;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
 body.light{--background:#F1F5F9;--surface:#FFFFFF;--surface2:#E2E8F0;--text:#0F172A;--text-secondary:#64748B;--border:#CBD5E1;--shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
 html{background:#0F172A;}html.light{background:#F1F5F9;}
@@ -306,6 +307,7 @@ body.light .tab-fab-item button{background:rgba(255,255,255,0.9);color:var(--tex
 </style>
 </head>
 <body>
+  <div id="topSafeArea"></div>
 <header class="header">
   <div class="header-left">
     <span class="header-title-emoji" id="headerEmoji" style="display:none;">📚</span>
@@ -374,27 +376,36 @@ body.light .tab-fab-item button{background:rgba(255,255,255,0.9);color:var(--tex
     </div>
   </section>
   <section id="homeroom" class="section">
-  <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:16px;">
-    <button class="cal-nav-btn" onclick="changeHrMonth(-1)" style="width:38px;height:38px;font-size:1.3rem;">‹</button>
-    <div id="hrCalendarTitle" style="min-width:150px;text-align:center;font-size:1.1rem;font-weight:700;color:var(--text);"></div>
-    <button class="cal-nav-btn" onclick="changeHrMonth(1)" style="width:38px;height:38px;font-size:1.3rem;">›</button>
+  <div class="sub-nav">
+    <button class="sub-nav-btn active" onclick="showHrTab('hrCalendarTab',this)">📅 캘린더</button>
+<button class="sub-nav-btn" onclick="showHrTab('hrNoticeTab',this)">🔔 오늘의 안내사항</button>
   </div>
-  <div class="hr-legend">
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#FCD34D;"></div>지각</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#FB923C;"></div>조퇴</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#60A5FA;"></div>결과</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#F87171;"></div>결석</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#C4B5FD;"></div>상담</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#34D399;"></div>현체</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#A78BFA;"></div>사회봉사</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#818CF8;"></div>특별교육</div>
-    <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#EF4444;"></div>출석정지</div>
+  <div id="hrCalendarTab">
+    <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:16px;">
+      <button class="cal-nav-btn" onclick="changeHrMonth(-1)" style="width:38px;height:38px;font-size:1.3rem;">‹</button>
+      <div id="hrCalendarTitle" style="min-width:150px;text-align:center;font-size:1.1rem;font-weight:700;color:var(--text);"></div>
+      <button class="cal-nav-btn" onclick="changeHrMonth(1)" style="width:38px;height:38px;font-size:1.3rem;">›</button>
+    </div>
+    <div class="hr-legend">
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#FCD34D;"></div>지각</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#FB923C;"></div>조퇴</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#60A5FA;"></div>결과</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#F87171;"></div>결석</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#C4B5FD;"></div>상담</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#34D399;"></div>현체</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#A78BFA;"></div>사회봉사</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#818CF8;"></div>특별교육</div>
+      <div class="hr-legend-item"><div class="hr-legend-dot" style="background:#EF4444;"></div>출석정지</div>
+    </div>
+    <div class="hr-cal-card">
+      <div class="hr-cal-days-header" id="hrCalDaysHeader"></div>
+      <div class="hr-cal-days-body" id="hrCalDaysBody"></div>
+    </div>
+    <div class="hr-unsubmitted" id="hrUnsubmittedAlert"></div>
   </div>
-  <div class="hr-cal-card">
-    <div class="hr-cal-days-header" id="hrCalDaysHeader"></div>
-    <div class="hr-cal-days-body" id="hrCalDaysBody"></div>
+  <div id="hrNoticeTab" style="display:none;">
+    <div id="hrNoticeContent"></div>
   </div>
-  <div class="hr-unsubmitted" id="hrUnsubmittedAlert"></div>
 </section>
   <section id="timetable" class="section">
     <div class="card"><div class="timetable"><div class="timetable-grid" id="timetableGrid"></div></div></div>
@@ -2542,6 +2553,87 @@ function saveSpecialProg(){
   showToast('✅ 등록되었습니다');
 }
 function deleteSpecialProg(id){if(!confirm('삭제할까요?'))return;DB.set('specialPrograms',DB.get('specialPrograms').filter(s=>s.id!==id));renderHrCalendar();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('✅ 삭제되었습니다');}
+/* ── 오늘의 안내사항 ── */
+let noticeSelectedDate=new Date().toISOString().split('T')[0];
+function showHrTab(tabId,btn){
+  document.getElementById('hrCalendarTab').style.display=tabId==='hrCalendarTab'?'block':'none';
+  document.getElementById('hrNoticeTab').style.display=tabId==='hrNoticeTab'?'block':'none';
+  document.querySelectorAll('#homeroom .sub-nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(tabId==='hrNoticeTab')renderNoticeTab();
+}
+function changeNoticeDate(dir){const d=new Date(noticeSelectedDate+'T12:00:00');d.setDate(d.getDate()+dir);noticeSelectedDate=d.toISOString().split('T')[0];renderNoticeTab();}
+function renderNoticeTab(){
+  const c=document.getElementById('hrNoticeContent');if(!c)return;
+  const notices=DB.get('dailyNotices').filter(n=>n.date===noticeSelectedDate);
+  const dateObj=new Date(noticeSelectedDate+'T12:00:00');
+  const dow=['일','월','화','수','목','금','토'];
+  const isToday=noticeSelectedDate===new Date().toISOString().split('T')[0];
+  let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;justify-content:center;flex-wrap:nowrap;">
+    <button class="cal-nav-btn" onclick="changeNoticeDate(-1)" style="width:34px;height:34px;font-size:1.1rem;flex-shrink:0;">‹</button>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+      <input type="date" value="${noticeSelectedDate}" onchange="noticeSelectedDate=this.value;renderNoticeTab();" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:0.88rem;cursor:pointer;font-family:inherit;">
+      <span style="font-size:0.88rem;color:var(--text-secondary);white-space:nowrap;">${dow[dateObj.getDay()]}요일${isToday?` <strong style="color:var(--primary-light);">오늘</strong>`:''}</span>
+      ${!isToday?`<button onclick="noticeSelectedDate=new Date().toISOString().split('T')[0];renderNoticeTab();" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">오늘로</button>`:''}
+    </div>
+    <button class="cal-nav-btn" onclick="changeNoticeDate(1)" style="width:34px;height:34px;font-size:1.1rem;flex-shrink:0;">›</button>
+  </div>`;
+  if(notices.length){
+    const done=notices.filter(n=>n.done).length;
+    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border);">
+      <span style="font-size:0.85rem;color:var(--text-secondary);">전체 <strong style="color:var(--text);">${notices.length}개</strong></span>
+      <span style="color:var(--border);">·</span>
+      <span style="font-size:0.85rem;color:var(--text-secondary);">완료 <strong style="color:#10B981;">${done}개</strong></span>
+      ${done>0?`<button onclick="clearDoneNotices()" style="margin-left:auto;padding:4px 10px;font-size:0.75rem;background:rgba(239,68,68,0.1);color:#EF4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;cursor:pointer;font-family:inherit;">완료 지우기</button>`:''}
+    </div>`;
+    html+=notices.map(n=>{
+      const displayText=n.content||n.title||'(내용 없음)';
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface);border-radius:10px;border-left:4px solid ${n.done?'var(--border)':'var(--primary)'};margin-bottom:8px;transition:all 0.2s;${n.done?'opacity:0.55;':''}">
+        <button onclick="toggleNoticeDone(${n.id})" style="width:22px;height:22px;border-radius:50%;border:2px solid ${n.done?'#10B981':'var(--primary)'};background:${n.done?'#10B981':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:white;flex-shrink:0;margin-top:2px;transition:all 0.2s;">${n.done?'✓':''}</button>
+        <div style="flex:1;min-width:0;font-size:0.92rem;line-height:1.6;white-space:pre-wrap;${n.done?'text-decoration:line-through;color:var(--text-secondary);':''}">${escHtml(displayText)}</div>
+        <button class="btn-icon" onclick="deleteNotice(${n.id})" style="flex-shrink:0;margin-top:-2px;">✕</button>
+      </div>`;
+    }).join('');
+  }else{
+    html+=`<div class="empty-state" style="padding:24px 0;"><div class="empty-icon">📢</div><p>이 날 안내사항이 없어요</p></div>`;
+  }
+  html+=`<div class="card" style="margin-top:16px;margin-bottom:0;">
+    <div class="card-title">➕ 안내사항 추가</div>
+    <div class="form-group" style="margin-bottom:10px;"><textarea id="noticeContent" spellcheck="false" placeholder="안내사항 내용을 입력하세요..." style="min-height:80px;" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')addNotice()"></textarea></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="addNotice()">➕ 추가하기</button>
+    <p style="font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-top:6px;">Ctrl+Enter로 빠르게 추가</p>
+  </div>`;
+  c.innerHTML=html;
+}
+function addNotice(){
+  const content=document.getElementById('noticeContent').value.trim();
+  if(!content){showToast('❌ 내용을 입력해주세요');return;}
+  const notices=DB.get('dailyNotices');
+  notices.push({id:Date.now(),date:noticeSelectedDate,content,done:false});
+  DB.set('dailyNotices',notices);
+  renderNoticeTab();
+  showToast('✅ 안내사항이 추가되었습니다');
+}
+function toggleNoticeDone(id){
+  const notices=DB.get('dailyNotices');
+  const n=notices.find(n=>n.id===id);
+  if(n)n.done=!n.done;
+  DB.set('dailyNotices',notices);
+  renderNoticeTab();
+  showToast(n?.done?'✅ 완료!':'↩️ 다시 열렸습니다');
+}
+function deleteNotice(id){
+  if(!confirm('이 안내사항을 삭제할까요?'))return;
+  DB.set('dailyNotices',DB.get('dailyNotices').filter(n=>n.id!==id));
+  renderNoticeTab();
+  showToast('✅ 삭제되었습니다');
+}
+function clearDoneNotices(){
+  if(!confirm('완료된 안내사항을 모두 삭제할까요?'))return;
+  DB.set('dailyNotices',DB.get('dailyNotices').filter(n=>!(n.done&&n.date===noticeSelectedDate)));
+  renderNoticeTab();
+  showToast('✅ 완료 안내사항이 삭제되었습니다');
+}
 /* ── 탭 전용 FAB ── */
 let _tabFabOpen=false;
 function updateTabFab(sectionId){
@@ -2619,7 +2711,7 @@ import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app
 import{getFirestore,doc,setDoc,getDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyCqoVkHtnEsQRwExsthe4sASWID5H2bzuQ",authDomain:"kosick-dashboard.firebaseapp.com",projectId:"kosick-dashboard",storageBucket:"kosick-dashboard.firebasestorage.app",messagingSenderId:"990702080590",appId:"1:990702080590:web:9fe9a356db03c0eea4291f"};
 const fb=initializeApp(cfg),fs=getFirestore(fb);
-const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms'];
+const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices'];
 const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','theme','homeroomMyClassId'];
 const ref=doc(fs,'kosick','data');
 let _isSaving=false;
