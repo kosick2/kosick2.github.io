@@ -167,7 +167,7 @@ body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;backgrou
 .btn-secondary:hover{background:#475569;}
 .btn-icon{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.82rem;transition:all 0.2s;flex-shrink:0;}
 .btn-icon:hover{background:var(--surface2);color:var(--text);}
-input[type="text"],input[type="url"],input[type="date"],input[type="time"],input[type="number"],textarea,select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;width:100%;outline:none;transition:border-color 0.2s;font-family:inherit;}
+input[type="text"],input[type="url"],input[type="date"],input[type="time"],input[type="number"],textarea,select{background:var(--background);filter:brightness(0.88);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;width:100%;outline:none;transition:border-color 0.2s;font-family:inherit;}
 input:focus,textarea:focus,select:focus{border-color:var(--primary-light);}
 textarea{resize:vertical;min-height:80px;}
 .form-group{margin-bottom:12px;}
@@ -195,7 +195,7 @@ textarea{resize:vertical;min-height:80px;}
 .class-room{font-size:0.75rem;color:var(--text-secondary);}
 .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.active{display:flex;}
-.modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:100%;max-width:480px;border:1px solid var(--border);max-height:90vh;overflow-y:auto;}
+.modal{background:var(--background);border-radius:var(--radius);padding:24px;width:100%;max-width:480px;border:1px solid var(--border);max-height:90vh;overflow-y:auto;}
 .modal-title{font-size:1.1rem;font-weight:700;margin-bottom:20px;}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
 .search-box{position:relative;margin-bottom:16px;}
@@ -308,7 +308,8 @@ textarea{resize:vertical;min-height:80px;}
 .tab-fab-item button:hover{background:rgba(79,70,229,0.7);}
 </style>
 </head>
-<body class="section-home">
+<body>
+<script>document.body.className='section-home';</script>
 <div id="topSafeArea" style="background:#EFCE7B;"></div><header class="header">
   <div class="header-left">
     <span class="header-title-emoji" id="headerEmoji" style="display:none;">📚</span>
@@ -325,7 +326,7 @@ textarea{resize:vertical;min-height:80px;}
 </nav>
   <span class="mobile-tab-title" id="mobileTabTitle">홈</span>
   <div class="header-right">
-<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" ontouchstart="openDrawer();event.preventDefault();" title="메뉴" style="position:relative;"></button>
+<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" ontouchstart="openDrawer();event.preventDefault();" title="메뉴" style="position:relative;">☰</button>
   </div>
 </header>
 <main class="main">
