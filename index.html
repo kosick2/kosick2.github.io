@@ -309,8 +309,7 @@ textarea{resize:vertical;min-height:80px;}
 </style>
 </head>
 <body class="section-home">
-  <div id="topSafeArea"></div>
-<header class="header">
+<div id="topSafeArea" style="background:#EFCE7B;"></div><header class="header">
   <div class="header-left">
     <span class="header-title-emoji" id="headerEmoji" style="display:none;">📚</span>
     <span class="header-title-text" id="headerName" style="display:none;">Kosick</span>
@@ -933,6 +932,7 @@ function showSection(id,btn){
   const bg=getComputedStyle(document.body).getPropertyValue('--background').trim()||'#EFCE7B';
   document.documentElement.style.background=bg;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',bg);
+  const _sa=document.getElementById('topSafeArea');if(_sa)_sa.style.background=bg;
   /* ★ 모바일 탭 제목 업데이트 */
 const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'메모',students:'학생관리',timetable:'시간표',homeroom:'담임'};
   const SECTION_EMOJIS={home:'🏠',bookmarks:'🔖',memos:'📝',students:'👨‍🎓',timetable:'📅',homeroom:'👩‍🏫'};
@@ -1313,6 +1313,7 @@ function renderMiniTimetable(){
 }
 document.body.classList.add('section-home');
 document.documentElement.style.background='#EFCE7B';
+const _initSa=document.getElementById('topSafeArea');if(_initSa)_initSa.style.background='#EFCE7B';
 updateHome();
 
 /* ── 메모 ── */
