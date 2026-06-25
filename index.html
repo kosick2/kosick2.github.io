@@ -10,20 +10,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kosick">
-<meta name="theme-color" id="themeColor" content="#EFCE7B">
-<script>document.documentElement.style.background='#EFCE7B';</script>
+<meta name="theme-color" id="themeColor" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)">
+<script>if(localStorage.getItem('theme')==='light'){document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');document.documentElement.classList.add('light');document.documentElement.style.background='#F1F5F9';}else{document.documentElement.style.background='#0F172A';}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 #topSafeArea{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--background);z-index:200;pointer-events:none;}
 :root{--primary:#4F46E5;--primary-light:#818CF8;--secondary:#10B981;--background:#0F172A;--surface:#1E293B;--surface2:#334155;--text:#F1F5F9;--text-secondary:#94A3B8;--border:#334155;--danger:#EF4444;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
-html{background:#EFCE7B;}
-/* ── 탭별 배경색 ── */
-body.section-home{--background:#EFCE7B;--surface:rgba(255,255,255,0.65);--surface2:rgba(0,0,0,0.07);--text:#2C2500;--text-secondary:#6B5A00;--border:rgba(0,0,0,0.14);--shadow:0 4px 6px -1px rgba(0,0,0,0.12);}
-body.section-homeroom{--background:#25533F;--surface:#1E4233;--surface2:#173527;--text:#E8F5EE;--text-secondary:#9DCBAF;--border:rgba(255,255,255,0.15);--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
-body.section-students{--background:#8f5353;--surface:rgba(255,255,255,0.18);--surface2:rgba(0,0,0,0.12);--text:#000000;--text-secondary:#1a1a1a;--border:rgba(255,255,255,0.15);--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
-body.section-memo{--background:#50617a;--surface:rgba(255,255,255,0.18);--surface2:rgba(0,0,0,0.12);--text:#0A1628;--text-secondary:#1E3A5F;--border:rgba(255,255,255,0.15);--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
-body.section-bookmarks{--background:#876029;--surface:#6B4A1F;--surface2:#5A3C18;--text:#FFF3DC;--text-secondary:#D4AA6E;--border:rgba(255,255,255,0.15);--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
-body.section-timetable{--background:#4f493a;--surface:rgba(255,255,255,0.18);--surface2:rgba(0,0,0,0.12);--text:#ffffff;--text-secondary:#f0f0f0;--border:rgba(255,255,255,0.15);--shadow:0 4px 6px -1px rgba(0,0,0,0.3);}
+body.light{--background:#F1F5F9;--surface:#FFFFFF;--surface2:#E2E8F0;--text:#0F172A;--text-secondary:#64748B;--border:#CBD5E1;--shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
+html{background:#0F172A;}html.light{background:#F1F5F9;}
 body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--background);color:var(--text);min-height:100vh;}
 .header{background:var(--background);padding:0 20px;padding-left:calc(20px + env(safe-area-inset-left));padding-right:calc(20px + env(safe-area-inset-right));height:calc(58px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;position:sticky;top:0;z-index:100;}
 .header-left{flex-shrink:0;}
@@ -167,7 +162,7 @@ body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;backgrou
 .btn-secondary:hover{background:#475569;}
 .btn-icon{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.82rem;transition:all 0.2s;flex-shrink:0;}
 .btn-icon:hover{background:var(--surface2);color:var(--text);}
-input[type="text"],input[type="url"],input[type="date"],input[type="time"],input[type="number"],textarea,select{background:var(--background);filter:brightness(0.88);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;width:100%;outline:none;transition:border-color 0.2s;font-family:inherit;}
+input[type="text"],input[type="url"],input[type="date"],input[type="time"],input[type="number"],textarea,select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;width:100%;outline:none;transition:border-color 0.2s;font-family:inherit;}
 input:focus,textarea:focus,select:focus{border-color:var(--primary-light);}
 textarea{resize:vertical;min-height:80px;}
 .form-group{margin-bottom:12px;}
@@ -193,9 +188,9 @@ textarea{resize:vertical;min-height:80px;}
 .timetable-period{background:var(--surface2);border-radius:8px;padding:10px 6px;text-align:center;font-size:0.82rem;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;}
 .class-name{font-weight:600;font-size:0.85rem;}
 .class-room{font-size:0.75rem;color:var(--text-secondary);}
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.active{display:flex;}
-.modal{background:var(--background);border-radius:var(--radius);padding:24px;width:100%;max-width:480px;border:1px solid var(--border);max-height:90vh;overflow-y:auto;}
+.modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:100%;max-width:480px;border:1px solid var(--border);max-height:90vh;overflow-y:auto;}
 .modal-title{font-size:1.1rem;font-weight:700;margin-bottom:20px;}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
 .search-box{position:relative;margin-bottom:16px;}
@@ -209,6 +204,7 @@ textarea{resize:vertical;min-height:80px;}
 .fab-save{position:fixed;bottom:24px;left:20px;width:58px;height:58px;border-radius:50%;background:rgba(15,23,42,0.5);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);z-index:500;transition:all 0.2s;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0.5;}
 .fab-save:hover{background:rgba(79,70,229,0.7);transform:scale(1.1);opacity:1;}
 .fab-save:active{transform:scale(0.93);}
+body.light .fab-save{background:rgba(241,245,249,0.5);color:var(--text);border:1px solid rgba(0,0,0,0.12);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface2);color:var(--text);padding:12px 24px;border-radius:30px;font-size:0.9rem;z-index:2000;transition:transform 0.3s;border:1px solid var(--border);}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .items-list{display:flex;flex-direction:column;gap:12px;}
@@ -235,10 +231,10 @@ textarea{resize:vertical;min-height:80px;}
   .cal-day{height:78px;}
 }
 /* ═══ 모바일 드로어 네비게이션 ═══ */
-.hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);font-size:1.4rem;line-height:1;transition:background 0.2s;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);font-size:1.4rem;line-height:1;transition:background 0.2s;flex-shrink:0;}
 .hamburger-btn:hover{background:var(--surface2);}
 .mobile-tab-title{display:none;font-weight:700;font-size:1.05rem;color:var(--text);text-align:center;}
-.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1200;backdrop-filter:blur(3px);opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1200;backdrop-filter:blur(3px);opacity:0;transition:opacity 0.3s;pointer-events:none;}
 .drawer-overlay.open{opacity:1;pointer-events:all;}
 .mobile-drawer{position:fixed;top:0;right:-300px;width:280px;height:100dvh;background:var(--surface);z-index:1201;transition:right 0.32s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(0,0,0,0.35);border-radius:20px 0 0 20px;}
 .mobile-drawer.open{right:0;}
@@ -263,6 +259,7 @@ textarea{resize:vertical;min-height:80px;}
   .mobile-tab-title{display:none !important;}
   /* 기존 탭 버튼 + 테마 토글 숨기기 */
   .header-nav{display:none !important;}
+  #themeToggleBtn{display:none !important;}
 }
 /* ── 담임 탭 ── */
 .hr-section-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
@@ -306,11 +303,13 @@ textarea{resize:vertical;min-height:80px;}
 .tab-fab-item.show{opacity:1;transform:translateY(0);pointer-events:all;}
 .tab-fab-item button{white-space:nowrap;padding:10px 20px;border-radius:30px;border:1px solid rgba(255,255,255,0.15);background:rgba(15,23,42,0.75);color:rgba(255,255,255,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:background 0.2s;font-family:inherit;}
 .tab-fab-item button:hover{background:rgba(79,70,229,0.7);}
+body.light .tab-fab-main{background:rgba(241,245,249,0.5);color:var(--text);border:1px solid rgba(0,0,0,0.12);}
+body.light .tab-fab-item button{background:rgba(255,255,255,0.9);color:var(--text);border:1px solid rgba(0,0,0,0.12);}
 </style>
 </head>
 <body>
-<script>document.body.className='section-home';</script>
-<div id="topSafeArea" style="background:#EFCE7B;"></div><header class="header">
+  <div id="topSafeArea"></div>
+<header class="header">
   <div class="header-left">
     <span class="header-title-emoji" id="headerEmoji" style="display:none;">📚</span>
     <span class="header-title-text" id="headerName" style="display:none;">Kosick</span>
@@ -326,7 +325,8 @@ textarea{resize:vertical;min-height:80px;}
 </nav>
   <span class="mobile-tab-title" id="mobileTabTitle">홈</span>
   <div class="header-right">
-<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" ontouchstart="openDrawer();event.preventDefault();" title="메뉴" style="position:relative;">☰</button>
+    <button id="themeToggleBtn" onclick="toggleTheme()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">🌙</button>
+<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" title="메뉴" style="position:relative;">☰<span id="hamburgerBadge" style="display:none;position:absolute;top:2px;right:2px;background:#EF4444;color:white;font-size:0.6rem;font-weight:700;min-width:15px;height:15px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;"></span></button>
   </div>
 </header>
 <main class="main">
@@ -921,20 +921,19 @@ function manualSave(){
     showToast('❌ 저장 모듈 초기화 중입니다. 잠시 후 다시 시도해주세요.');
   }
 }
+function toggleTheme(){const l=document.body.classList.toggle('light');document.documentElement.classList.toggle('light',l);document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark');document.querySelector('meta[name="theme-color"]').setAttribute('content',l?'#F1F5F9':'#0F172A');if(window._syncSettings)window._syncSettings();}
+(function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.documentElement.classList.add('light');document.getElementById('themeToggleBtn').textContent='☀️';document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');}})();
+const themeColorMeta = document.getElementById('themeColor');
+if (document.body.classList.contains('dark')) {
+    themeColorMeta.setAttribute('content', '#0F172A');
+} else {
+    themeColorMeta.setAttribute('content', '#ffffff');
+}
 function showSection(id,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(btn)btn.classList.add('active');
-  /* ★ 탭별 배경색 적용 */
-  const SECTION_THEMES={home:'section-home',homeroom:'section-homeroom',students:'section-students',memos:'section-memos',bookmarks:'section-bookmarks',timetable:'section-timetable'};
-  document.body.classList.remove('section-home','section-homeroom','section-students','section-memos','section-bookmarks','section-timetable');
-  if(SECTION_THEMES[id])document.body.classList.add(SECTION_THEMES[id]);
-const SECTION_BG={home:'#EFCE7B',homeroom:'#25533F',students:'#8f5353',memos:'#50617a',bookmarks:'#876029',timetable:'#4f493a'};
-const bg=SECTION_BG[id]||'#EFCE7B';
-  document.documentElement.style.background=bg;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',bg);
-  const _sa=document.getElementById('topSafeArea');if(_sa)_sa.style.background=bg;
   /* ★ 모바일 탭 제목 업데이트 */
 const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'메모',students:'학생관리',timetable:'시간표',homeroom:'담임'};
   const SECTION_EMOJIS={home:'🏠',bookmarks:'🔖',memos:'📝',students:'👨‍🎓',timetable:'📅',homeroom:'👩‍🏫'};
@@ -1313,7 +1312,7 @@ function renderMiniTimetable(){
   html+=`</div></div>`;
   c.innerHTML=html;
 }
-showSection('home', document.querySelector('.nav-btn'));
+updateHome();
 
 /* ── 메모 ── */
 const LIST_COLORS=['#A8C8F8','#C5B4E3','#F4A7B9','#F7A8A8','#F9C9A4','#F9E4A4','#A8E6C3','#A4D4E0'];
@@ -2229,7 +2228,13 @@ function closeDrawer(){
   document.body.style.overflow='';
 }
 
-function updateDrawerThemeBtn(){}
+function updateDrawerThemeBtn(){
+  const isLight=document.body.classList.contains('light');
+  const icon=document.getElementById('drawerThemeIcon');
+  const label=document.getElementById('drawerThemeLabel');
+  if(icon)icon.textContent=isLight?'☀️':'🌙';
+  if(label)label.textContent=isLight?'다크 모드로 전환':'라이트 모드로 전환';
+}
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 
@@ -2702,7 +2707,11 @@ document.addEventListener('click',e=>{
     <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
   </div>
   <nav class="drawer-nav-list" id="drawerNavList"></nav>
-  <div class="drawer-footer" style="display:none;"></div>
+  <div class="drawer-footer">
+    <button class="drawer-theme-btn" onclick="toggleTheme();updateDrawerThemeBtn();" title="테마 전환">
+      <span id="drawerThemeIcon">🌙</span>
+    </button>
+  </div>
 </div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -2710,7 +2719,7 @@ import{getFirestore,doc,setDoc,getDoc,onSnapshot}from"https://www.gstatic.com/fi
 const cfg={apiKey:"AIzaSyCqoVkHtnEsQRwExsthe4sASWID5H2bzuQ",authDomain:"kosick-dashboard.firebaseapp.com",projectId:"kosick-dashboard",storageBucket:"kosick-dashboard.firebasestorage.app",messagingSenderId:"990702080590",appId:"1:990702080590:web:9fe9a356db03c0eea4291f"};
 const fb=initializeApp(cfg),fs=getFirestore(fb);
 const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices'];
-const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','homeroomMyClassId'];
+const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','theme','homeroomMyClassId'];
 const ref=doc(fs,'kosick','data');
 let _isSaving=false;
 let _firebaseLoaded=false;
@@ -2734,6 +2743,11 @@ function applyRemoteData(data){
   SK.forEach(k=>{if(data[k]!==undefined&&data[k]!=='')localStorage.setItem(k,data[k]);});
   localStorage.setItem('_savedAt',Number(data._savedAt||0));
   initHeaderTitle();initColors();
+  const l=localStorage.getItem('theme')==='light';
+  document.body.classList.toggle('light',l);
+  document.documentElement.classList.toggle('light',l);
+  document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';
+  document.querySelector('meta[name="theme-color"]').setAttribute('content',l?'#F1F5F9':'#0F172A');
 const activeId=document.querySelector('.section.active')?.id;
   if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();
 }
@@ -2752,6 +2766,10 @@ async function loadData(){
       else{syncAll();}
     }
     initHeaderTitle();initColors();
+    const l=localStorage.getItem('theme')==='light';
+    document.body.classList.toggle('light',l);
+    document.documentElement.classList.toggle('light',l);
+    document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';
     updateHome();
     showToast('☁️ 데이터 불러오기 완료');
   }catch(e){
