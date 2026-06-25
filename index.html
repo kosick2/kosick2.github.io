@@ -8,9 +8,10 @@
 <link rel="shortcut icon" href="logo.png">
 <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kosick">
-<meta name="theme-color" content="#0F172A">
+<meta name="theme-color" id="themeColor" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)">
 <script>if(localStorage.getItem('theme')==='light'){document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');document.documentElement.classList.add('light');document.documentElement.style.background='#F1F5F9';}else{document.documentElement.style.background='#0F172A';}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -922,6 +923,12 @@ function manualSave(){
 }
 function toggleTheme(){const l=document.body.classList.toggle('light');document.documentElement.classList.toggle('light',l);document.getElementById('themeToggleBtn').textContent=l?'☀️':'🌙';localStorage.setItem('theme',l?'light':'dark');document.querySelector('meta[name="theme-color"]').setAttribute('content',l?'#F1F5F9':'#0F172A');if(window._syncSettings)window._syncSettings();}
 (function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.documentElement.classList.add('light');document.getElementById('themeToggleBtn').textContent='☀️';document.querySelector('meta[name="theme-color"]').setAttribute('content','#F1F5F9');}})();
+const themeColorMeta = document.getElementById('themeColor');
+if (document.body.classList.contains('dark')) {
+    themeColorMeta.setAttribute('content', '#0F172A');
+} else {
+    themeColorMeta.setAttribute('content', '#ffffff');
+}
 function showSection(id,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
