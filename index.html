@@ -1008,7 +1008,7 @@ function _applyThemeCSSVars(color){
     root.style.setProperty('--shadow','0 4px 6px -1px rgba(0,0,0,0.45)');
   }
 }
-const DB={get:k=>JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')),set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+const DB={get:k=>JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'?'{}':'[]')),set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
 /* ── 메모 자동저장 (iOS 완전 대응) ── */
 const _dirtyEls=new Set();
 
@@ -1053,7 +1053,7 @@ document.addEventListener('focusout',e=>{
     const sm=el.id?el.id.match(/^sgibu_(\d+)_(\d+)$/):null;
     if(sm&&typeof _sgibuCurrentCategory!=='undefined'){
       clearTimeout(_sgibuSaveTimer);
-      const _sgibuRec=DB.get('sgibuRecords')||{};
+    let _sgibuRec=DB.get('sgibuRecords');if(!_sgibuRec||Array.isArray(_sgibuRec))_sgibuRec={};
       const _cid=sm[1],_sid=Number(sm[2]);
       if(!_sgibuRec[_cid])_sgibuRec[_cid]={};
       if(!_sgibuRec[_cid][_sid]||typeof _sgibuRec[_cid][_sid]!=='object')_sgibuRec[_cid][_sid]={};
@@ -1081,6 +1081,7 @@ document.addEventListener('touchstart',e=>{
 (function(){
   try{const r=localStorage.getItem('evaluations');if(!r)return;const evs=JSON.parse(r);let ch=false;evs.forEach(ev=>{if(!ev.classRecords){ev.classRecords=[];ch=true;}if(!ev.sessions){const sid='session_'+ev.id;ev.sessions=[{id:sid,name:'1차시',date:ev.date||'',maxScore:ev.maxScore||100}];(ev.classRecords||[]).forEach(cr=>{(cr.records||[]).forEach(r=>{if(!r.sessionData){r.sessionData={};r.sessionData[sid]={submitted:r.submitted||false,score:r.score||''};delete r.submitted;delete r.score;}});});ch=true;}});if(ch)localStorage.setItem('evaluations',JSON.stringify(evs));}catch(e){}
   try{const bms=JSON.parse(localStorage.getItem('bookmarks')||'[]');const m=bms.map(b=>({groupId:null,...b}));if(JSON.stringify(m)!==JSON.stringify(bms))localStorage.setItem('bookmarks',JSON.stringify(m));}catch(e){}
+  try{const _sr=localStorage.getItem('sgibuRecords');if(_sr){const _srp=JSON.parse(_sr);if(Array.isArray(_srp)){localStorage.setItem('sgibuRecords','{}');}}}catch(e){}
   try{const items=JSON.parse(localStorage.getItem('memoItems')||'[]');let ch=false;const m=items.map(i=>{if(i.priority===undefined){i.priority=false;ch=true;}if(i.deadline===undefined){i.deadline='';ch=true;}return i;});if(ch)localStorage.setItem('memoItems',JSON.stringify(m));}catch(e){}
 })();
 function updateDate(){const el=document.getElementById('currentDate');if(!el)return;const n=new Date(),d=['일','월','화','수','목','금','토'];el.textContent=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 (${d[n.getDay()]})`;}
@@ -1112,7 +1113,7 @@ function manualSave(){
     const m=el.id.match(/^sgibu_(\d+)_(\d+)$/);
     if(!m)return;
     const classId=m[1],studentId=Number(m[2]);
-    const records=DB.get('sgibuRecords')||{};
+    let records=DB.get('sgibuRecords');if(!records||Array.isArray(records))records={};
     if(!records[classId])records[classId]={};
     if(typeof records[classId][studentId]!=='object'||records[classId][studentId]===null)records[classId][studentId]={};
     records[classId][studentId][_sgibuCurrentCategory]=el.value;
@@ -3261,10 +3262,10 @@ function onSgibuInput(classId,studentId,el){
 if(byteEl){byteEl.textContent=`${byteLen} 바이트`;byteEl.className='sgibu-byte-count '+(byteLen>1000?'sgibu-limit-over':byteLen>800?'sgibu-limit-warn':'');}
   clearTimeout(_sgibuSaveTimer);
   _sgibuSaveTimer=setTimeout(()=>{
-    const records=DB.get('sgibuRecords')||{};
+    let records=DB.get('sgibuRecords');if(!records||Array.isArray(records))records={};
     if(!records[classId])records[classId]={};
     if(typeof records[classId][studentId]==='string'){
-      const oldText=records[classId][studentId];
+    const oldText=records[classId][studentId];
       records[classId][studentId]={subject:oldText};
     }
     if(!records[classId][studentId]||typeof records[classId][studentId]!=='object')records[classId][studentId]={};
@@ -3380,7 +3381,7 @@ let _saveToastTimer=null;
 function syncAll(){
   if(!_firebaseReady){console.warn('🛡️ 안전장치: Firebase 미로드 상태에서 저장 차단');showToast('⏳ 데이터 로딩 중... 잠시 후 자동 저장됩니다');return;}
   const p={};
-  DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));
+  DK.forEach(k=>{p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'?'{}':'[]'));if(k==='sgibuRecords'&&Array.isArray(p[k]))p[k]={};});
   const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
   const _hasSettings=SK.some(k=>localStorage.getItem(k)&&localStorage.getItem(k)!=='');
   if(!_hasData&&!_hasSettings){console.warn('🛡️ 안전장치: 로컬이 비어있어 Firebase 덮어쓰기 차단');showToast('⚠️ 데이터가 비어있어 저장이 차단되었습니다');return;}
@@ -3393,7 +3394,7 @@ p._savedAt=Date.now();
 }
 window._syncSettings=syncAll;
 function applyRemoteData(data){
-  DK.forEach(k=>{if(data[k]!==undefined)localStorage.setItem(k,JSON.stringify(data[k]));});
+  DK.forEach(k=>{if(data[k]!==undefined){let _v=data[k];if(k==='sgibuRecords'&&Array.isArray(_v))_v={};localStorage.setItem(k,JSON.stringify(_v));}});
   SK.forEach(k=>{if(data[k]!==undefined&&data[k]!=='')localStorage.setItem(k,data[k]);});
   localStorage.setItem('_savedAt',Number(data._savedAt||0));
   initHeaderTitle();initColors();
