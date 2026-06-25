@@ -318,6 +318,69 @@ textarea{resize:vertical;min-height:80px;}
 .web-theme-panel{position:absolute;top:calc(100% + 8px);right:0;width:185px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,0.4);z-index:500;max-height:0;overflow:hidden;opacity:0;transition:max-height 0.32s cubic-bezier(0.4,0,0.2,1),opacity 0.25s;pointer-events:none;}
 .web-theme-panel.open{max-height:420px;opacity:1;pointer-events:all;}
 @media(max-width:768px){.web-theme-wrap{display:none !important;}}
+/* ── 메모장(Notepad) ── */
+.notepad-layout{display:flex;gap:16px;height:calc(100vh - 140px);min-height:400px;}
+.notepad-sidebar{width:250px;flex-shrink:0;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.notepad-sidebar-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.notepad-sidebar-title{font-weight:700;font-size:0.95rem;}
+.notepad-add-group-btn{width:30px;height:30px;border-radius:8px;border:none;background:var(--primary);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
+.notepad-add-group-btn:hover{background:#4338CA;transform:scale(1.08);}
+.notepad-groups-list{flex:1;overflow-y:auto;padding:6px 0;}
+.notepad-group-row{border-bottom:1px solid var(--border);}
+.notepad-group-header{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background 0.15s;user-select:none;}
+.notepad-group-header:hover{background:var(--surface2);}
+.notepad-group-arrow{font-size:0.7rem;color:var(--text-secondary);transition:transform 0.25s;flex-shrink:0;}
+.notepad-group-arrow.open{transform:rotate(90deg);}
+.notepad-group-name{flex:1;font-size:0.9rem;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.notepad-group-count{font-size:0.72rem;color:var(--text-secondary);flex-shrink:0;}
+.notepad-group-del{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.7rem;padding:2px 4px;border-radius:4px;opacity:0;transition:opacity 0.15s;}
+.notepad-group-header:hover .notepad-group-del{opacity:1;}
+.notepad-items-list{overflow:hidden;max-height:0;transition:max-height 0.32s cubic-bezier(0.4,0,0.2,1);}
+.notepad-items-list.open{max-height:600px;}
+.notepad-note-btn{width:100%;padding:8px 14px 8px 34px;text-align:left;background:none;border:none;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;transition:background 0.15s;font-family:inherit;display:flex;align-items:center;gap:6px;overflow:hidden;}
+.notepad-note-btn:hover{background:var(--surface2);color:var(--text);}
+.notepad-note-btn.active{background:rgba(79,70,229,0.18);color:var(--primary-light);font-weight:600;}
+.notepad-note-title-span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.notepad-note-del{font-size:0.65rem;opacity:0;flex-shrink:0;transition:opacity 0.15s;}
+.notepad-note-btn:hover .notepad-note-del{opacity:1;}
+.notepad-add-note-btn{width:100%;padding:7px 14px 7px 34px;text-align:left;background:none;border:none;color:var(--primary-light);font-size:0.82rem;cursor:pointer;transition:background 0.15s;font-family:inherit;opacity:0.75;}
+.notepad-add-note-btn:hover{opacity:1;background:rgba(79,70,229,0.1);}
+.notepad-editor-area{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.notepad-editor-topbar{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.notepad-editor-meta{font-size:0.75rem;color:var(--text-secondary);}
+.notepad-title-input{width:100%;background:transparent;border:none;color:var(--text);font-size:1.25rem;font-weight:700;outline:none;padding:16px 20px 10px;font-family:inherit;}
+.notepad-title-input::placeholder{color:var(--text-secondary);opacity:0.45;}
+.notepad-content-input{flex:1;width:100%;background:transparent;border:none;color:var(--text);font-size:0.95rem;line-height:1.85;outline:none;resize:none;padding:0 20px 20px;font-family:inherit;}
+.notepad-content-input::placeholder{color:var(--text-secondary);opacity:0.45;}
+.notepad-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-secondary);gap:10px;}
+.notepad-mobile-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:rgba(15,23,42,0.55);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.18);font-size:1.4rem;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:490;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all 0.2s;}
+.notepad-mobile-panel{position:fixed;top:0;right:-310px;width:290px;height:100dvh;background:var(--surface);z-index:1100;transition:right 0.32s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(0,0,0,0.4);border-radius:20px 0 0 20px;}
+.notepad-mobile-panel.open{right:0;}
+@media(max-width:768px){
+  .notepad-layout{flex-direction:column;height:auto;}
+  .notepad-sidebar{display:none;}
+  .notepad-editor-area{min-height:calc(100vh - 200px);}
+  .notepad-mobile-fab{display:flex;}
+}
+/* ── 생기부 ── */
+.sgibu-layout{display:flex;flex-direction:column;gap:12px;}
+.sgibu-class-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:0.9rem;font-family:inherit;cursor:pointer;outline:none;}
+.sgibu-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.sgibu-row:last-child{border-bottom:none;}
+.sgibu-student-info{display:flex;flex-direction:column;gap:2px;padding-top:6px;width:68px;flex-shrink:0;}
+.sgibu-num{font-size:0.75rem;color:var(--text-secondary);}
+.sgibu-name{font-weight:700;font-size:0.95rem;}
+.sgibu-textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:14px;font-size:0.88rem;width:100%;outline:none;resize:vertical;min-height:70px;font-family:inherit;line-height:1.65;transition:border-color 0.2s;}
+.sgibu-textarea:focus{border-color:var(--primary-light);}
+.sgibu-counter{display:flex;flex-direction:column;gap:4px;padding-top:8px;align-items:flex-end;}
+.sgibu-char-count{font-size:0.82rem;font-weight:700;color:var(--text);}
+.sgibu-byte-count{font-size:0.72rem;color:var(--text-secondary);}
+.sgibu-limit-warn{color:#FBBF24;}
+.sgibu-limit-over{color:#EF4444;}
+@media(max-width:600px){
+  .sgibu-student-info{width:56px;}
+  .sgibu-name{font-size:0.82rem;}
+}
 </style>
 </head>
 <body>
@@ -332,7 +395,8 @@ textarea{resize:vertical;min-height:80px;}
   <button class="nav-btn active" onclick="showSection('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">홈</span></button>
   <button class="nav-btn" onclick="showSection('homeroom',this)"><span class="nav-icon">👩‍🏫</span><span class="nav-label">담임</span><span class="nav-badge" id="badgeHomeroom"></span></button>
   <button class="nav-btn" onclick="showSection('students',this)"><span class="nav-icon">👨‍🎓</span><span class="nav-label">학생관리</span></button>
-  <button class="nav-btn" onclick="showSection('memos',this)"><span class="nav-icon">📝</span><span class="nav-label">메모</span><span class="nav-badge" id="badgeMemos"></span></button>
+<button class="nav-btn" onclick="showSection('memos',this)"><span class="nav-icon">📌</span><span class="nav-label">할 일</span><span class="nav-badge" id="badgeMemos"></span></button>
+  <button class="nav-btn" onclick="showSection('notepad',this)"><span class="nav-icon">📝</span><span class="nav-label">메모</span></button>
   <button class="nav-btn" onclick="showSection('bookmarks',this)"><span class="nav-icon">🔖</span><span class="nav-label">즐겨찾기</span></button>
   <button class="nav-btn" onclick="showSection('timetable',this)"><span class="nav-icon">📅</span><span class="nav-label">시간표</span></button>
 </nav>
@@ -369,12 +433,43 @@ textarea{resize:vertical;min-height:80px;}
     <div class="search-box"><span class="search-icon">🔍</span><input type="text" spellcheck="false" placeholder="즐겨찾기 검색..." oninput="searchBookmarks(this.value)"></div>
     <div id="bookmarkList"></div>
   </section>
-  <section id="memos" class="section"><div id="memoContent"></div></section>
+<section id="memos" class="section"><div id="memoContent"></div></section>
+<section id="notepad" class="section">
+  <div class="notepad-layout">
+    <div class="notepad-sidebar" id="notepadSidebar">
+      <div class="notepad-sidebar-header">
+        <span class="notepad-sidebar-title">📝 메모</span>
+        <button class="notepad-add-group-btn" onclick="openAddNoteGroupModal()" title="그룹 추가">+</button>
+      </div>
+      <div class="notepad-groups-list" id="notepadGroupsList"></div>
+    </div>
+    <div class="notepad-editor-area" id="notepadEditorArea">
+      <div class="notepad-empty-state" id="notepadEmptyState">
+        <div style="font-size:2.5rem;">📝</div>
+        <div style="font-weight:600;">메모를 선택해주세요</div>
+        <div style="font-size:0.85rem;">좌측에서 그룹을 만들고 메모를 추가해보세요</div>
+      </div>
+    </div>
+  </div>
+  <div class="notepad-mobile-panel" id="notepadMobilePanel">
+    <div style="padding:16px 14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <span style="font-weight:700;font-size:1rem;">📝 메모 목록</span>
+      <button onclick="closeNotepadPanel()" style="background:none;border:none;color:var(--text-secondary);font-size:1.1rem;cursor:pointer;padding:4px 6px;border-radius:6px;">✕</button>
+    </div>
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button class="btn btn-primary" style="width:100%;padding:8px;" onclick="openAddNoteGroupModal()">+ 새 그룹 추가</button>
+    </div>
+    <div class="notepad-groups-list" id="notepadMobileGroupsList" style="flex:1;overflow-y:auto;padding:6px 0;"></div>
+  </div>
+  <div class="drawer-overlay" id="notepadOverlay" onclick="closeNotepadPanel()" style="display:none;z-index:1099;"></div>
+  <button class="notepad-mobile-fab" id="notepadMobileFab" onclick="openNotepadPanel()" title="메모 목록">📓</button>
+</section>
   <section id="students" class="section">
     <div class="sub-nav">
       <button class="sub-nav-btn active" onclick="showStudentTab('classSection',this)">🏫 학급 관리</button>
       <button class="sub-nav-btn" onclick="showStudentTab('evalSection',this)">📊 수행평가</button>
       <button class="sub-nav-btn" onclick="showStudentTab('counselingSection',this)">💬 상담기록</button>
+      <button class="sub-nav-btn" onclick="showStudentTab('sgibuSection',this)">📜 생활기록부</button>
     </div>
     <div id="classSection" class="student-tab active">
       <div class="section-header" style="margin-bottom:16px;">
@@ -388,6 +483,17 @@ textarea{resize:vertical;min-height:80px;}
       </div>
       <div id="classChipsArea"></div>
       <div id="evalListContent"></div>
+    </div>
+    <div id="sgibuSection" class="student-tab">
+      <div class="section-header" style="margin-bottom:16px;"><div style="font-size:1rem;font-weight:600;">📜 생활기록부 작성</div></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <label style="font-size:0.88rem;color:var(--text-secondary);">학급 선택</label>
+        <select class="sgibu-class-select" id="sgibuClassSelect" onchange="renderSgibuSection(this.value)">
+          <option value="">-- 학급을 선택하세요 --</option>
+        </select>
+        <span id="sgibuSaveStatus" style="font-size:0.78rem;color:var(--text-secondary);margin-left:auto;"></span>
+      </div>
+      <div id="sgibuContent"></div>
     </div>
     <div id="counselingSection" class="student-tab">
 <div class="section-header" style="margin-bottom:16px;"><div style="font-size:1rem;font-weight:600;">상담기록</div></div>
@@ -494,6 +600,14 @@ textarea{resize:vertical;min-height:80px;}
       <div class="form-group"><label class="form-label">색상</label><input type="color" id="newTypeColor" value="#818CF8" style="height:42px;padding:4px;cursor:pointer;"></div>
     </div>
     <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('typeManagerModal')">닫기</button><button class="btn btn-primary" onclick="addScheduleType()">추가</button></div>
+  </div>
+</div>
+<!-- 모달: 메모장 그룹 추가 -->
+<div class="modal-overlay" id="addNoteGroupModal">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-title">📁 새 그룹 만들기</div>
+    <div class="form-group"><label class="form-label">그룹 이름</label><input type="text" id="newNoteGroupName" spellcheck="false" placeholder="예: 업무 메모" onkeydown="if(event.key==='Enter')saveNewNoteGroup()"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addNoteGroupModal')">취소</button><button class="btn btn-primary" onclick="saveNewNoteGroup()">만들기</button></div>
   </div>
 </div>
 <!-- 모달: 메모 목록 추가 -->
@@ -973,9 +1087,9 @@ function showSection(id,btn){
   document.getElementById(id).classList.add('active');
   if(btn)btn.classList.add('active');
   /* ★ 모바일 탭 제목 업데이트 */
-const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'메모',students:'학생관리',timetable:'시간표',homeroom:'담임'};
-  const SECTION_EMOJIS={home:'🏠',bookmarks:'🔖',memos:'📝',students:'👨‍🎓',timetable:'📅',homeroom:'👩‍🏫'};
-  const titleEl=document.getElementById('mobileTabTitle');
+const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'할 일',notepad:'메모',students:'학생관리',timetable:'시간표',homeroom:'담임'};
+const SECTION_EMOJIS={home:'🏠',bookmarks:'🔖',memos:'📌',notepad:'📝',students:'👨‍🎓',timetable:'📅',homeroom:'👩‍🏫'};
+const titleEl=document.getElementById('mobileTabTitle');
   if(titleEl)titleEl.textContent=SECTION_NAMES[id]||id;
   const secTitleEl=document.getElementById('headerSectionTitle');
   if(secTitleEl)secTitleEl.textContent=(SECTION_EMOJIS[id]||'')+' '+(SECTION_NAMES[id]||id);
@@ -988,10 +1102,10 @@ const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'메모',students
   const _sa=document.getElementById('topSafeArea');if(_sa)_sa.style.background=_bg;
   const _hd=document.querySelector('.header');if(_hd)_hd.style.background=_bg;
   closeDrawer();
-({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[id])?.();
+({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,notepad:renderNotepadSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[id])?.();
   updateTabFab(id);
 }
-function showStudentTab(id,btn){document.querySelectorAll('.student-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sub-nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');({classSection:renderClasses,evalSection:renderEvalList,counselingSection:renderCounseling}[id])?.();updateStudentsFab();}
+function showStudentTab(id,btn){document.querySelectorAll('.student-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sub-nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');({classSection:renderClasses,evalSection:renderEvalList,counselingSection:renderCounseling,sgibuSection:initSgibuSection}[id])?.();updateStudentsFab();}
 function openModal(id){document.getElementById(id).classList.add('active');}
 function closeModal(id){document.getElementById(id).classList.remove('active');document.getElementById(id).querySelectorAll('input:not([type=hidden]),textarea').forEach(el=>{if(el.type!=='color')el.value='';});document.getElementById(id).querySelectorAll('select').forEach(s=>s.selectedIndex=0);}
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{
@@ -2227,7 +2341,8 @@ const DRAWER_SECTIONS=[
   {id:'home',      emoji:'🏠', name:'홈'},
   {id:'homeroom',  emoji:'👩‍🏫', name:'담임'},
   {id:'students',  emoji:'👨‍🎓', name:'학생관리'},
-  {id:'memos',     emoji:'📝', name:'메모'},
+  {id:'memos',     emoji:'📌', name:'할 일'},
+  {id:'notepad',   emoji:'📝', name:'메모'},
   {id:'bookmarks', emoji:'🔖', name:'즐겨찾기'},
   {id:'timetable', emoji:'📅', name:'시간표'},
 ];
@@ -2674,7 +2789,26 @@ function showHrTab(tabId,btn){
   if(tabId==='hrNoticeTab')renderNoticeTab();
 }
 function changeNoticeDate(dir){const d=new Date(noticeSelectedDate+'T12:00:00');d.setDate(d.getDate()+dir);noticeSelectedDate=d.toISOString().split('T')[0];renderNoticeTab();}
+function carryOverUndoneNotices(){
+  const today=new Date().toISOString().split('T')[0];
+  if(noticeSelectedDate!==today)return;
+  const notices=DB.get('dailyNotices');
+  const todaySourceIds=new Set(notices.filter(n=>n.date===today&&n.carriedOverFrom).map(n=>n.carriedOverFrom));
+  const undoneOld=notices.filter(n=>!n.done&&n.date<today);
+  let changed=false;
+  const now=Date.now();
+  undoneOld.forEach((n,i)=>{
+    const srcId=n.originalSourceId||n.id;
+    if(!todaySourceIds.has(srcId)){
+      todaySourceIds.add(srcId);
+      notices.push({id:now+i+1,date:today,content:n.content,done:false,studentId:n.studentId||null,studentName:n.studentName||null,carriedOverFrom:srcId,originalSourceId:srcId});
+      changed=true;
+    }
+  });
+  if(changed)DB.set('dailyNotices',notices);
+}
 function renderNoticeTab(){
+  carryOverUndoneNotices();
   const c=document.getElementById('hrNoticeContent');if(!c)return;
   const notices=DB.get('dailyNotices').filter(n=>n.date===noticeSelectedDate);
   const dateObj=new Date(noticeSelectedDate+'T12:00:00');
@@ -2699,17 +2833,31 @@ function renderNoticeTab(){
     </div>`;
     html+=notices.map(n=>{
       const displayText=n.content||n.title||'(내용 없음)';
+      const studentBadge=n.studentName?`<span style="display:inline-flex;align-items:center;font-size:0.72rem;background:rgba(129,140,248,0.2);color:var(--primary-light);border:1px solid rgba(129,140,248,0.3);border-radius:20px;padding:2px 8px;margin-bottom:5px;">👤 ${escHtml(n.studentName)}</span><br>`:'';
+      const carryBadge=n.carriedOverFrom?`<span style="display:inline-flex;align-items:center;font-size:0.7rem;background:rgba(252,211,77,0.15);color:#D97706;border:1px solid rgba(252,211,77,0.3);border-radius:20px;padding:1px 7px;margin-bottom:5px;">📋 이전 날에서 넘어옴</span><br>`:'';
       return `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface);border-radius:10px;border-left:4px solid ${n.done?'var(--border)':'#EF4444'};margin-bottom:8px;transition:all 0.2s;${n.done?'opacity:0.55;':''}">
       <button onclick="toggleNoticeDone(${n.id})" style="width:22px;height:22px;border-radius:50%;border:2px solid ${n.done?'#10B981':'var(--primary)'};background:${n.done?'#10B981':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:white;flex-shrink:0;margin-top:2px;transition:all 0.2s;">${n.done?'✓':''}</button>
-        <div style="flex:1;min-width:0;font-size:0.92rem;line-height:1.6;white-space:pre-wrap;${n.done?'text-decoration:line-through;color:var(--text-secondary);':''}">${escHtml(displayText)}</div>
+        <div style="flex:1;min-width:0;">
+          ${carryBadge}${studentBadge}
+          <div style="font-size:0.92rem;line-height:1.6;white-space:pre-wrap;${n.done?'text-decoration:line-through;color:var(--text-secondary);':''}">${escHtml(displayText)}</div>
+        </div>
         <button class="btn-icon" onclick="deleteNotice(${n.id})" style="flex-shrink:0;margin-top:-2px;">✕</button>
       </div>`;
     }).join('');
   }else{
     html+=`<div class="empty-state" style="padding:24px 0;"><div class="empty-icon">📢</div><p>이 날 안내사항이 없어요</p></div>`;
   }
+  let studentSelectHtml='';
+  if(hrSelectedClassId){
+    const cls=DB.get('classes').find(c=>c.id===hrSelectedClassId);
+    if(cls&&cls.students.length){
+      const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
+      studentSelectHtml=`<div class="form-group" style="margin-bottom:8px;"><label class="form-label">학생 선택 <span style="font-size:0.75rem;color:var(--text-secondary);">(특정 학생에게 전달할 내용이 있을 때)</span></label><select id="noticeStudentSelect" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:0.9rem;width:100%;font-family:inherit;"><option value="">📢 전체 (학생 미지정)</option>${sorted.map(s=>`<option value="${s.id}">${s.number?s.number+'번 ':''}${escHtml(s.name)}</option>`).join('')}</select></div>`;
+    }
+  }
   html+=`<div class="card" style="margin-top:16px;margin-bottom:0;">
     <div class="card-title">➕ 안내사항 추가</div>
+    ${studentSelectHtml}
     <div class="form-group" style="margin-bottom:10px;"><textarea id="noticeContent" spellcheck="false" placeholder="안내사항 내용을 입력하세요..." style="min-height:80px;" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')addNotice()"></textarea></div>
     <button class="btn btn-primary" style="width:100%;" onclick="addNotice()">➕ 추가하기</button>
     <p style="font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-top:6px;">Ctrl+Enter로 빠르게 추가</p>
@@ -2720,7 +2868,14 @@ function addNotice(){
   const content=document.getElementById('noticeContent').value.trim();
   if(!content){showToast('❌ 내용을 입력해주세요');return;}
   const notices=DB.get('dailyNotices');
-  notices.push({id:Date.now(),date:noticeSelectedDate,content,done:false});
+  let studentId=null,studentName=null;
+  const studentSel=document.getElementById('noticeStudentSelect');
+  if(studentSel&&studentSel.value){
+    studentId=Number(studentSel.value);
+    const cls=DB.get('classes').find(c=>c.id===hrSelectedClassId);
+    if(cls){const stud=cls.students.find(s=>s.id===studentId);if(stud)studentName=stud.name;}
+  }
+  notices.push({id:Date.now(),date:noticeSelectedDate,content,done:false,studentId,studentName});
   DB.set('dailyNotices',notices);
   renderNoticeTab();
   showToast('✅ 안내사항이 추가되었습니다');
@@ -2745,6 +2900,247 @@ function clearDoneNotices(){
   renderNoticeTab();
   showToast('✅ 완료 안내사항이 삭제되었습니다');
 }
+/* ══════════════════════════════
+   메모장(Notepad) 기능
+══════════════════════════════ */
+let _currentNoteId=null;
+let _currentNoteGroupId=null;
+let _notepadMobilePanelOpen=false;
+let _noteSaveTimer=null;
+let _notepadOpenGroups=new Set();
+
+function renderNotepadSection(){
+  renderNotepadGroups();
+  if(_currentNoteId)loadNoteIntoEditor(_currentNoteId);
+  else showNotepadEmpty();
+  const fab=document.getElementById('notepadMobileFab');
+  if(fab)fab.style.display=window.innerWidth<=768?'flex':'none';
+}
+
+function renderNotepadGroups(){
+  const groups=DB.get('noteGroups'),notes=DB.get('noteItems');
+  ['notepadGroupsList','notepadMobileGroupsList'].forEach(elId=>{
+    const c=document.getElementById(elId);if(!c)return;
+    if(!groups.length){c.innerHTML=`<div style="padding:20px 14px;text-align:center;color:var(--text-secondary);font-size:0.85rem;">그룹을 추가해보세요</div>`;return;}
+    c.innerHTML=groups.map(g=>{
+      const gNotes=notes.filter(n=>n.groupId===g.id);
+      const isOpen=_notepadOpenGroups.has(g.id);
+      const notesHtml=gNotes.map(n=>`<button class="notepad-note-btn${_currentNoteId===n.id?' active':''}" onclick="selectNote(${n.id})"><span class="notepad-note-title-span">📄 ${escHtml(n.title||'제목 없음')}</span><span class="notepad-note-del" onclick="event.stopPropagation();deleteNote(${n.id})">✕</span></button>`).join('');
+      return `<div class="notepad-group-row"><div class="notepad-group-header" onclick="toggleNoteGroup(${g.id})"><span class="notepad-group-arrow${isOpen?' open':''}">▶</span><span class="notepad-group-name">📁 ${escHtml(g.name)}</span><span class="notepad-group-count">${gNotes.length}</span><button class="notepad-group-del" onclick="event.stopPropagation();deleteNoteGroup(${g.id})">✕</button></div><div class="notepad-items-list${isOpen?' open':''}">${notesHtml}<button class="notepad-add-note-btn" onclick="addNoteToGroup(${g.id})">+ 메모 추가</button></div></div>`;
+    }).join('');
+  });
+}
+
+function toggleNoteGroup(groupId){
+  if(_notepadOpenGroups.has(groupId))_notepadOpenGroups.delete(groupId);
+  else _notepadOpenGroups.add(groupId);
+  renderNotepadGroups();
+}
+
+function showNotepadEmpty(){
+  const ea=document.getElementById('notepadEditorArea');if(!ea)return;
+  ea.innerHTML=`<div class="notepad-empty-state"><div style="font-size:2.5rem;">📝</div><div style="font-weight:600;">메모를 선택해주세요</div><div style="font-size:0.85rem;">좌측에서 그룹을 만들고 메모를 추가해보세요</div></div>`;
+}
+
+function selectNote(noteId){
+  _currentNoteId=noteId;
+  loadNoteIntoEditor(noteId);
+  renderNotepadGroups();
+  if(_notepadMobilePanelOpen)closeNotepadPanel();
+}
+
+function loadNoteIntoEditor(noteId){
+  const notes=DB.get('noteItems'),note=notes.find(n=>n.id===noteId);if(!note)return;
+  const ea=document.getElementById('notepadEditorArea');if(!ea)return;
+  const updStr=note.updatedAt?new Date(note.updatedAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+  ea.innerHTML=`<div class="notepad-editor-topbar"><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">🗑️ 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><textarea class="notepad-content-input" id="noteContentInput" placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})">${escHtml(note.content||'')}</textarea>`;
+}
+
+function scheduleNoteSave(noteId){
+  clearTimeout(_noteSaveTimer);
+  _noteSaveTimer=setTimeout(()=>saveCurrentNote(noteId),700);
+}
+
+function saveCurrentNote(noteId){
+  const titleEl=document.getElementById('noteTitleInput'),contentEl=document.getElementById('noteContentInput');
+  if(!titleEl||!contentEl)return;
+  const notes=DB.get('noteItems'),note=notes.find(n=>n.id===noteId);if(!note)return;
+  note.title=titleEl.value;
+  note.content=contentEl.value;
+  note.updatedAt=Date.now();
+  DB.set('noteItems',notes);
+  renderNotepadGroups();
+}
+
+function addNoteToGroup(groupId){
+  _notepadOpenGroups.add(groupId);
+  _currentNoteGroupId=groupId;
+  const notes=DB.get('noteItems');
+  const newNote={id:Date.now(),groupId,title:'',content:'',updatedAt:Date.now()};
+  notes.push(newNote);
+  DB.set('noteItems',notes);
+  _currentNoteId=newNote.id;
+  renderNotepadGroups();
+  loadNoteIntoEditor(newNote.id);
+  setTimeout(()=>{const t=document.getElementById('noteTitleInput');if(t)t.focus();},80);
+  showToast('📝 새 메모가 추가되었습니다');
+}
+
+function addNoteToCurrentGroup(){
+  const groups=DB.get('noteGroups');
+  if(!groups.length){showToast('❌ 먼저 그룹을 추가해주세요');openAddNoteGroupModal();return;}
+  const gid=_currentNoteGroupId||(_currentNoteId?(DB.get('noteItems').find(n=>n.id===_currentNoteId)?.groupId):null)||groups[0].id;
+  addNoteToGroup(gid);
+}
+
+function deleteNote(noteId){
+  if(!confirm('이 메모를 삭제할까요?'))return;
+  DB.set('noteItems',DB.get('noteItems').filter(n=>n.id!==noteId));
+  if(_currentNoteId===noteId){_currentNoteId=null;showNotepadEmpty();}
+  renderNotepadGroups();
+  showToast('✅ 메모가 삭제되었습니다');
+}
+
+function openAddNoteGroupModal(){openModal('addNoteGroupModal');setTimeout(()=>document.getElementById('newNoteGroupName')?.focus(),80);}
+
+function saveNewNoteGroup(){
+  const name=document.getElementById('newNoteGroupName').value.trim();
+  if(!name){showToast('❌ 이름을 입력해주세요');return;}
+  const groups=DB.get('noteGroups');
+  const ng={id:Date.now(),name};
+  groups.push(ng);
+  DB.set('noteGroups',groups);
+  _notepadOpenGroups.add(ng.id);
+  closeModal('addNoteGroupModal');
+  renderNotepadGroups();
+  showToast('✅ 그룹이 만들어졌습니다');
+}
+
+function deleteNoteGroup(groupId){
+  if(!confirm('그룹과 내부 메모를 모두 삭제할까요?'))return;
+  DB.set('noteGroups',DB.get('noteGroups').filter(g=>g.id!==groupId));
+  DB.set('noteItems',DB.get('noteItems').filter(n=>n.groupId!==groupId));
+  _notepadOpenGroups.delete(groupId);
+  if(_currentNoteId&&DB.get('noteItems').findIndex(n=>n.id===_currentNoteId)===-1){_currentNoteId=null;showNotepadEmpty();}
+  renderNotepadGroups();
+  showToast('✅ 그룹이 삭제되었습니다');
+}
+
+function openNotepadPanel(){
+  _notepadMobilePanelOpen=true;
+  document.getElementById('notepadMobilePanel')?.classList.add('open');
+  const ov=document.getElementById('notepadOverlay');
+  if(ov){ov.style.display='block';setTimeout(()=>ov.classList.add('open'),10);}
+  document.body.style.overflow='hidden';
+}
+
+function closeNotepadPanel(){
+  _notepadMobilePanelOpen=false;
+  document.getElementById('notepadMobilePanel')?.classList.remove('open');
+  const ov=document.getElementById('notepadOverlay');
+  if(ov){ov.classList.remove('open');setTimeout(()=>ov.style.display='none',300);}
+  document.body.style.overflow='';
+}
+
+/* ══════════════════════════════
+   생기부 작성 기능
+══════════════════════════════ */
+let _sgibuSaveTimer=null;
+let _sgibuCurrentClassId=null;
+let _sgibuCurrentCategory='subject';
+
+function initSgibuSection(){
+  const classes=DB.get('classes');
+  const sel=document.getElementById('sgibuClassSelect');
+  if(!sel)return;
+  sel.innerHTML='<option value="">-- 학급을 선택하세요 --</option>'+classes.map(c=>`<option value="${c.id}" ${c.id===_sgibuCurrentClassId?'selected':''}>${c.grade}학년 ${c.classNum}반</option>`).join('');
+  if(_sgibuCurrentClassId)renderSgibuSection(_sgibuCurrentClassId);
+  else document.getElementById('sgibuContent').innerHTML=`<div class="empty-state"><div class="empty-icon">📜</div><p>학급을 선택하면 학생 목록이 표시됩니다</p></div>`;
+}
+
+function getSgibuByteLength(str){
+  let bytes=0;
+  for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);if(c<=0x7F)bytes+=1;else if(c<=0x7FF)bytes+=2;else bytes+=3;}
+  return bytes;
+}
+
+const SGIBU_CATEGORIES=[
+  {id:'subject',label:'과목별세부능력및특기사항'},
+  {id:'autonomous',label:'자율자치활동'},
+  {id:'club',label:'동아리활동'},
+  {id:'behavior',label:'행동특성및종합의견'},
+];
+function switchSgibuCategory(categoryId,classId){
+  _sgibuCurrentCategory=categoryId;
+  renderSgibuSection(classId);
+}
+function renderSgibuSection(classId){
+  _sgibuCurrentClassId=classId?Number(classId):null;
+  const c=document.getElementById('sgibuContent');if(!c)return;
+  if(!classId){c.innerHTML=`<div class="empty-state"><div class="empty-icon">📜</div><p>학급을 선택하면 학생 목록이 표시됩니다</p></div>`;return;}
+  const cls=DB.get('classes').find(cl=>cl.id===Number(classId));
+  if(!cls||!cls.students.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">👨‍🎓</div><p>이 학급에 학생이 없어요</p></div>`;return;}
+  const records=DB.get('sgibuRecords')||{};
+  const classRecords=records[classId]||{};
+  const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
+  const catNav=SGIBU_CATEGORIES.map(cat=>`<button onclick="switchSgibuCategory('${cat.id}',${classId})" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:${_sgibuCurrentCategory===cat.id?'var(--primary)':'var(--surface2)'};color:${_sgibuCurrentCategory===cat.id?'white':'var(--text-secondary)'};cursor:pointer;font-size:0.8rem;font-family:inherit;transition:all 0.2s;white-space:nowrap;">${cat.label}</button>`).join('');
+  const catLabel=SGIBU_CATEGORIES.find(ct=>ct.id===_sgibuCurrentCategory)?.label||'';
+  c.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${catNav}</div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-weight:700;font-size:0.95rem;">${cls.grade}학년 ${cls.classNum}반 — ${catLabel}</span>
+      <span></span>
+      </div>
+    <div class="sgibu-layout" style="padding:0 16px;">
+      ${sorted.map(s=>{
+        const sr=classRecords[s.id];
+        let text='';
+        if(typeof sr==='string'){text=_sgibuCurrentCategory==='subject'?sr:'';}
+        else if(sr&&typeof sr==='object'){text=sr[_sgibuCurrentCategory]||'';}
+        const charLen=text.length;
+        const byteLen=getSgibuByteLength(text);
+        const charColor=charLen>500?'sgibu-limit-over':charLen>400?'sgibu-limit-warn':'';
+        const byteColor=byteLen>1000?'sgibu-limit-over':byteLen>800?'sgibu-limit-warn':'';
+        return `<div class="sgibu-row">
+          <div class="sgibu-student-info">
+            <span class="sgibu-num">${s.number??''}번</span>
+            <span class="sgibu-name">${escHtml(s.name)}</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;">
+            <textarea class="sgibu-textarea" id="sgibu_${classId}_${s.id}" placeholder="내용을 입력하세요..." oninput="onSgibuInput(${classId},${s.id},this)">${escHtml(text)}</textarea>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+              <span class="sgibu-char-count ${charColor}" id="sgibuChar_${classId}_${s.id}">${charLen}자</span>
+<span class="sgibu-byte-count ${byteColor}" id="sgibuByte_${classId}_${s.id}">${byteLen} 바이트</span>            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function onSgibuInput(classId,studentId,el){
+  const text=el.value;
+  const charLen=text.length;
+  const byteLen=getSgibuByteLength(text);
+  const charEl=document.getElementById(`sgibuChar_${classId}_${studentId}`);
+  const byteEl=document.getElementById(`sgibuByte_${classId}_${studentId}`);
+  if(charEl){charEl.textContent=`${charLen}자`;charEl.className='sgibu-char-count '+(charLen>500?'sgibu-limit-over':charLen>400?'sgibu-limit-warn':'');}
+if(byteEl){byteEl.textContent=`${byteLen} 바이트`;byteEl.className='sgibu-byte-count '+(byteLen>1000?'sgibu-limit-over':byteLen>800?'sgibu-limit-warn':'');}
+  clearTimeout(_sgibuSaveTimer);
+  _sgibuSaveTimer=setTimeout(()=>{
+    const records=DB.get('sgibuRecords')||{};
+    if(!records[classId])records[classId]={};
+    if(typeof records[classId][studentId]==='string'){
+      const oldText=records[classId][studentId];
+      records[classId][studentId]={subject:oldText};
+    }
+    if(!records[classId][studentId]||typeof records[classId][studentId]!=='object')records[classId][studentId]={};
+    records[classId][studentId][_sgibuCurrentCategory]=text;
+    DB.set('sgibuRecords',records);
+    const st=document.getElementById('sgibuSaveStatus');
+    if(st){st.textContent='💾 저장됨';setTimeout(()=>{if(st)st.textContent='';},1500);}
+  },600);
+}
 /* ── 탭 전용 FAB ── */
 let _tabFabOpen=false;
 function updateTabFab(sectionId){
@@ -2766,6 +3162,9 @@ function updateTabFab(sectionId){
   }else if(sectionId==='bookmarks'){
     main.textContent='+';
     items.innerHTML=`<div class="tab-fab-item"><button onclick="openAddGroupModal();closeTabFab()">📁 + 그룹</button></div><div class="tab-fab-item"><button onclick="openAddBookmarkModal();closeTabFab()">🔖 + 즐겨찾기</button></div>`;
+  }else if(sectionId==='notepad'){
+    main.textContent='+';
+    items.innerHTML=`<div class="tab-fab-item"><button onclick="openAddNoteGroupModal();closeTabFab()">📁 + 그룹</button></div><div class="tab-fab-item"><button onclick="addNoteToCurrentGroup();closeTabFab()">📝 + 메모</button></div>`;
   }
 }
 function updateStudentsFab(){
@@ -2828,7 +3227,7 @@ import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app
 import{getFirestore,doc,setDoc,getDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyCqoVkHtnEsQRwExsthe4sASWID5H2bzuQ",authDomain:"kosick-dashboard.firebaseapp.com",projectId:"kosick-dashboard",storageBucket:"kosick-dashboard.firebasestorage.app",messagingSenderId:"990702080590",appId:"1:990702080590:web:9fe9a356db03c0eea4291f"};
 const fb=initializeApp(cfg),fs=getFirestore(fb);
-const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices'];
+const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords'];
 const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','homeroomMyClassId','appThemeColor'];
 const ref=doc(fs,'kosick','data');
 let _isSaving=false;
