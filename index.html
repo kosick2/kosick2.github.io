@@ -328,7 +328,7 @@ textarea{resize:vertical;min-height:80px;}
 .notepad-add-group-btn:hover{background:#4338CA;transform:scale(1.08);}
 .notepad-groups-list{flex:1;overflow-y:auto;padding:6px 0;}
 .notepad-group-row{border-bottom:1px solid var(--border);}
-.notepad-group-header{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background 0.15s;user-select:none;}
+.notepad-group-header{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background 0.15s;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .notepad-group-header:hover{background:var(--surface2);}
 .notepad-group-arrow{font-size:0.7rem;color:var(--text-secondary);transition:transform 0.25s;flex-shrink:0;}
 .notepad-group-arrow.open{transform:rotate(90deg);}
@@ -338,7 +338,7 @@ textarea{resize:vertical;min-height:80px;}
 .notepad-group-header:hover .notepad-group-del{opacity:1;}
 .notepad-items-list{overflow:hidden;max-height:0;transition:max-height 0.32s cubic-bezier(0.4,0,0.2,1);}
 .notepad-items-list.open{max-height:600px;}
-.notepad-note-btn{width:100%;padding:8px 14px 8px 34px;text-align:left;background:none;border:none;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;transition:background 0.15s;font-family:inherit;display:flex;align-items:center;gap:6px;overflow:hidden;}
+.notepad-note-btn{width:100%;padding:8px 14px 8px 34px;text-align:left;background:none;border:none;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;transition:background 0.15s;font-family:inherit;display:flex;align-items:center;gap:6px;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .notepad-note-btn:hover{background:var(--surface2);color:var(--text);}
 .notepad-note-btn.active{background:rgba(79,70,229,0.18);color:var(--primary-light);font-weight:600;}
 .notepad-note-title-span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
@@ -380,7 +380,7 @@ textarea{resize:vertical;min-height:80px;}
 .sgibu-student-info{display:flex;flex-direction:column;gap:2px;padding-top:6px;width:68px;flex-shrink:0;}
 .sgibu-num{font-size:0.75rem;color:var(--text-secondary);}
 .sgibu-name{font-weight:700;font-size:0.95rem;}
-.sgibu-textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:14px;font-size:0.88rem;width:100%;outline:none;resize:vertical;min-height:70px;font-family:inherit;line-height:1.65;transition:border-color 0.2s;}
+.sgibu-textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:14px;font-size:0.88rem;width:100%;outline:none;resize:none;min-height:70px;overflow:hidden;font-family:inherit;line-height:1.65;transition:border-color 0.2s;}
 .sgibu-textarea:focus{border-color:var(--primary-light);}
 .sgibu-counter{display:flex;flex-direction:column;gap:4px;padding-top:8px;align-items:flex-end;}
 .sgibu-char-count{font-size:0.82rem;font-weight:700;color:var(--text);}
@@ -390,6 +390,9 @@ textarea{resize:vertical;min-height:80px;}
 @media(max-width:600px){
   .sgibu-student-info{width:56px;}
   .sgibu-name{font-size:0.82rem;}
+}
+@media(min-width:769px){
+  body:has(#sgibuSection.student-tab.active) .main{max-width:92vw;}
 }
 </style>
 </head>
@@ -3263,9 +3266,10 @@ function renderSgibuSection(classId){
       }).join('')}
     </div>
   </div>`;
+  setTimeout(()=>{c.querySelectorAll('.sgibu-textarea').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});},0);
 }
-
 function onSgibuInput(classId,studentId,el){
+  el.style.height='auto';el.style.height=el.scrollHeight+'px';
   const text=el.value;
   const charLen=text.length;
   const byteLen=getSgibuByteLength(text);
@@ -3483,6 +3487,34 @@ DB.set=(k,v)=>{
 };
 window._cancelDebounce=()=>clearTimeout(_debounceTimer);
 loadData();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _firebaseReady) {
+    getDoc(ref).then(snap => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const localTime = Number(localStorage.getItem('_savedAt') || 0);
+      const fireTime = Number(data._savedAt || 0);
+      if (fireTime > localTime) {
+        applyRemoteData(data);
+        showToast('🔄 최신 데이터로 갱신되었습니다');
+      }
+    }).catch(() => {});
+  }
+});
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && _firebaseReady) {
+    getDoc(ref).then(snap => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const localTime = Number(localStorage.getItem('_savedAt') || 0);
+      const fireTime = Number(data._savedAt || 0);
+      if (fireTime > localTime) {
+        applyRemoteData(data);
+        showToast('🔄 최신 데이터로 갱신되었습니다');
+      }
+    }).catch(() => {});
+  }
+});
 </script>
 </body>
 </html>
