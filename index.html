@@ -358,8 +358,10 @@ textarea{resize:vertical;min-height:80px;}
 .notepad-editor-meta{font-size:0.75rem;color:var(--text-secondary);}
 .notepad-title-input{width:100%;background:transparent;border:none;color:var(--text);font-size:1.25rem;font-weight:700;outline:none;padding:16px 20px 10px;font-family:inherit;}
 .notepad-title-input::placeholder{color:var(--text-secondary);opacity:0.45;}
-.notepad-content-input{flex:1;width:100%;background:transparent;border:none;color:var(--text);font-size:0.95rem;line-height:1.85;outline:none;resize:none;padding:0 20px 20px;font-family:inherit;}
+.notepad-content-input{flex:1;width:100%;background:transparent;border:none;color:var(--text);font-size:0.95rem;line-height:1.85;outline:none;resize:none;padding:0 20px 20px;font-family:inherit;overflow-y:auto;word-break:break-word;}
 .notepad-content-input::placeholder{color:var(--text-secondary);opacity:0.45;}
+.notepad-content-input[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-secondary);opacity:0.45;pointer-events:none;display:block;}
+#noticeContent[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-secondary);opacity:0.45;pointer-events:none;display:block;}
 .notepad-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-secondary);gap:10px;}
 .notepad-mobile-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:rgba(15,23,42,0.55);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.18);font-size:1.4rem;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:490;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all 0.2s;}
 .notepad-mobile-panel{position:fixed;top:0;right:-310px;width:290px;height:100dvh;background:var(--surface);z-index:1100;transition:right 0.32s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(0,0,0,0.4);border-radius:20px 0 0 20px;}
@@ -1036,10 +1038,14 @@ document.addEventListener('input',e=>{
 /* ② 포커스 잃을 때 즉시 저장 (키보드 Done 버튼 포함) */
 document.addEventListener('focusout',e=>{
   const el=e.target;
-  /* contenteditable (할 일 메모) */
+  /* contenteditable (할 일 메모 + 메모 탭) */
   if(el.isContentEditable){
     clearTimeout(el._saveTimer);
     _flushMemoEl(el);
+    if(el.id==='noteContentInput'&&typeof _currentNoteId!=='undefined'&&_currentNoteId){
+      clearTimeout(_noteSaveTimer);
+      saveCurrentNote(_currentNoteId);
+    }
     return;
   }
   /* textarea / input 즉시 flush */
@@ -1121,6 +1127,7 @@ function manualSave(){
   });
   /* ④ 전체 localStorage → Firebase 동기화 */
   if(window._manualSave){
+    if(window._cancelDebounce)window._cancelDebounce();
     setTimeout(()=>{
       window._manualSave();
       setTimeout(()=>{
@@ -1565,8 +1572,9 @@ function clearMemoDeadline(id){
   if(document.getElementById('home').classList.contains('active'))renderCalendar();
   showToast('✅ 기한이 제거되었습니다');
 }
-function handleMemoTextKeydown(e,id,el){if(e.key==='Enter'){e.preventDefault();return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');updateMemoText(id,el.innerHTML);}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');updateMemoText(id,el.innerHTML);}}
-function handleDetailKeydown(e,id,el){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');updateMemoDetail(id,el.innerHTML);return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');updateMemoDetail(id,el.innerHTML);return;}if(e.key==='Enter')setTimeout(()=>updateMemoDetail(id,el.innerHTML),0);}
+function _toggleHighlight(){const cur=document.queryCommandValue('backColor').replace(/\s/g,'').toLowerCase();const isHL=cur==='#fcd34d'||cur==='rgb(252,211,77)';document.execCommand('backColor',false,isHL?'transparent':'#FCD34D');}
+function handleMemoTextKeydown(e,id,el){const isCtrl=e.ctrlKey||e.metaKey;if(e.key==='Enter'){e.preventDefault();return;}if(isCtrl&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');updateMemoText(id,el.innerHTML);return;}if(isCtrl&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');updateMemoText(id,el.innerHTML);return;}if(isCtrl&&e.key.toLowerCase()==='u'){e.preventDefault();document.execCommand('underline');updateMemoText(id,el.innerHTML);return;}if(isCtrl&&e.key.toLowerCase()==='h'){e.preventDefault();_toggleHighlight();updateMemoText(id,el.innerHTML);return;}if(e.key==='Tab'&&!isCtrl){e.preventDefault();document.execCommand('insertText',false,'\u00a0\u00a0\u00a0\u00a0');updateMemoText(id,el.innerHTML);return;}}
+function handleDetailKeydown(e,id,el){const isCtrl=e.ctrlKey||e.metaKey;if(isCtrl&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');updateMemoDetail(id,el.innerHTML);return;}if(isCtrl&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');updateMemoDetail(id,el.innerHTML);return;}if(isCtrl&&e.key.toLowerCase()==='u'){e.preventDefault();document.execCommand('underline');updateMemoDetail(id,el.innerHTML);return;}if(isCtrl&&e.key.toLowerCase()==='h'){e.preventDefault();_toggleHighlight();updateMemoDetail(id,el.innerHTML);return;}if(e.key==='Tab'&&!isCtrl&&!e.shiftKey){e.preventDefault();document.execCommand('insertText',false,'\u00a0\u00a0\u00a0\u00a0');updateMemoDetail(id,el.innerHTML);return;}if(e.key==='Enter')setTimeout(()=>updateMemoDetail(id,el.innerHTML),0);}
 function openAddListModal(){selectedListColor=LIST_COLORS[0];document.getElementById('listColorPicker').innerHTML=LIST_COLORS.map(c=>`<div class="color-option ${c===selectedListColor?'selected':''}" style="background:${c};" onclick="selectListColor('${c}',this)"></div>`).join('');openModal('addListModal');}
 function selectListColor(color,el){selectedListColor=color;document.querySelectorAll('#listColorPicker .color-option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');}
 function saveNewList(){const name=document.getElementById('newListName').value.trim();if(!name){showToast('❌ 목록 이름을 입력해주세요');return;}const lists=DB.get('memoLists'),nl={id:Date.now(),name,color:selectedListColor};lists.push(nl);DB.set('memoLists',lists);closeModal('addListModal');renderMemoSection();updateNavBadges();showToast('✅ 목록이 만들어졌습니다');}
@@ -1682,8 +1690,8 @@ function toggleMemoItem(id){
   showToast(item.completed?'✅ 완료!':'↩️ 목록으로 돌아왔습니다');
 }
 let _memoToastTimer=null;
-function updateMemoText(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.text=html;DB.set('memoItems',items);clearTimeout(_memoToastTimer);_memoToastTimer=setTimeout(()=>showToast('✅ 저장되었습니다'),200);}
-function updateMemoDetail(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.detail=html;DB.set('memoItems',items);clearTimeout(_memoToastTimer);_memoToastTimer=setTimeout(()=>showToast('✅ 저장되었습니다'),200);}
+function updateMemoText(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.text=html;DB.set('memoItems',items);}
+function updateMemoDetail(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.detail=html;DB.set('memoItems',items);}
 function deleteMemoItem(id){
   if(!confirm('이 항목을 삭제할까요?'))return;
   DB.set('memoItems',DB.get('memoItems').filter(i=>i.id!==id));
@@ -2960,14 +2968,15 @@ function renderNoticeTab(){
     </div>`;
     html+=notices.map(n=>{
       const displayText=n.content||n.title||'(내용 없음)';
+      const _isHtml=/<[a-z][\s\S]*>/i.test(displayText);
       const studentBadge=n.studentName?`<span style="display:inline-flex;align-items:center;font-size:0.72rem;background:rgba(129,140,248,0.2);color:var(--primary-light);border:1px solid rgba(129,140,248,0.3);border-radius:20px;padding:2px 8px;margin-bottom:5px;">👤 ${escHtml(n.studentName)}</span><br>`:'';
       const carryBadge=n.carriedOverFrom?`<span style="display:inline-flex;align-items:center;font-size:0.7rem;background:rgba(252,211,77,0.15);color:#D97706;border:1px solid rgba(252,211,77,0.3);border-radius:20px;padding:1px 7px;margin-bottom:5px;">📋 이전 날에서 넘어옴</span><br>`:'';
       return `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface);border-radius:10px;border-left:4px solid ${n.done?'var(--border)':'#EF4444'};margin-bottom:8px;transition:all 0.2s;${n.done?'opacity:0.55;':''}">
       <button onclick="toggleNoticeDone(${n.id})" style="width:22px;height:22px;border-radius:50%;border:2px solid ${n.done?'#10B981':'var(--primary)'};background:${n.done?'#10B981':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:white;flex-shrink:0;margin-top:2px;transition:all 0.2s;">${n.done?'✓':''}</button>
         <div style="flex:1;min-width:0;">
           ${carryBadge}${studentBadge}
-          <div style="font-size:0.92rem;line-height:1.6;white-space:pre-wrap;${n.done?'text-decoration:line-through;color:var(--text-secondary);':''}">${escHtml(displayText)}</div>
-        </div>
+          <div style="font-size:0.92rem;line-height:1.6;${_isHtml?'':'white-space:pre-wrap;'}${n.done?'text-decoration:line-through;color:var(--text-secondary);':''}">${_isHtml?displayText:escHtml(displayText)}</div>
+          </div>
         <button class="btn-icon" onclick="deleteNotice(${n.id})" style="flex-shrink:0;margin-top:-2px;">✕</button>
       </div>`;
     }).join('');
@@ -2985,15 +2994,17 @@ function renderNoticeTab(){
   html+=`<div class="card" style="margin-top:16px;margin-bottom:0;">
     <div class="card-title">➕ 안내사항 추가</div>
     ${studentSelectHtml}
-    <div class="form-group" style="margin-bottom:10px;"><textarea id="noticeContent" spellcheck="false" placeholder="안내사항 내용을 입력하세요..." style="min-height:80px;" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')addNotice()"></textarea></div>
+    <div class="form-group" style="margin-bottom:10px;"><div id="noticeContent" contenteditable="true" spellcheck="false" data-placeholder="안내사항 내용을 입력하세요..." style="min-height:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;line-height:1.6;word-break:break-word;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor=''" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addNotice();}"></div></div>
     <button class="btn btn-primary" style="width:100%;" onclick="addNotice()">➕ 추가하기</button>
     <p style="font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-top:6px;">Ctrl+Enter로 빠르게 추가</p>
   </div>`;
   c.innerHTML=html;
 }
 function addNotice(){
-  const content=document.getElementById('noticeContent').value.trim();
-  if(!content){showToast('❌ 내용을 입력해주세요');return;}
+  const _ne=document.getElementById('noticeContent');
+  if(!_ne){showToast('❌ 내용을 입력해주세요');return;}
+  const content=_ne.tagName==='TEXTAREA'?_ne.value.trim():_ne.innerHTML.trim();
+  if(!content||content==='<br>'||!_ne.textContent.trim()){showToast('❌ 내용을 입력해주세요');return;}
   const notices=DB.get('dailyNotices');
   let studentId=null,studentName=null;
   const studentSel=document.getElementById('noticeStudentSelect');
@@ -3087,7 +3098,9 @@ function loadNoteIntoEditor(noteId){
   const notes=DB.get('noteItems'),note=notes.find(n=>n.id===noteId);if(!note)return;
   const ea=document.getElementById('notepadEditorArea');if(!ea)return;
   const updStr=note.updatedAt?new Date(note.updatedAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  ea.innerHTML=`<div class="notepad-editor-topbar"><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">🗑️ 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><textarea class="notepad-content-input" id="noteContentInput" placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})">${escHtml(note.content||'')}</textarea>`;
+  ea.innerHTML=`<div class="notepad-editor-topbar"><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">🗑️  삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div>`;
+  const _nc=document.getElementById('noteContentInput');
+  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
 }
 
 function scheduleNoteSave(noteId){
@@ -3100,7 +3113,7 @@ function saveCurrentNote(noteId){
   if(!titleEl||!contentEl)return;
   const notes=DB.get('noteItems'),note=notes.find(n=>n.id===noteId);if(!note)return;
   note.title=titleEl.value;
-  note.content=contentEl.value;
+  note.content=contentEl.tagName==='TEXTAREA'?contentEl.value:contentEl.innerHTML;
   note.updatedAt=Date.now();
   DB.set('noteItems',notes);
   renderNotepadGroups();
@@ -3275,6 +3288,30 @@ if(byteEl){byteEl.textContent=`${byteLen} 바이트`;byteEl.className='sgibu-byt
     if(st){st.textContent='💾 저장됨';setTimeout(()=>{if(st)st.textContent='';},1500);}
   },600);
 }
+/* ── 전역 서식 단축키 (contenteditable 및 textarea 공통) ── */
+document.addEventListener('keydown',function(e){
+  const el=e.target;
+  const isCtrl=e.ctrlKey||e.metaKey;
+  /* contenteditable: data-text-id / data-id 는 별도 핸들러에서 처리 */
+  if(el.isContentEditable&&!el.dataset.textId&&!el.dataset.id){
+    if(isCtrl&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');return;}
+    if(isCtrl&&e.key.toLowerCase()==='u'){e.preventDefault();document.execCommand('underline');return;}
+    if(isCtrl&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');return;}
+    if(isCtrl&&e.key.toLowerCase()==='h'){e.preventDefault();_toggleHighlight();return;}
+    if(e.key==='Tab'&&!isCtrl&&!e.shiftKey){e.preventDefault();document.execCommand('insertText',false,'\u00a0\u00a0\u00a0\u00a0');return;}
+  }
+  /* textarea: TAB 들여쓰기 */
+  if(el.tagName==='TEXTAREA'){
+    if(e.key==='Tab'&&!isCtrl&&!e.shiftKey){
+      e.preventDefault();
+      const s=el.selectionStart,en=el.selectionEnd;
+      el.value=el.value.substring(0,s)+'    '+el.value.substring(en);
+      el.selectionStart=el.selectionEnd=s+4;
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+      return;
+    }
+  }
+},true);
 /* ── 탭 전용 FAB ── */
 let _tabFabOpen=false;
 function updateHomeroomFab(){
@@ -3378,9 +3415,9 @@ let _isSaving=false;
 let _firebaseLoaded=false;
 let _firebaseReady=false;
 let _saveToastTimer=null;
-function syncAll(){
+function syncAll(isManual=false){
   if(!_firebaseReady){console.warn('🛡️ 안전장치: Firebase 미로드 상태에서 저장 차단');showToast('⏳ 데이터 로딩 중... 잠시 후 자동 저장됩니다');return;}
-  const p={};
+const p={};
   DK.forEach(k=>{p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'?'{}':'[]'));if(k==='sgibuRecords'&&Array.isArray(p[k]))p[k]={};});
   const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
   const _hasSettings=SK.some(k=>localStorage.getItem(k)&&localStorage.getItem(k)!=='');
@@ -3389,7 +3426,7 @@ function syncAll(){
 p._savedAt=Date.now();
   _isSaving=true;
   setDoc(ref,p)
-    .then(()=>{localStorage.setItem('_savedAt',p._savedAt);_isSaving=false;clearTimeout(_saveToastTimer);_saveToastTimer=setTimeout(()=>showToast('☁️ 자동 저장 완료'),200);})
+    .then(()=>{localStorage.setItem('_savedAt',p._savedAt);_isSaving=false;if(!isManual){clearTimeout(_saveToastTimer);_saveToastTimer=setTimeout(()=>showToast('☁️ 자동 저장 완료'),200);}})
   .catch(e=>{console.error('저장 실패:',e);showToast('❌ 저장 실패! 네트워크를 확인해주세요.');_isSaving=false;});
 }
 window._syncSettings=syncAll;
@@ -3436,7 +3473,7 @@ async function loadData(){
     }
   });
 }
-window._manualSave=syncAll;
+window._manualSave=()=>syncAll(true);
 let _debounceTimer=null;
 const _s=DB.set.bind(DB);
 DB.set=(k,v)=>{
@@ -3444,6 +3481,7 @@ DB.set=(k,v)=>{
   clearTimeout(_debounceTimer);
   _debounceTimer=setTimeout(syncAll,1500);
 };
+window._cancelDebounce=()=>clearTimeout(_debounceTimer);
 loadData();
 </script>
 </body>
