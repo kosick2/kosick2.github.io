@@ -235,7 +235,7 @@ textarea{resize:vertical;min-height:80px;}
   .cal-day{height:78px;}
 }
 /* ═══ 모바일 드로어 네비게이션 ═══ */
-.hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);font-size:1.4rem;line-height:1;transition:background 0.2s;flex-shrink:0;}
+.hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);font-size:1.4rem;line-height:1;transition:background 0.2s;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .hamburger-btn:hover{background:var(--surface2);}
 .mobile-tab-title{display:none;font-weight:700;font-size:1.05rem;color:var(--text);text-align:center;}
 .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1200;backdrop-filter:blur(3px);opacity:0;transition:opacity 0.3s;pointer-events:none;}
@@ -325,7 +325,7 @@ textarea{resize:vertical;min-height:80px;}
 </nav>
   <span class="mobile-tab-title" id="mobileTabTitle">홈</span>
   <div class="header-right">
-<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" title="메뉴" style="position:relative;">☰<span id="hamburgerBadge" style="display:none;position:absolute;top:2px;right:2px;background:#EF4444;color:white;font-size:0.6rem;font-weight:700;min-width:15px;height:15px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;"></span></button>
+<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" ontouchstart="openDrawer();event.preventDefault();" title="메뉴" style="position:relative;"></button>
   </div>
 </header>
 <main class="main">
@@ -929,7 +929,8 @@ function showSection(id,btn){
   const SECTION_THEMES={home:'section-home',homeroom:'section-homeroom',students:'section-students',memos:'section-memos',bookmarks:'section-bookmarks',timetable:'section-timetable'};
   document.body.classList.remove('section-home','section-homeroom','section-students','section-memos','section-bookmarks','section-timetable');
   if(SECTION_THEMES[id])document.body.classList.add(SECTION_THEMES[id]);
-  const bg=getComputedStyle(document.body).getPropertyValue('--background').trim()||'#EFCE7B';
+const SECTION_BG={home:'#EFCE7B',homeroom:'#25533F',students:'#8f5353',memos:'#50617a',bookmarks:'#876029',timetable:'#4f493a'};
+const bg=SECTION_BG[id]||'#EFCE7B';
   document.documentElement.style.background=bg;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',bg);
   const _sa=document.getElementById('topSafeArea');if(_sa)_sa.style.background=bg;
