@@ -1067,7 +1067,24 @@ function manualSave(){
     clearTimeout(el._saveTimer);
     _flushMemoEl(el);
   });
-  /* ② 전체 localStorage → Firebase 동기화 */
+  /* ② 메모장(Notepad) 미저장 내용 강제 flush */
+  if(_currentNoteId){
+    clearTimeout(_noteSaveTimer);
+    saveCurrentNote(_currentNoteId);
+  }
+  /* ③ 생기부 미저장 내용 강제 flush */
+  clearTimeout(_sgibuSaveTimer);
+  document.querySelectorAll('.sgibu-textarea').forEach(el=>{
+    const m=el.id.match(/^sgibu_(\d+)_(\d+)$/);
+    if(!m)return;
+    const classId=m[1],studentId=Number(m[2]);
+    const records=DB.get('sgibuRecords')||{};
+    if(!records[classId])records[classId]={};
+    if(typeof records[classId][studentId]!=='object'||records[classId][studentId]===null)records[classId][studentId]={};
+    records[classId][studentId][_sgibuCurrentCategory]=el.value;
+    DB.set('sgibuRecords',records);
+  });
+  /* ④ 전체 localStorage → Firebase 동기화 */
   if(window._manualSave){
     setTimeout(()=>{
       window._manualSave();
@@ -3238,8 +3255,9 @@ function syncAll(){
   const p={};
   DK.forEach(k=>p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'?'{}':'[]')));
   const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
-  if(!_hasData){console.warn('🛡️ 안전장치: 로컬이 비어있어 Firebase 덮어쓰기 차단');showToast('⚠️ 데이터가 비어있어 저장이 차단되었습니다');return;}
-SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
+  const _hasSettings=SK.some(k=>localStorage.getItem(k)&&localStorage.getItem(k)!=='');
+  if(!_hasData&&!_hasSettings){console.warn('🛡️ 안전장치: 로컬이 비어있어 Firebase 덮어쓰기 차단');showToast('⚠️ 데이터가 비어있어 저장이 차단되었습니다');return;}
+  SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
 p._savedAt=Date.now();
   _isSaving=true;
   setDoc(ref,p)
