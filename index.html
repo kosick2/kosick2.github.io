@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Kosick">
 <meta name="theme-color" id="themeColor" content="#0F172A">
 <script>document.documentElement.style.background='#0F172A';</script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 #topSafeArea{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--background);z-index:200;pointer-events:none;}
@@ -1643,13 +1644,14 @@ function openEditListModal(listId){const list=DB.get('memoLists').find(l=>l.id==
 function selectEditListColor(color,el){editListSelectedColor=color;}
 function saveEditList(){const id=Number(document.getElementById('editListId').value),name=document.getElementById('editListName').value.trim();if(!name){showToast('❌ 이름을 입력해주세요');return;}const lists=DB.get('memoLists'),idx=lists.findIndex(l=>l.id===id);if(idx!==-1){lists[idx].name=name;lists[idx].color=editListSelectedColor;lists[idx].fillStyle=editListSelectedFillStyle;DB.set('memoLists',lists);}closeModal('editListModal');renderMemoSection();showToast('✅ 수정되었습니다');}
 function togglePriority(id){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(!item)return;item.priority=!item.priority;DB.set('memoItems',items);renderMemoSection();showToast(item.priority?'⭐ 우선순위 추가':'☆ 우선순위 해제');}
-function memoItemHtml(item,color,isCompleted){
+function memoItemHtml(item,color,isCompleted,fillStyle){
   const textColor=_getContrastColor(color);
   const _tr=parseInt(textColor.slice(1,3),16),_tg=parseInt(textColor.slice(3,5),16),_tb=parseInt(textColor.slice(5,7),16);
-  const _tcNormal=textColor;
+  const _tcNormal=fillStyle==='fill'?textColor:'var(--text)';
   const _tcDone=`rgba(${_tr},${_tg},${_tb},0.45)`;
-  const _tcDetail=`rgba(${_tr},${_tg},${_tb},0.6)`;
-  const cs=isCompleted?`background:${color};border-color:${color};`:`border-color:${color};`;
+const _tcDetail=fillStyle==='fill'?`rgba(${_tr},${_tg},${_tb},0.6)`:'var(--text-secondary)';
+  const _borderColor=fillStyle==='fill'?_tcNormal:color;
+const cs=isCompleted?`background:${_borderColor};border-color:${_borderColor};`:`border-color:${_borderColor};`;
   const ed=isCompleted?'false':'true';
   const tc=`memo-item-text${isCompleted?' done':''}`;
 const dragAttrs=!isCompleted?`ondragstart="memoItemDragStart(event,${item.id})" ondragover="memoItemDragOver(event,${item.id},this)" ondragleave="this.classList.remove('drag-over-memo')" ondrop="memoItemDrop(event,${item.id})" ondragend="this.removeAttribute('draggable')"`:'' ;  return `<div class="memo-item" id="memoItem_${item.id}" ${dragAttrs}>
@@ -1696,7 +1698,7 @@ g+=`<div class="memo-grid-card" style="${list.fillStyle==='fill'?'background:'+l
   });
 g+=`<div class="memo-grid-card" style="border-color:var(--border);cursor:default;background:rgba(107,114,128,0.88);color:#1a2234;">
   <div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:12px 12px 0 0;background:#6B7280;"></div>
-    <div style="margin-top:4px;"><div style="font-size:1.4rem;font-weight:800;color:#6B7280;">${cc}</div><div style="font-size:0.82rem;font-weight:600;">✅ 완료</div></div>
+    <div style="margin-top:4px;"><div style="font-size:1.4rem;font-weight:800;color:#1a2234;">${cc}</div><div style="font-size:0.82rem;font-weight:600;">✅ 완료</div></div>
   </div>
   <div class="memo-grid-add" onclick="openAddListModal()"><span>+</span><span>새 목록</span></div></div>`;
   const pItems=items.filter(i=>i.priority&&!i.completed);
@@ -1726,7 +1728,7 @@ body+=`<div class="card" id="memoList_${list.id}" style="margin-bottom:0;${isLas
           <span style="font-size:0.82rem;color:${_ctcs};">${li.length}개</span>
           </div>
         <div style="flex:1; max-height:450px; overflow-y:auto; padding-right:4px;">
-          ${li.length?li.map(item=>memoItemHtml(item,list.color,false)).join(''):'<div style="text-align:center;padding:8px 0;color:'+_ctcs+';font-size:0.85rem;">항목이 없어요</div>'}
+${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).join(''):'<div style="text-align:center;padding:8px 0;color:'+_ctcs+';font-size:0.85rem;">항목이 없어요</div>'}
           </div>
         <div class="memo-add-row" style="border-top:1px solid ${list.fillStyle==='fill'?_getContrastColor(list.color)+'33':'var(--border)'};">
           <div style="width:22px;height:22px;border-radius:50%;border:2px dashed ${list.fillStyle==='fill'?_getContrastColor(list.color):list.color};flex-shrink:0;display:flex;align-items:center;justify-content:center;color:${list.fillStyle==='fill'?_getContrastColor(list.color):list.color};font-size:0.9rem;font-weight:700;">+</div>
@@ -1736,7 +1738,7 @@ body+=`<div class="card" id="memoList_${list.id}" style="margin-bottom:0;${isLas
     });
     body+=`</div>`;
     const ci=items.filter(i=>i.completed);
-if(ci.length){body+=`<div class="card" style="margin-top:14px;border-top:3px solid #6B7280;background:rgba(107,114,128,0.88);"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:10px;height:10px;border-radius:50%;background:#6B7280;flex-shrink:0;"></div><span style="font-size:1rem;font-weight:700;color:#9CA3AF;">✅ 완료</span><span style="font-size:0.82rem;color:var(--text-secondary);">${ci.length}개</span></div><div style="max-height:520px;overflow-y:auto;padding-right:4px;">`;lists.forEach(list=>{const gi=ci.filter(i=>i.listId===list.id);if(!gi.length)return;body+=`<div style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin:8px 0 4px;">${escHtml(list.name)}</div>`;gi.forEach(item=>body+=memoItemHtml(item,list.color,true));});body+=`</div></div>`;}
+if(ci.length){body+=`<div class="card" style="margin-top:14px;border-top:3px solid #6B7280;background:rgba(107,114,128,0.88);"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:10px;height:10px;border-radius:50%;background:#6B7280;flex-shrink:0;"></div><span style="font-size:1rem;font-weight:700;color:#9CA3AF;">✅ 완료</span><span style="font-size:0.82rem;color:var(--text-secondary);">${ci.length}개</span></div><div style="max-height:520px;overflow-y:auto;padding-right:4px;">`;lists.forEach(list=>{const gi=ci.filter(i=>i.listId===list.id);if(!gi.length)return;body+=`<div style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin:8px 0 4px;">${escHtml(list.name)}</div>`;gi.forEach(item=>body+=memoItemHtml(item,list.color,true,list.fillStyle));});body+=`</div></div>`;}
   }
   document.getElementById('memoContent').innerHTML=g+pSection+body;
   document.querySelectorAll('[data-text-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.textId));if(f)el.innerHTML=f.text||'';});
@@ -3336,6 +3338,7 @@ function renderSgibuSection(classId){
       <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center;">
         <button onclick="openSgibuAiModal()" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;">⚙️ AI 설정</button>
         <button onclick="runSgibuAiReview(${classId},'${_sgibuCurrentCategory}')" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid rgba(129,140,248,0.5);background:rgba(79,70,229,0.15);color:var(--primary-light);cursor:pointer;font-family:inherit;">🤖 AI 검토 시작</button>
+        <button onclick="exportSgibuToExcel(${classId})" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid rgba(52,211,153,0.5);background:rgba(16,185,129,0.15);color:#10B981;cursor:pointer;font-family:inherit;">📥 Excel 내보내기</button>
         <button onclick="clearSgibuAiResults(${classId})" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;">✕ 결과 지우기</button>
       </div>
     </div>
@@ -3481,6 +3484,86 @@ async function callOpenAiReview(apiKey,model,systemPrompt,studentText,studentNam
   const status=lines[0]?.includes('STATUS:OK')?'ok':'warn';
   const feedback=lines.slice(1).join('\n').trim();
   return{status,feedback};
+}
+async function exportSgibuToExcel(classId){
+  if(typeof ExcelJS==='undefined'){showToast('⏳ 라이브러리 로딩 중... 잠시 후 다시 시도해주세요');return;}
+  const cls=DB.get('classes').find(c=>c.id===Number(classId));
+  if(!cls){showToast('❌ 학급 정보를 찾을 수 없어요');return;}
+  const records=DB.get('sgibuRecords')||{};
+  const classRecords=records[classId]||records[String(classId)]||{};
+  const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
+  const getVal=(sr,cat)=>{if(!sr)return'';if(typeof sr==='string')return cat==='subject'?sr:'';return sr[cat]||'';};
+  const getByteLen=(str)=>{let b=0;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);if(c<=0x7F)b+=1;else if(c<=0x7FF)b+=2;else b+=3;}return b;};
+  const CATEGORIES=[
+    {id:'subject',label:'과목별세부능력및특기사항'},
+    {id:'autonomous',label:'자율자치활동'},
+    {id:'club',label:'동아리활동'},
+    {id:'behavior',label:'행동특성및종합의견'},
+  ];
+  const thinBorder={style:'thin',color:{argb:'FFCCCCCC'}};
+  const cellBorder={top:thinBorder,bottom:thinBorder,left:thinBorder,right:thinBorder};
+  const workbook=new ExcelJS.Workbook();
+  for(const cat of CATEGORIES){
+    const ws=workbook.addWorksheet(cat.label);
+    ws.columns=[
+      {key:'grade',width:7},
+      {key:'classNum',width:6},
+      {key:'number',width:7},
+      {key:'name',width:10},
+      {key:'content',width:64},
+      {key:'charCount',width:9},
+      {key:'byteCount',width:10},
+    ];
+    const headerRow=ws.addRow(['학년','반','번호','이름',cat.label,'글자수','바이트']);
+    headerRow.height=26;
+    headerRow.eachCell(cell=>{
+cell.font={bold:true,size:11,name:'함초롬바탕',charset:129};
+      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC7D2FE'}};
+      cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+      cell.border={
+        top:{style:'thin',color:{argb:'FF4F46E5'}},
+        bottom:{style:'medium',color:{argb:'FF4F46E5'}},
+        left:{style:'thin',color:{argb:'FF4F46E5'}},
+        right:{style:'thin',color:{argb:'FF4F46E5'}}
+      };
+    });
+    sorted.forEach((s,idx)=>{
+      const sr=classRecords[s.id]||classRecords[String(s.id)];
+      const text=getVal(sr,cat.id);
+      const isAlt=idx%2===1;
+      const fillColor=isAlt?'FFF0F4FF':'FFFFFFFF';
+      const dataRow=ws.addRow({
+        grade:cls.grade,
+        classNum:cls.classNum,
+        number:s.number??'',
+        name:s.name,
+        content:text,
+        charCount:text.length,
+        byteCount:getByteLen(text)
+      });
+      const lineCount=text?text.split('\n').reduce((acc,line)=>acc+Math.max(1,Math.ceil(line.length/56)),0):1;
+      dataRow.height=Math.max(20,lineCount*16+10);
+      dataRow.eachCell({includeEmpty:true},(cell,colNum)=>{
+cell.font={size:10,name:'함초롬바탕',charset:129};
+        cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:fillColor}};
+        cell.border=cellBorder;
+        if(colNum===5){
+          cell.alignment={horizontal:'left',vertical:'top',wrapText:true};
+        }else{
+          cell.alignment={horizontal:'center',vertical:'middle'};
+        }
+      });
+    });
+  }
+  const buffer=await workbook.xlsx.writeBuffer();
+  const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`생활기록부_${cls.grade}학년${cls.classNum}반.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Excel 파일 내보내기 완료! (시트 4개)');
 }
 function clearSgibuAiResults(classId){
   const cls=DB.get('classes').find(c=>c.id===Number(classId));
