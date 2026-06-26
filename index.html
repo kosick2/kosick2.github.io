@@ -77,7 +77,7 @@ body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;backgrou
 .score-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
 .score-table th{background:var(--surface2);padding:10px 8px;text-align:left;font-weight:600;font-size:0.82rem;color:var(--text-secondary);border-bottom:2px solid var(--border);}
 .score-table td{padding:8px;border-bottom:1px solid var(--border);}
-.main{padding:20px;max-width:1100px;margin:0 auto;}
+.main{padding:20px;max-width:92vw;margin:0 auto;}
 .section{display:none;}.section.active{display:block;}
 .card{background:var(--surface);border-radius:var(--radius);padding:20px;margin-bottom:16px;border:1px solid var(--border);box-shadow:var(--shadow);}
 .card-title{font-size:1rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
@@ -391,9 +391,16 @@ textarea{resize:vertical;min-height:80px;}
   .sgibu-student-info{width:56px;}
   .sgibu-name{font-size:0.82rem;}
 }
-@media(min-width:769px){
-  body:has(#sgibuSection.student-tab.active) .main{max-width:92vw;}
-}
+/* ── 생기부 AI ── */
+.sgibu-ai-feedback{margin-top:6px;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.6;border-left:3px solid var(--border);background:var(--surface2);display:none;}
+.sgibu-ai-feedback.visible{display:block;}
+.sgibu-ai-feedback.ai-ok{border-left-color:#34D399;background:rgba(52,211,153,0.1);}
+.sgibu-ai-feedback.ai-warn{border-left-color:#EF4444;background:rgba(239,68,68,0.08);}
+.sgibu-ai-feedback.ai-loading{border-left-color:var(--primary-light);background:rgba(129,140,248,0.08);}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:20px;margin-right:4px;vertical-align:middle;}
+.ai-badge.ok{background:rgba(52,211,153,0.2);color:#10B981;}
+.ai-badge.warn{background:rgba(239,68,68,0.2);color:#EF4444;}
+.ai-badge.loading{background:rgba(129,140,248,0.2);color:var(--primary-light);}
 </style>
 </head>
 <body>
@@ -939,6 +946,34 @@ textarea{resize:vertical;min-height:80px;}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('addSpecialProgModal')">취소</button>
       <button class="btn btn-primary" onclick="saveSpecialProg()">등록</button>
+    </div>
+  </div>
+</div>
+<!-- 모달: 생기부 AI 설정 -->
+<div class="modal-overlay" id="sgibuAiModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-title">🤖 생기부 AI 검토 설정</div>
+    <div class="form-group">
+      <label class="form-label">🔑 Groq API Key</label>
+      <input type="password" id="sgibuApiKey" spellcheck="false" placeholder="AIza..." autocomplete="off">
+<p style="font-size:0.75rem;color:var(--text-secondary);margin-top:5px;">API 키는 이 기기 로컬에만 저장됩니다. <a href="https://console.groq.com/keys" target="_blank" style="color:var(--primary-light);">Groq Console</a>에서 무료 발급 가능합니다.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">🤖 AI 모델</label>
+<select id="sgibuAiModel">
+  <option value="llama-3.3-70b-versatile">Llama 3.3 70B (고성능·추천)</option>
+  <option value="llama-3.1-8b-instant">Llama 3.1 8B (경량·빠름)</option>
+  <option value="gemma2-9b-it">Gemma2 9B (Google 경량)</option>
+  <option value="mixtral-8x7b-32768">Mixtral 8x7B (긴 문맥)</option>
+</select>
+    </div>
+    <hr class="modal-divider">
+    <div class="modal-subtitle">📋 항목별 검토 기준 프롬프트</div>
+    <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:12px;">각 항목에 대한 검토 기준을 작성하세요. 비워두면 기본 기준이 사용됩니다.</p>
+    <div id="sgibuAiPromptsContainer" style="display:flex;flex-direction:column;gap:10px;max-height:40vh;overflow-y:auto;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('sgibuAiModal')">닫기</button>
+      <button class="btn btn-primary" onclick="saveSgibuAiSettings()">💾 저장</button>
     </div>
   </div>
 </div>
@@ -3237,10 +3272,15 @@ function renderSgibuSection(classId){
   const catLabel=SGIBU_CATEGORIES.find(ct=>ct.id===_sgibuCurrentCategory)?.label||'';
   c.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${catNav}</div>
   <div class="card" style="padding:0;overflow:hidden;">
-    <div style="padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div style="padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span style="font-weight:700;font-size:0.95rem;">${cls.grade}학년 ${cls.classNum}반 — ${catLabel}</span>
-      <span></span>
+      <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center;">
+        <button onclick="openSgibuAiModal()" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;">⚙️ AI 설정</button>
+        <button onclick="runSgibuAiReview(${classId},'${_sgibuCurrentCategory}')" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid rgba(129,140,248,0.5);background:rgba(79,70,229,0.15);color:var(--primary-light);cursor:pointer;font-family:inherit;">🤖 AI 검토 시작</button>
+        <button onclick="clearSgibuAiResults(${classId})" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;">✕ 결과 지우기</button>
       </div>
+    </div>
+    <div id="sgibuAiProgressBar" style="padding:0 14px;"></div>
     <div class="sgibu-layout" style="padding:0 16px;">
       ${sorted.map(s=>{
         const sr=classRecords[s.id];
@@ -3261,12 +3301,139 @@ function renderSgibuSection(classId){
             <div style="display:flex;justify-content:flex-end;gap:10px;">
               <span class="sgibu-char-count ${charColor}" id="sgibuChar_${classId}_${s.id}">${charLen}자</span>
 <span class="sgibu-byte-count ${byteColor}" id="sgibuByte_${classId}_${s.id}">${byteLen} 바이트</span>            </div>
+            <div class="sgibu-ai-feedback" id="aiFeedback_${classId}_${s.id}"></div>
           </div>
         </div>`;
       }).join('')}
     </div>
   </div>`;
   setTimeout(()=>{c.querySelectorAll('.sgibu-textarea').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});},0);
+}
+/* ══════════════════════════════
+   생기부 AI 검토 기능
+══════════════════════════════ */
+const SGIBU_AI_DEFAULT_PROMPTS={
+  subject:'학생의 과목별 세부능력 및 특이사항을 검토해주세요.\n기준:\n1. 학생 개인의 특성과 성장이 구체적으로 드러나는가\n2. 단순 활동 나열이 아닌 역량·태도가 기술되었는가\n3. 문법 오류나 어색한 표현이 없는가\n4. 내용이 지나치게 짧지 않은가(50자 미만 주의)',
+  autonomous:'자율자치활동 기록을 검토해주세요.\n기준:\n1. 학생의 역할과 기여가 구체적으로 기술되었는가\n2. 활동을 통해 배운 점이 드러나는가\n3. 문법 및 표현이 적절한가',
+  club:'동아리활동 기록을 검토해주세요.\n기준:\n1. 동아리명과 활동 내용이 구체적인가\n2. 학생의 주도성과 성취가 드러나는가\n3. 문법 및 표현이 적절한가',
+  behavior:'행동특성 및 종합의견을 검토해주세요.\n기준:\n1. 인성과 학업 태도가 균형 있게 기술되었는가\n2. 구체적인 사례를 바탕으로 기술되었는가\n3. 긍정적이면서도 객관적인 서술인가\n4. 문법 및 표현이 적절한가'
+};
+let _sgibuAiRunning=false;
+function openSgibuAiModal(){
+  document.getElementById('sgibuApiKey').value=localStorage.getItem('sgibuApiKey')||'';
+document.getElementById('sgibuAiModel').value=localStorage.getItem('sgibuAiModel')||'llama-3.3-70b-versatile';
+  const container=document.getElementById('sgibuAiPromptsContainer');
+  container.innerHTML=SGIBU_CATEGORIES.map(cat=>{
+    const saved=localStorage.getItem(`sgibuAiPrompt_${cat.id}`)||'';
+    return `<div class="form-group" style="margin-bottom:0;"><label class="form-label" style="font-size:0.82rem;">${cat.label}</label><textarea rows="3" style="font-size:0.82rem;min-height:70px;" spellcheck="false" id="sgibuAiPrompt_${cat.id}" placeholder="${escHtml(SGIBU_AI_DEFAULT_PROMPTS[cat.id]||'')}">${escHtml(saved)}</textarea></div>`;
+  }).join('');
+  openModal('sgibuAiModal');
+}
+function saveSgibuAiSettings(){
+  localStorage.setItem('sgibuApiKey',document.getElementById('sgibuApiKey').value.trim());
+  localStorage.setItem('sgibuAiModel',document.getElementById('sgibuAiModel').value);
+  SGIBU_CATEGORIES.forEach(cat=>{
+    const el=document.getElementById(`sgibuAiPrompt_${cat.id}`);
+    if(el)localStorage.setItem(`sgibuAiPrompt_${cat.id}`,el.value);
+  });
+  closeModal('sgibuAiModal');
+  showToast('✅ AI 설정이 저장되었습니다');
+}
+async function runSgibuAiReview(classId,category){
+  const apiKey=localStorage.getItem('sgibuApiKey')||'';
+  if(!apiKey){showToast('❌ AI 설정에서 API 키를 먼저 입력해주세요');return;}
+  if(_sgibuAiRunning){showToast('⏳ 이미 검토가 진행 중입니다');return;}
+  const cls=DB.get('classes').find(c=>c.id===Number(classId));
+  if(!cls||!cls.students.length)return;
+  const records=DB.get('sgibuRecords')||{};
+  const classRecords=records[classId]||{};
+  const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
+  const studentsWithContent=sorted.filter(s=>{
+    const sr=classRecords[s.id];
+    let text='';
+    if(typeof sr==='string')text=category==='subject'?sr:'';
+    else if(sr&&typeof sr==='object')text=sr[category]||'';
+    return text.trim().length>0;
+  });
+  if(!studentsWithContent.length){showToast('❌ 검토할 내용이 없습니다');return;}
+  const prompt=localStorage.getItem(`sgibuAiPrompt_${category}`)||SGIBU_AI_DEFAULT_PROMPTS[category]||'';
+const model=localStorage.getItem('sgibuAiModel')||'llama-3.3-70b-versatile';
+  _sgibuAiRunning=true;
+  studentsWithContent.forEach(s=>{
+    const el=document.getElementById(`aiFeedback_${classId}_${s.id}`);
+    if(el){el.className='sgibu-ai-feedback visible ai-loading';el.innerHTML='<span class="ai-badge loading">⏳ 검토 중</span> AI가 분석하고 있습니다...';}
+  });
+  const prog=document.getElementById('sgibuAiProgressBar');
+  function updateProg(done,total){
+    if(!prog)return;
+    const pct=total?Math.round(done/total*100):0;
+    prog.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;"><span style="font-size:0.82rem;white-space:nowrap;color:var(--text-secondary);">🤖 ${done}/${total}명 검토 중</span><div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--primary);border-radius:3px;transition:width 0.4s;"></div></div><span style="font-size:0.78rem;color:var(--text-secondary);">${pct}%</span>${done===total?'<span style="font-size:0.8rem;color:#10B981;font-weight:700;white-space:nowrap;">완료!</span>':''}</div>`;
+  }
+  updateProg(0,studentsWithContent.length);
+  let done=0;
+  for(const s of studentsWithContent){
+    const sr=classRecords[s.id];
+    let text='';
+    if(typeof sr==='string')text=category==='subject'?sr:'';
+    else if(sr&&typeof sr==='object')text=sr[category]||'';
+    try{
+      const result=await callOpenAiReview(apiKey,model,prompt,text,s.name);
+      const el=document.getElementById(`aiFeedback_${classId}_${s.id}`);
+      if(el){
+        el.className=`sgibu-ai-feedback visible ${result.status==='ok'?'ai-ok':'ai-warn'}`;
+        const badge=result.status==='ok'?'<span class="ai-badge ok">✅ 양호</span>':'<span class="ai-badge warn">⚠️ 수정 필요</span>';
+        el.innerHTML=badge+(result.feedback?result.feedback.replace(/\n/g,'<br>'):'');
+      }
+    }catch(e){
+      const el=document.getElementById(`aiFeedback_${classId}_${s.id}`);
+      if(el){el.className='sgibu-ai-feedback visible ai-warn';el.innerHTML=`<span class="ai-badge warn">❌ 오류</span>${escHtml(e.message||'검토 실패')}`;}
+    }
+    done++;
+    updateProg(done,studentsWithContent.length);
+    if(done<studentsWithContent.length)await new Promise(r=>setTimeout(r,600));
+  }
+  _sgibuAiRunning=false;
+  const warnCnt=studentsWithContent.filter(s=>{const el=document.getElementById(`aiFeedback_${classId}_${s.id}`);return el&&el.classList.contains('ai-warn');}).length;
+  showToast(`🤖 검토 완료! ✅ ${studentsWithContent.length-warnCnt}명 양호 / ⚠️ ${warnCnt}명 수정 필요`);
+}
+async function callOpenAiReview(apiKey,model,systemPrompt,studentText,studentName){
+  const sys=`당신은 학교 생활기록부 검토 전문가입니다. 교사가 작성한 학생의 생활기록부를 검토하고 피드백을 제공합니다.\n\n검토 기준:\n${systemPrompt}\n\n응답 규칙:\n- 반드시 첫 줄에 "STATUS:OK" 또는 "STATUS:WARN" 중 하나만 작성하세요.\n- STATUS:OK = 수정 불필요, STATUS:WARN = 수정 필요\n- 두 번째 줄부터 구체적인 피드백을 한국어로 3줄 이내로 작성하세요.\n- 양호한 경우 간단히 이유를 한 줄로 적어주세요.`;
+  const url='https://api.groq.com/openai/v1/chat/completions';
+  const resp=await fetch(url,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':`Bearer ${apiKey}`
+    },
+    body:JSON.stringify({
+      model:model,
+      messages:[
+        {role:'system',content:sys},
+        {role:'user',content:`학생: ${studentName}\n\n내용:\n${studentText}`}
+      ],
+      max_tokens:300,
+      temperature:0.3
+    })
+  });
+  if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err.error?.message||`HTTP ${resp.status}`);}
+  const data=await resp.json();
+  const content=data.choices?.[0]?.message?.content||'';
+  const lines=content.split('\n');
+  const status=lines[0]?.includes('STATUS:OK')?'ok':'warn';
+  const feedback=lines.slice(1).join('\n').trim();
+  return{status,feedback};
+}
+function clearSgibuAiResults(classId){
+  const cls=DB.get('classes').find(c=>c.id===Number(classId));
+  if(!cls)return;
+  cls.students.forEach(s=>{
+    const el=document.getElementById(`aiFeedback_${classId}_${s.id}`);
+    if(el){el.className='sgibu-ai-feedback';el.innerHTML='';}
+  });
+  const prog=document.getElementById('sgibuAiProgressBar');
+  if(prog)prog.innerHTML='';
+  _sgibuAiRunning=false;
+  showToast('🗑️ AI 검토 결과가 초기화되었습니다');
 }
 function onSgibuInput(classId,studentId,el){
   el.style.height='auto';el.style.height=el.scrollHeight+'px';
