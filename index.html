@@ -3984,15 +3984,23 @@ async function _refreshFromFirebase(label){
   }catch(e){console.warn('갱신 실패:',e);}
 }
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&_firebaseReady){
-    setupRealtimeListener();
-    _refreshFromFirebase('🔄 최신 데이터로 갱신되었습니다');
+  if(document.visibilityState==='visible'){
+    if(_firebaseReady){
+      setupRealtimeListener();
+      _refreshFromFirebase('🔄 최신 데이터로 갱신되었습니다');
+    }else{
+      loadData();
+    }
   }
 });
 window.addEventListener('pageshow',(event)=>{
-  if(event.persisted&&_firebaseReady){
-    setupRealtimeListener();
-    _refreshFromFirebase('🔄 최신 데이터로 갱신되었습니다');
+  if(event.persisted){
+    if(_firebaseReady){
+      setupRealtimeListener();
+      _refreshFromFirebase('🔄 최신 데이터로 갱신되었습니다');
+    }else{
+      loadData();
+    }
   }
 });
 window.addEventListener('online',()=>{
