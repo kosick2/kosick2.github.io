@@ -496,6 +496,7 @@ body.has-fav-bar .main{padding-bottom:20px;}
         <span class="notepad-sidebar-title">📝 메모</span>
         <button class="notepad-add-group-btn" onclick="openAddNoteGroupModal()" title="그룹 추가">+</button>
       </div>
+      <div style="padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;"><div style="position:relative;"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:0.8rem;pointer-events:none;">🔍</span><input type="text" id="notepadSearchDesktop" spellcheck="false" placeholder="메모 검색..." style="padding:7px 10px 7px 30px;font-size:0.82rem;width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;outline:none;font-family:inherit;" oninput="searchNotepad(this.value)"></div></div>
       <div class="notepad-groups-list" id="notepadGroupsList"></div>
     </div>
     <div class="notepad-editor-area" id="notepadEditorArea">
@@ -514,6 +515,7 @@ body.has-fav-bar .main{padding-bottom:20px;}
     <div style="padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <button class="btn btn-primary" style="width:100%;padding:8px;" onclick="openAddNoteGroupModal()">+ 새 그룹 추가</button>
     </div>
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;"><div style="position:relative;"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:0.8rem;pointer-events:none;">🔍</span><input type="text" id="notepadSearchMobile" spellcheck="false" placeholder="메모 검색..." style="padding:7px 10px 7px 30px;font-size:0.82rem;width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;outline:none;font-family:inherit;" oninput="searchNotepad(this.value)"></div></div>
     <div class="notepad-groups-list" id="notepadMobileGroupsList" style="flex:1;overflow-y:auto;padding:6px 0;"></div>
   </div>
   <div class="drawer-overlay" id="notepadOverlay" onclick="closeNotepadPanel()" style="display:none;z-index:1099;"></div>
@@ -3183,6 +3185,7 @@ function clearDoneNotices(){
    메모장(Notepad) 기능
 ══════════════════════════════ */
 let _dragNoteGroupId=null,_dragNoteItemId=null;
+let _notepadSearchQuery='';
 function noteGroupDragStart(e,id){_dragNoteGroupId=id;_dragNoteItemId=null;e.dataTransfer.effectAllowed='move';}
 function noteGroupDragOver(e,id,el){e.preventDefault();e.stopPropagation();document.querySelectorAll('.notepad-group-row').forEach(r=>r.classList.remove('drag-over-note-group'));el.classList.add('drag-over-note-group');}
 function noteGroupDrop(e,toId){e.preventDefault();e.stopPropagation();document.querySelectorAll('.notepad-group-row').forEach(r=>r.classList.remove('drag-over-note-group'));if(!_dragNoteGroupId||_dragNoteGroupId===toId){_dragNoteGroupId=null;return;}reorderArr('noteGroups',_dragNoteGroupId,toId,renderNotepadGroups);_dragNoteGroupId=null;}
@@ -3195,7 +3198,18 @@ let _notepadMobilePanelOpen=false;
 let _noteSaveTimer=null;
 let _notepadOpenGroups=new Set();
 
+function searchNotepad(query){
+  _notepadSearchQuery=query.trim().toLowerCase();
+  const d=document.getElementById('notepadSearchDesktop');
+  const m=document.getElementById('notepadSearchMobile');
+  if(d&&d.value.toLowerCase()!==_notepadSearchQuery)d.value=query;
+  if(m&&m.value.toLowerCase()!==_notepadSearchQuery)m.value=query;
+  renderNotepadGroups();
+}
 function renderNotepadSection(){
+  if(_notepadOpenGroups.size===0){
+    DB.get('noteGroups').forEach(g=>_notepadOpenGroups.add(g.id));
+  }
   renderNotepadGroups();
   if(_currentNoteId)loadNoteIntoEditor(_currentNoteId);
   else showNotepadEmpty();
@@ -3207,12 +3221,23 @@ function renderNotepadGroups(){
   const groups=DB.get('noteGroups'),notes=DB.get('noteItems');
   ['notepadGroupsList','notepadMobileGroupsList'].forEach(elId=>{
     const c=document.getElementById(elId);if(!c)return;
+    if(_notepadSearchQuery){
+      const q=_notepadSearchQuery;
+      const matched=notes.filter(n=>{
+        const title=(n.title||'').toLowerCase();
+        const content=(n.content||'').replace(/<[^>]*>/g,'').toLowerCase();
+        return title.includes(q)||content.includes(q);
+      });
+      if(!matched.length){c.innerHTML=`<div style="padding:20px 14px;text-align:center;color:var(--text-secondary);font-size:0.85rem;">🔍 검색 결과가 없어요</div>`;return;}
+      c.innerHTML=`<div style="padding:6px 14px 2px;font-size:0.75rem;color:var(--text-secondary);">검색 결과 ${matched.length}개</div>`+matched.map(n=>`<button class="notepad-note-btn${_currentNoteId===n.id?' active':''}" data-note-id="${n.id}" onclick="selectNote(${n.id})" ontouchend="event.preventDefault();selectNote(${n.id})" style="padding-left:14px;"><span class="notepad-note-title-span">📄 ${escHtml(n.title||'제목 없음')}</span><span class="notepad-note-del" onclick="event.stopPropagation();deleteNote(${n.id})">✕</span></button>`).join('');
+      return;
+    }
     if(!groups.length){c.innerHTML=`<div style="padding:20px 14px;text-align:center;color:var(--text-secondary);font-size:0.85rem;">그룹을 추가해보세요</div>`;return;}
     c.innerHTML=groups.map(g=>{
       const gNotes=notes.filter(n=>n.groupId===g.id);
       const isOpen=_notepadOpenGroups.has(g.id);
-const notesHtml=gNotes.map(n=>`<button class="notepad-note-btn${_currentNoteId===n.id?' active':''}" data-note-id="${n.id}" onclick="selectNote(${n.id})" ondragstart="noteItemDragStart(event,${n.id})" ondragover="noteItemDragOver(event,${n.id},this)" ondragleave="this.classList.remove('drag-over-note-item')" ondrop="noteItemDrop(event,${n.id})" ondragend="this.removeAttribute('draggable');this.style.opacity='';document.querySelectorAll('.notepad-note-btn').forEach(r=>r.classList.remove('drag-over-note-item'))"><span class="note-drag-handle" onmousedown="event.stopPropagation();this.closest('[data-note-id]').setAttribute('draggable','true')" ontouchstart="event.stopPropagation();this.closest('[data-note-id]').setAttribute('draggable','true')" onclick="event.stopPropagation()">⠿</span><span class="notepad-note-title-span">📄 ${escHtml(n.title||'제목 없음')}</span><span class="notepad-note-del" onclick="event.stopPropagation();deleteNote(${n.id})">✕</span></button>`).join('');
-return `<div class="notepad-group-row" ondragstart="noteGroupDragStart(event,${g.id})" ondragover="noteGroupDragOver(event,${g.id},this)" ondragleave="this.classList.remove('drag-over-note-group')" ondrop="noteGroupDrop(event,${g.id})" ondragend="this.removeAttribute('draggable');document.querySelectorAll('.notepad-group-row').forEach(r=>r.classList.remove('drag-over-note-group'))"><div class="notepad-group-header" onclick="toggleNoteGroup(${g.id})"><span class="notepad-group-drag-handle" onmousedown="event.stopPropagation();this.closest('.notepad-group-row').setAttribute('draggable','true')" ontouchstart="event.stopPropagation();this.closest('.notepad-group-row').setAttribute('draggable','true')" onclick="event.stopPropagation()">⠿</span><span class="notepad-group-arrow${isOpen?' open':''}">▶</span><span class="notepad-group-name">📁 ${escHtml(g.name)}</span><span class="notepad-group-count">${gNotes.length}</span><button class="notepad-group-del" onclick="event.stopPropagation();deleteNoteGroup(${g.id})">✕</button></div><div class="notepad-items-list${isOpen?' open':''}">${notesHtml}<button class="notepad-add-note-btn" onclick="addNoteToGroup(${g.id})">+ 메모 추가</button></div></div>`;
+      const notesHtml=gNotes.map(n=>`<button class="notepad-note-btn${_currentNoteId===n.id?' active':''}" data-note-id="${n.id}" onclick="selectNote(${n.id})" ontouchend="event.preventDefault();selectNote(${n.id})" ondragstart="noteItemDragStart(event,${n.id})" ondragover="noteItemDragOver(event,${n.id},this)" ondragleave="this.classList.remove('drag-over-note-item')" ondrop="noteItemDrop(event,${n.id})" ondragend="this.removeAttribute('draggable');this.style.opacity='';document.querySelectorAll('.notepad-note-btn').forEach(r=>r.classList.remove('drag-over-note-item'))"><span class="note-drag-handle" onmousedown="event.stopPropagation();this.closest('[data-note-id]').setAttribute('draggable','true')" ontouchstart="event.stopPropagation();this.closest('[data-note-id]').setAttribute('draggable','true')" onclick="event.stopPropagation()">⠿</span><span class="notepad-note-title-span">📄 ${escHtml(n.title||'제목 없음')}</span><span class="notepad-note-del" onclick="event.stopPropagation();deleteNote(${n.id})">✕</span></button>`).join('');
+      return `<div class="notepad-group-row" ondragstart="noteGroupDragStart(event,${g.id})" ondragover="noteGroupDragOver(event,${g.id},this)" ondragleave="this.classList.remove('drag-over-note-group')" ondrop="noteGroupDrop(event,${g.id})" ondragend="this.removeAttribute('draggable');document.querySelectorAll('.notepad-group-row').forEach(r=>r.classList.remove('drag-over-note-group'))"><div class="notepad-group-header" onclick="toggleNoteGroup(${g.id})" ontouchend="event.preventDefault();toggleNoteGroup(${g.id})"><span class="notepad-group-drag-handle" onmousedown="event.stopPropagation();this.closest('.notepad-group-row').setAttribute('draggable','true')" ontouchstart="event.stopPropagation();this.closest('.notepad-group-row').setAttribute('draggable','true')" onclick="event.stopPropagation()">⠿</span><span class="notepad-group-arrow${isOpen?' open':''}">▶</span><span class="notepad-group-name">📁 ${escHtml(g.name)}</span><span class="notepad-group-count">${gNotes.length}</span><button class="notepad-group-del" onclick="event.stopPropagation();deleteNoteGroup(${g.id})">✕</button></div><div class="notepad-items-list${isOpen?' open':''}">${notesHtml}<button class="notepad-add-note-btn" onclick="addNoteToGroup(${g.id})">+ 메모 추가</button></div></div>`;
     }).join('');
   });
 }
@@ -3933,6 +3958,21 @@ async function loadData(){
     }
   });
 }
+let _unsubscribeSnapshot=null;
+function setupRealtimeListener(){
+  if(_unsubscribeSnapshot){try{_unsubscribeSnapshot();}catch(e){}}_unsubscribeSnapshot=null;
+  _unsubscribeSnapshot=onSnapshot(ref,(snap)=>{
+    if(!_firebaseReady){_firebaseReady=true;console.log('✅ onSnapshot 연결 성공');}
+    if(!snap.exists()||_isSaving)return;
+    const data=snap.data();
+    const localTime=Number(localStorage.getItem('_savedAt')||0);
+    const fireTime=Number(data._savedAt||0);
+    if(fireTime>localTime){applyRemoteData(data);showToast('🔄 다른 기기에서 변경사항이 반영되었습니다');}
+  },(error)=>{
+    console.error('onSnapshot 끊김, 3초 후 재연결:', error);
+    setTimeout(()=>{if(_firebaseReady)setupRealtimeListener();},3000);
+  });
+}
 window._manualSave=()=>syncAll(true);
 let _debounceTimer=null;
 const _s=DB.set.bind(DB);
@@ -3943,32 +3983,33 @@ DB.set=(k,v)=>{
 };
 window._cancelDebounce=()=>clearTimeout(_debounceTimer);
 loadData();
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && _firebaseReady) {
-    getDoc(ref).then(snap => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      const localTime = Number(localStorage.getItem('_savedAt') || 0);
-      const fireTime = Number(data._savedAt || 0);
-      if (fireTime > localTime) {
-        applyRemoteData(data);
-        showToast('🔄 최신 데이터로 갱신되었습니다');
-      }
-    }).catch(() => {});
+async function _refreshFromFirebase(label){
+  try{
+    const snap=await getDoc(ref);
+    if(!snap.exists())return;
+    const data=snap.data();
+    const localTime=Number(localStorage.getItem('_savedAt')||0);
+    const fireTime=Number(data._savedAt||0);
+    if(fireTime>localTime){applyRemoteData(data);showToast(label||'🔄 최신 데이터로 갱신되었습니다');}
+  }catch(e){console.warn('갱신 실패:',e);}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&_firebaseReady){
+    setupRealtimeListener();
+    _refreshFromFirebase('🔄 최신 데이터로 갱신되었습니다');
   }
 });
-window.addEventListener('pageshow', (event) => {
-  if (event.persisted && _firebaseReady) {
-    getDoc(ref).then(snap => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      const localTime = Number(localStorage.getItem('_savedAt') || 0);
-      const fireTime = Number(data._savedAt || 0);
-      if (fireTime > localTime) {
-        applyRemoteData(data);
-        showToast('🔄 최신 데이터로 갱신되었습니다');
-      }
-    }).catch(() => {});
+window.addEventListener('pageshow',(event)=>{
+  if(event.persisted&&_firebaseReady){
+    setupRealtimeListener();
+    _refreshFromFirebase('🔄 최신 데이터로 갱신되었습니다');
+  }
+});
+window.addEventListener('online',()=>{
+  if(_firebaseReady){
+    showToast('📶 네트워크 재연결됨, 데이터 동기화 중...');
+    setupRealtimeListener();
+    _refreshFromFirebase('🔄 네트워크 재연결: 데이터가 갱신되었습니다');
   }
 });
 </script>
