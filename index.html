@@ -1023,6 +1023,7 @@ body.has-fav-bar .main{padding-bottom:20px;}
 <script>
 /* ── 유틸 ── */
 function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _getLocalTodayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 // [추가] 텍스트 창에 입력된 범위 계산식을 파싱하는 함수
 function parseAutoCalcRules(text) {
   const rules = [];
@@ -2007,7 +2008,7 @@ function onEvalDrop(e,evalId,el){e.preventDefault();if(el)el.classList.remove('d
 function evalCardDragStart(e,id){dragEvalCardId=id;dragChipClassId=null;e.dataTransfer.effectAllowed='move';}
 function evalCardDragOver(e,id,el){e.preventDefault();document.querySelectorAll('.eval-card-wrap').forEach(c=>c.classList.remove('drag-over-item'));el.classList.add('drag-over-item');}
 function evalCardDrop(e,toId,el){e.preventDefault();if(el)el.classList.remove('drag-over-item');document.querySelectorAll('.eval-card-wrap').forEach(c=>c.classList.remove('drag-over-item'));if(!dragEvalCardId||dragEvalCardId===toId)return;reorderArr('evaluations',dragEvalCardId,toId,renderEvalList);dragEvalCardId=null;}
-function openAddEvalModal(){const today=new Date().toISOString().split('T')[0];document.getElementById('evalTitle').value='';document.getElementById('evalSubject').value='';_evalSessionMode='add';window._removedSessionIds=[];_evalSessions=[{id:'session_'+Date.now(),name:'1차시',date:today,maxScore:100}];renderEvalSessionsUI('addEvalSessionsContainer');openModal('addEvalModal');}
+function openAddEvalModal(){const today=_getLocalTodayStr();document.getElementById('evalTitle').value='';document.getElementById('evalSubject').value='';_evalSessionMode='add';window._removedSessionIds=[];_evalSessions=[{id:'session_'+Date.now(),name:'1차시',date:today,maxScore:100}];renderEvalSessionsUI('addEvalSessionsContainer');openModal('addEvalModal');}
 function saveNewEval(){const title=document.getElementById('evalTitle').value.trim(),subject=document.getElementById('evalSubject').value.trim();if(!title){showToast('❌ 평가명을 입력해주세요');return;}if(!_evalSessions.length){showToast('❌ 차시를 1개 이상 추가해주세요');return;}const first=_evalSessions[0];const evals=DB.get('evaluations');evals.push({id:Date.now(),title,subject,date:first.date||'',maxScore:first.maxScore||100,sessions:[..._evalSessions],classRecords:[]});DB.set('evaluations',evals);closeModal('addEvalModal');renderEvalList();showToast('✅ 추가되었습니다');}
 function openEditEvalModal(id){const ev=DB.get('evaluations').find(e=>e.id===id);if(!ev)return;document.getElementById('editEvalId').value=id;document.getElementById('editEvalTitle').value=ev.title;document.getElementById('editEvalSubject').value=ev.subject||'';_evalSessionMode='edit';window._removedSessionIds=[];_evalSessions=(ev.sessions||[{id:'session_'+ev.id,name:'1차시',date:ev.date||'',maxScore:ev.maxScore||100}]).map(s=>({...s}));renderEvalSessionsUI('editEvalSessionsContainer');openModal('editEvalModal');}
 function saveEditEval(){
@@ -2950,7 +2951,7 @@ function saveSpecialProg(){
 }
 function deleteSpecialProg(id){if(!confirm('삭제할까요?'))return;DB.set('specialPrograms',DB.get('specialPrograms').filter(s=>s.id!==id));renderHrCalendar();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('✅ 삭제되었습니다');}
 /* ── 오늘의 안내사항 ── */
-let noticeSelectedDate=new Date().toISOString().split('T')[0];
+let noticeSelectedDate=_getLocalTodayStr();
 function showHrTab(tabId,btn){
   document.getElementById('hrCalendarTab').style.display=tabId==='hrCalendarTab'?'block':'none';
   document.getElementById('hrNoticeTab').style.display=tabId==='hrNoticeTab'?'block':'none';
@@ -3062,13 +3063,13 @@ function renderNoticeTab(){
   const notices=DB.get('dailyNotices').filter(n=>n.date===noticeSelectedDate);
   const dateObj=new Date(noticeSelectedDate+'T12:00:00');
   const dow=['일','월','화','수','목','금','토'];
-  const isToday=noticeSelectedDate===new Date().toISOString().split('T')[0];
+const isToday=noticeSelectedDate===_getLocalTodayStr();
   let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;justify-content:center;flex-wrap:nowrap;">
     <button class="cal-nav-btn" onclick="changeNoticeDate(-1)" style="width:34px;height:34px;font-size:1.1rem;flex-shrink:0;">‹</button>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
       <input type="date" value="${noticeSelectedDate}" onchange="noticeSelectedDate=this.value;renderNoticeTab();" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:0.88rem;cursor:pointer;font-family:inherit;">
       <span style="font-size:0.88rem;color:var(--text-secondary);white-space:nowrap;">${dow[dateObj.getDay()]}요일${isToday?` <strong style="color:var(--text);font-weight:800;">오늘</strong>`:''}</span>
-      ${!isToday?`<button onclick="noticeSelectedDate=new Date().toISOString().split('T')[0];renderNoticeTab();" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">오늘로</button>`:''}
+      ${!isToday?`<button onclick="noticeSelectedDate=_getLocalTodayStr();renderNoticeTab();" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">오늘로</button>`:''}
     </div>
     <button class="cal-nav-btn" onclick="changeNoticeDate(1)" style="width:34px;height:34px;font-size:1.1rem;flex-shrink:0;">›</button>
   </div>`;
@@ -3136,10 +3137,18 @@ function addNotice(){
 function toggleNoticeDone(id){
   const notices=DB.get('dailyNotices');
   const n=notices.find(n=>n.id===id);
-  if(n)n.done=!n.done;
+  if(!n)return;
+  n.done=!n.done;
+  /* 복사본을 체크한 경우 → 원본 및 다른 모든 복사본도 동기화 */
+  const srcId=n.originalSourceId||n.id;
+  notices.forEach(other=>{
+    if(other.id===id)return;
+    const otherSrcId=other.originalSourceId||other.id;
+    if(otherSrcId===srcId||other.id===srcId)other.done=n.done;
+  });
   DB.set('dailyNotices',notices);
   renderNoticeTab();
-  showToast(n?.done?'✅ 완료!':'↩️ 다시 열렸습니다');
+  showToast(n.done?'✅ 완료!':'↩️ 다시 열렸습니다');
 }
 function deleteNotice(id){
   if(!confirm('이 안내사항을 삭제할까요?'))return;
