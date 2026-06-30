@@ -3948,8 +3948,8 @@ renderFavBar();
     const token=getToken(),gistId=getGistId();
     if(!token||!gistId){showGistSetup();return;}
     try{
-      const resp=await fetch(`https://api.github.com/gists/${gistId}`,{
-        headers:{'Authorization':`token ${token}`,'Cache-Control':'no-cache'}
+const resp=await fetch(`https://api.github.com/gists/${gistId}?t=${Date.now()}`,{
+        headers:{'Authorization':`token ${token}`}
       });
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
       const gist=await resp.json();
@@ -3984,8 +3984,8 @@ renderFavBar();
       const token=getToken(),gistId=getGistId();
       if(!token||!gistId)return;
       try{
-        const resp=await fetch(`https://api.github.com/gists/${gistId}`,{
-          headers:{'Authorization':`token ${token}`,'Cache-Control':'no-cache'}
+        const resp=await fetch(`https://api.github.com/gists/${gistId}?t=${Date.now()}`,{
+          headers:{'Authorization':`token ${token}`}
         });
         if(!resp.ok)return;
         const gist=await resp.json();
@@ -4049,8 +4049,8 @@ renderFavBar();
         startPolling();
         const token=getToken(),gistId=getGistId();
         if(!token||!gistId)return;
-        fetch(`https://api.github.com/gists/${gistId}`,{
-          headers:{'Authorization':`token ${token}`,'Cache-Control':'no-cache'}
+        fetch(`https://api.github.com/gists/${gistId}?t=${Date.now()}`,{
+          headers:{'Authorization':`token ${token}`}
         }).then(r=>r.json()).then(gist=>{
           const content=gist.files['kosick-data.json']?.content;
           if(!content)return;
