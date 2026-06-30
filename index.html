@@ -3946,17 +3946,7 @@ async function loadData(){
       });
     },5000);
   }
-  onSnapshot(ref,(snap)=>{
-    if(!_firebaseReady){_firebaseReady=true;console.log('✅ onSnapshot 연결 성공, ready 상태 전환');}
-    if(!snap.exists()||_isSaving)return;
-    const data=snap.data();
-    const localTime=Number(localStorage.getItem('_savedAt')||0);
-    const fireTime=Number(data._savedAt||0);
-    if(fireTime>localTime){
-      applyRemoteData(data);
-      showToast('🔄 다른 기기에서 변경사항이 반영되었습니다');
-    }
-  });
+  setupRealtimeListener();
 }
 let _unsubscribeSnapshot=null;
 function setupRealtimeListener(){
