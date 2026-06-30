@@ -2954,6 +2954,7 @@ function saveSpecialProg(){
 function deleteSpecialProg(id){if(!confirm('삭제할까요?'))return;DB.set('specialPrograms',DB.get('specialPrograms').filter(s=>s.id!==id));renderHrCalendar();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast('✅ 삭제되었습니다');}
 /* ── 오늘의 안내사항 ── */
 let noticeSelectedDate=_getLocalTodayStr();
+let _noticesDoneOpen=false;
 function showHrTab(tabId,btn){
   document.getElementById('hrCalendarTab').style.display=tabId==='hrCalendarTab'?'block':'none';
   document.getElementById('hrNoticeTab').style.display=tabId==='hrNoticeTab'?'block':'none';
@@ -2965,6 +2966,7 @@ function showHrTab(tabId,btn){
   _activeHrTab=tabId;
   updateHomeroomFab();
 }
+function toggleNoticeDoneFolder(){_noticesDoneOpen=!_noticesDoneOpen;renderNoticeTab();}
 function changeNoticeDate(dir){const d=new Date(noticeSelectedDate+'T12:00:00');d.setDate(d.getDate()+dir);noticeSelectedDate=d.toISOString().split('T')[0];renderNoticeTab();}
 function carryOverUndoneNotices(){
   const today=new Date().toISOString().split('T')[0];
@@ -3077,14 +3079,15 @@ const isToday=noticeSelectedDate===_getLocalTodayStr();
   </div>`;
     html+=buildAttUnsubmittedHtmlForNotice(noticeSelectedDate);
   if(notices.length){
-    const done=notices.filter(n=>n.done).length;
+    const undoneNotices=notices.filter(n=>!n.done);
+    const doneNotices=notices.filter(n=>n.done);
     html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border);">
       <span style="font-size:0.85rem;color:var(--text-secondary);">전체 <strong style="color:var(--text);">${notices.length}개</strong></span>
       <span style="color:var(--border);">·</span>
-      <span style="font-size:0.85rem;color:var(--text-secondary);">완료 <strong style="color:#10B981;">${done}개</strong></span>
-      ${done>0?`<button onclick="clearDoneNotices()" style="margin-left:auto;padding:4px 10px;font-size:0.75rem;background:rgba(239,68,68,0.1);color:#EF4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;cursor:pointer;font-family:inherit;">완료 지우기</button>`:''}
+      <span style="font-size:0.85rem;color:var(--text-secondary);">완료 <strong style="color:#10B981;">${doneNotices.length}개</strong></span>
+      ${doneNotices.length>0?`<button onclick="clearDoneNotices()" style="margin-left:auto;padding:4px 10px;font-size:0.75rem;background:rgba(239,68,68,0.1);color:#EF4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;cursor:pointer;font-family:inherit;">완료 지우기</button>`:''}
     </div>`;
-    html+=notices.map(n=>{
+    const _buildNoticeItemHtml=(n)=>{
       const displayText=n.content||n.title||'(내용 없음)';
       const _isHtml=/<[a-z][\s\S]*>/i.test(displayText);
       const studentBadge=n.studentName?`<span style="display:inline-flex;align-items:center;font-size:0.72rem;background:rgba(129,140,248,0.2);color:var(--primary-light);border:1px solid rgba(129,140,248,0.3);border-radius:20px;padding:2px 8px;margin-bottom:5px;">👤 ${escHtml(n.studentName)}</span><br>`:'';
@@ -3097,7 +3100,19 @@ const isToday=noticeSelectedDate===_getLocalTodayStr();
           </div>
         <button class="btn-icon" onclick="deleteNotice(${n.id})" style="flex-shrink:0;margin-top:-2px;">✕</button>
       </div>`;
-    }).join('');
+    };
+    html+=undoneNotices.map(n=>_buildNoticeItemHtml(n)).join('');
+    if(doneNotices.length){
+      html+=`<div style="margin-top:16px;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+        <button onclick="toggleNoticeDoneFolder()" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border:none;color:var(--text);cursor:pointer;font-size:0.88rem;font-weight:600;font-family:inherit;transition:background 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.08)'" onmouseout="this.style.background='var(--surface2)'">
+          <span style="font-size:1rem;">✅</span>
+          <span>완료</span>
+          <span style="background:rgba(16,185,129,0.2);color:#10B981;font-size:0.75rem;padding:2px 8px;border-radius:20px;font-weight:700;">${doneNotices.length}개</span>
+          <span style="margin-left:auto;font-size:0.75rem;display:inline-block;transition:transform 0.25s;transform:${_noticesDoneOpen?'rotate(90deg)':'rotate(0deg)'};">▶</span>
+        </button>
+        ${_noticesDoneOpen?`<div style="padding:12px 12px 4px;">${doneNotices.map(n=>_buildNoticeItemHtml(n)).join('')}</div>`:''}
+      </div>`;
+    }
   }else{
     html+=`<div class="empty-state" style="padding:24px 0;"><div class="empty-icon">📢</div><p>이 날 안내사항이 없어요</p></div>`;
   }
