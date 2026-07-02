@@ -408,6 +408,7 @@ textarea{resize:vertical;min-height:80px;}
 .sgibu-level-badge:hover{opacity:0.8;transform:scale(1.06);}
 .sgibu-level-popup{position:absolute;left:0;top:calc(100% + 3px);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:5px;display:none;flex-direction:column;gap:3px;box-shadow:0 8px 24px rgba(0,0,0,0.4);min-width:76px;}
 .sgibu-level-popup.open{display:flex;}
+.sgibu-level-popup.open-up{top:auto;bottom:calc(100% + 3px);}
 .sgibu-level-popup-btn{font-size:0.8rem;font-weight:700;padding:6px 8px;border-radius:7px;border:none;cursor:pointer;text-align:center;font-family:inherit;width:100%;transition:opacity 0.15s;}
 .sgibu-level-popup-btn:hover{opacity:0.75;}
 /* ── 생기부 AI ── */
@@ -3796,9 +3797,15 @@ function setSgibuAchievement(classId,studentId,level){
   showToast(`✅ 성취도: ${level||'미설정'}`);
 }
 function toggleSgibuLevelPopup(classId,studentId,btn){
-  document.querySelectorAll('.sgibu-level-popup.open').forEach(p=>{if(p.id!==`levelPopup_${classId}_${studentId}`)p.classList.remove('open');});
+  document.querySelectorAll('.sgibu-level-popup.open').forEach(p=>{if(p.id!==`levelPopup_${classId}_${studentId}`){p.classList.remove('open');p.classList.remove('open-up');}});
   const popup=document.getElementById(`levelPopup_${classId}_${studentId}`);
-  if(popup)popup.classList.toggle('open');
+  if(!popup)return;
+  if(popup.classList.contains('open')){popup.classList.remove('open');popup.classList.remove('open-up');return;}
+  const btnRect=btn.getBoundingClientRect();
+  const spaceBelow=window.innerHeight-btnRect.bottom;
+  popup.classList.remove('open-up');
+  if(spaceBelow<180)popup.classList.add('open-up');
+  popup.classList.add('open');
 }
 function closeSgibuLevelPopup(){document.querySelectorAll('.sgibu-level-popup.open').forEach(p=>p.classList.remove('open'));}
 function onSgibuInput(classId,studentId,el){
