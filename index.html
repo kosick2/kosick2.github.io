@@ -381,7 +381,7 @@ textarea{resize:vertical;min-height:80px;}
 .sgibu-class-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:0.9rem;font-family:inherit;cursor:pointer;outline:none;}
 .sgibu-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
 .sgibu-row:last-child{border-bottom:none;}
-.sgibu-student-info{display:flex;flex-direction:column;gap:2px;padding-top:6px;width:68px;flex-shrink:0;}
+.sgibu-student-info{display:flex;flex-direction:column;gap:2px;padding-top:6px;width:68px;flex-shrink:0;position:relative;}
 .sgibu-num{font-size:0.75rem;color:var(--text-secondary);}
 .sgibu-name{font-weight:700;font-size:0.95rem;}
 .sgibu-textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:14px;font-size:0.88rem;width:100%;outline:none;resize:none;min-height:70px;overflow:hidden;font-family:inherit;line-height:1.65;transition:border-color 0.2s;}
@@ -395,6 +395,21 @@ textarea{resize:vertical;min-height:80px;}
   .sgibu-student-info{width:56px;}
   .sgibu-name{font-size:0.82rem;}
 }
+/* ── 생기부 항목 탭 버튼 ── */
+.sgibu-cat-wrap{position:relative;display:inline-flex;align-items:center;flex-shrink:0;}
+.sgibu-cat-edit-btn,.sgibu-cat-del-btn{position:absolute;top:-6px;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--surface);color:white;font-size:0.5rem;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;font-weight:700;z-index:2;line-height:1;}
+.sgibu-cat-edit-btn{right:14px;background:#818CF8;}
+.sgibu-cat-edit-btn.no-del{right:-6px;}
+.sgibu-cat-del-btn{right:-6px;background:#EF4444;}
+.sgibu-cat-wrap:hover .sgibu-cat-edit-btn,.sgibu-cat-wrap:hover .sgibu-cat-del-btn{display:flex;}
+@media(max-width:768px){.sgibu-cat-edit-btn,.sgibu-cat-del-btn{display:flex !important;}}
+/* ── 생기부 성취도 ── */
+.sgibu-level-badge{font-size:0.68rem;font-weight:700;padding:3px 6px;border-radius:20px;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:all 0.15s;line-height:1.4;margin-top:4px;display:inline-block;text-align:center;white-space:nowrap;}
+.sgibu-level-badge:hover{opacity:0.8;transform:scale(1.06);}
+.sgibu-level-popup{position:absolute;left:0;top:calc(100% + 3px);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:5px;display:none;flex-direction:column;gap:3px;box-shadow:0 8px 24px rgba(0,0,0,0.4);min-width:76px;}
+.sgibu-level-popup.open{display:flex;}
+.sgibu-level-popup-btn{font-size:0.8rem;font-weight:700;padding:6px 8px;border-radius:7px;border:none;cursor:pointer;text-align:center;font-family:inherit;width:100%;transition:opacity 0.15s;}
+.sgibu-level-popup-btn:hover{opacity:0.75;}
 /* ── 생기부 AI ── */
 .sgibu-ai-feedback{margin-top:6px;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.6;border-left:3px solid var(--border);background:var(--surface2);display:none;}
 .sgibu-ai-feedback.visible{display:block;}
@@ -997,6 +1012,33 @@ body.has-fav-bar .main{padding-bottom:20px;}
     </div>
   </div>
 </div>
+<!-- 모달: 생기부 항목 추가 -->
+<div class="modal-overlay" id="addSgibuCategoryModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title">📝 생기부 항목 추가</div>
+    <div class="form-group"><label class="form-label">항목 이름 *</label><input type="text" id="newSgibuCatLabel" spellcheck="false" placeholder="예: 진로활동" onkeydown="if(event.key==='Enter')document.getElementById('newSgibuCatMaxChar').focus()"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">최대 글자 수 <span style="font-size:0.75rem;color:var(--text-secondary);">(0=제한없음)</span></label><input type="number" id="newSgibuCatMaxChar" min="0" placeholder="예: 500"></div>
+      <div class="form-group"><label class="form-label">최대 바이트 <span style="font-size:0.75rem;color:var(--text-secondary);">(0=제한없음)</span></label><input type="number" id="newSgibuCatMaxByte" min="0" placeholder="예: 1500"></div>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-secondary);margin-top:-4px;">0 입력 시 제한 없이 기존 경고 기준(500자/1000바이트)이 적용됩니다.</p>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addSgibuCategoryModal')">취소</button><button class="btn btn-primary" onclick="saveNewSgibuCategory()">추가</button></div>
+  </div>
+</div>
+<!-- 모달: 생기부 항목 수정 -->
+<div class="modal-overlay" id="editSgibuCategoryModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title">✏️ 생기부 항목 수정</div>
+    <input type="hidden" id="editSgibuCatId">
+    <div class="form-group"><label class="form-label">항목 이름 *</label><input type="text" id="editSgibuCatLabel" spellcheck="false"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">최대 글자 수 <span style="font-size:0.75rem;color:var(--text-secondary);">(0=제한없음)</span></label><input type="number" id="editSgibuCatMaxChar" min="0"></div>
+      <div class="form-group"><label class="form-label">최대 바이트 <span style="font-size:0.75rem;color:var(--text-secondary);">(0=제한없음)</span></label><input type="number" id="editSgibuCatMaxByte" min="0"></div>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-secondary);margin-top:-4px;">0 입력 시 제한 없이 기존 경고 기준(500자/1000바이트)이 적용됩니다.</p>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editSgibuCategoryModal')">취소</button><button class="btn btn-primary" onclick="saveEditSgibuCategory()">저장</button></div>
+  </div>
+</div>
 <!-- 모달: 생기부 AI 설정 -->
 <div class="modal-overlay" id="sgibuAiModal">
   <div class="modal" style="max-width:600px;">
@@ -1098,7 +1140,7 @@ function _applyThemeCSSVars(color){
     root.style.setProperty('--shadow','0 4px 6px -1px rgba(0,0,0,0.45)');
   }
 }
-const DB={get:k=>JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'?'{}':'[]')),set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+const DB={get:k=>JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'||k==='sgibuAchievements'?'{}':'[]')),set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
 /* ── 메모 자동저장 (iOS 완전 대응) ── */
 const _dirtyEls=new Set();
 
@@ -3220,8 +3262,8 @@ function clearDoneNotices(){
 let _dragNoteGroupId=null,_dragNoteItemId=null;
 function noteGroupDragStart(e,id){_dragNoteGroupId=id;_dragNoteItemId=null;e.dataTransfer.effectAllowed='move';}
 function noteGroupDragOver(e,id,el){e.preventDefault();e.stopPropagation();document.querySelectorAll('.notepad-group-row').forEach(r=>r.classList.remove('drag-over-note-group'));el.classList.add('drag-over-note-group');}
-function noteGroupDrop(e,toId){e.preventDefault();e.stopPropagation();document.querySelectorAll('.notepad-group-row').forEach(r=>r.classList.remove('drag-over-note-group'));if(!_dragNoteGroupId||_dragNoteGroupId===toId){_dragNoteGroupId=null;return;}reorderArr('noteGroups',_dragNoteGroupId,toId,renderNotepadGroups);_dragNoteGroupId=null;}
-function noteItemDragStart(e,id){_dragNoteItemId=id;_dragNoteGroupId=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const el=document.querySelector(`[data-note-id="${id}"]`);if(el)el.style.opacity='0.35';},0);}
+function noteGroupDrop(e,toId){e.preventDefault();e.stopPropagation();document.querySelectorAll('.notepad-group-row').forEach(r=>r.classList.remove('drag-over-note-group'));if(_dragNoteItemId){const notes=DB.get('noteItems');const note=notes.find(n=>n.id===_dragNoteItemId);if(note&&note.groupId!==toId){note.groupId=toId;DB.set('noteItems',notes);showToast('✅ 메모가 이동되었습니다');}else{showToast('이미 같은 그룹에 있어요');}_dragNoteItemId=null;renderNotepadGroups();return;}if(!_dragNoteGroupId||_dragNoteGroupId===toId){_dragNoteGroupId=null;return;}reorderArr('noteGroups',_dragNoteGroupId,toId,renderNotepadGroups);_dragNoteGroupId=null;}
+function noteItemDragStart(e,id){_dragNoteItemId=id;_dragNoteGroupId=null;e.dataTransfer.effectAllowed='move';e.stopPropagation();setTimeout(()=>{const el=document.querySelector(`[data-note-id="${id}"]`);if(el)el.style.opacity='0.35';},0);}
 function noteItemDragOver(e,id,el){e.preventDefault();e.stopPropagation();document.querySelectorAll('.notepad-note-btn').forEach(r=>r.classList.remove('drag-over-note-item'));el.classList.add('drag-over-note-item');}
 function noteItemDrop(e,toId){e.preventDefault();e.stopPropagation();document.querySelectorAll('.notepad-note-btn').forEach(r=>r.classList.remove('drag-over-note-item'));if(!_dragNoteItemId||_dragNoteItemId===toId){_dragNoteItemId=null;return;}const notes=DB.get('noteItems');const fi=notes.findIndex(n=>n.id===_dragNoteItemId);const ti=notes.findIndex(n=>n.id===toId);if(fi===-1||ti===-1){_dragNoteItemId=null;return;}const toNote=notes[ti];const[moved]=notes.splice(fi,1);moved.groupId=toNote.groupId;const nti=notes.findIndex(n=>n.id===toId);notes.splice(nti,0,moved);DB.set('noteItems',notes);_dragNoteItemId=null;renderNotepadGroups();showToast('✅ 순서가 변경되었습니다');}
 let _currentNoteId=null;
@@ -3377,6 +3419,8 @@ function initSgibuSection(){
   const sel=document.getElementById('sgibuClassSelect');
   if(!sel)return;
   sel.innerHTML='<option value="">-- 학급을 선택하세요 --</option>'+classes.map(c=>`<option value="${c.id}" ${c.id===_sgibuCurrentClassId?'selected':''}>${c.grade}학년 ${c.classNum}반</option>`).join('');
+  const cats=getSgibuCategories();
+  if(!cats.find(c=>c.id===_sgibuCurrentCategory))_sgibuCurrentCategory=cats[0]?.id||'subject';
   if(_sgibuCurrentClassId)renderSgibuSection(_sgibuCurrentClassId);
   else document.getElementById('sgibuContent').innerHTML=`<div class="empty-state"><div class="empty-icon">📜</div><p>학급을 선택하면 학생 목록이 표시됩니다</p></div>`;
 }
@@ -3387,12 +3431,64 @@ function getSgibuByteLength(str){
   return bytes;
 }
 
-const SGIBU_CATEGORIES=[
-  {id:'subject',label:'과목별세부능력및특기사항'},
-  {id:'autonomous',label:'자율자치활동'},
-  {id:'club',label:'동아리활동'},
-  {id:'behavior',label:'행동특성및종합의견'},
+const SGIBU_DEFAULT_CATEGORIES=[
+  {id:'subject',label:'과목별세부능력및특기사항',maxChar:0,maxByte:0},
+  {id:'autonomous',label:'자율자치활동',maxChar:0,maxByte:0},
+  {id:'club',label:'동아리활동',maxChar:0,maxByte:0},
+  {id:'behavior',label:'행동특성및종합의견',maxChar:0,maxByte:0},
 ];
+const SGIBU_FIXED_IDS=['subject','autonomous','club','behavior'];
+function getSgibuCategories(){
+  const saved=DB.get('sgibuCategories');
+  if(!saved||!saved.length){DB.set('sgibuCategories',[...SGIBU_DEFAULT_CATEGORIES]);return[...SGIBU_DEFAULT_CATEGORIES];}
+  let changed=false;
+  saved.forEach(c=>{if(c.maxChar===undefined){c.maxChar=0;changed=true;}if(c.maxByte===undefined){c.maxByte=0;changed=true;}});
+  if(changed)DB.set('sgibuCategories',saved);
+  return saved;
+}
+function saveNewSgibuCategory(){
+  const label=document.getElementById('newSgibuCatLabel').value.trim();
+  if(!label){showToast('❌ 항목 이름을 입력해주세요');return;}
+  const maxChar=Number(document.getElementById('newSgibuCatMaxChar').value)||0;
+  const maxByte=Number(document.getElementById('newSgibuCatMaxByte').value)||0;
+  const cats=getSgibuCategories();
+  cats.push({id:'custom_sgibu_'+Date.now(),label,maxChar,maxByte});
+  DB.set('sgibuCategories',cats);
+  closeModal('addSgibuCategoryModal');
+  if(_sgibuCurrentClassId)renderSgibuSection(_sgibuCurrentClassId);
+  showToast('✅ 항목이 추가되었습니다');
+}
+function openEditSgibuCategoryModal(catId){
+  const cat=getSgibuCategories().find(c=>c.id===catId);if(!cat)return;
+  document.getElementById('editSgibuCatId').value=catId;
+  document.getElementById('editSgibuCatLabel').value=cat.label;
+  document.getElementById('editSgibuCatMaxChar').value=cat.maxChar||0;
+  document.getElementById('editSgibuCatMaxByte').value=cat.maxByte||0;
+  openModal('editSgibuCategoryModal');
+}
+function saveEditSgibuCategory(){
+  const id=document.getElementById('editSgibuCatId').value;
+  const label=document.getElementById('editSgibuCatLabel').value.trim();
+  if(!label){showToast('❌ 항목 이름을 입력해주세요');return;}
+  const maxChar=Number(document.getElementById('editSgibuCatMaxChar').value)||0;
+  const maxByte=Number(document.getElementById('editSgibuCatMaxByte').value)||0;
+  const cats=getSgibuCategories();
+  const idx=cats.findIndex(c=>c.id===id);if(idx===-1)return;
+  cats[idx]={...cats[idx],label,maxChar,maxByte};
+  DB.set('sgibuCategories',cats);
+  closeModal('editSgibuCategoryModal');
+  if(_sgibuCurrentClassId)renderSgibuSection(_sgibuCurrentClassId);
+  showToast('✅ 수정되었습니다');
+}
+function deleteSgibuCategory(catId){
+  if(SGIBU_FIXED_IDS.includes(catId)){showToast('❌ 기본 항목은 삭제할 수 없어요');return;}
+  if(!confirm('이 항목을 삭제할까요?\n해당 항목에 입력된 내용도 더 이상 표시되지 않습니다.'))return;
+  const cats=getSgibuCategories().filter(c=>c.id!==catId);
+  DB.set('sgibuCategories',cats);
+  if(_sgibuCurrentCategory===catId)_sgibuCurrentCategory=cats[0]?.id||'subject';
+  if(_sgibuCurrentClassId)renderSgibuSection(_sgibuCurrentClassId);
+  showToast('✅ 항목이 삭제되었습니다');
+}
 function switchSgibuCategory(categoryId,classId){
   _sgibuCurrentCategory=categoryId;
   renderSgibuSection(classId);
@@ -3406,12 +3502,26 @@ function renderSgibuSection(classId){
   const records=DB.get('sgibuRecords')||{};
   const classRecords=records[classId]||{};
   const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
-  const catNav=SGIBU_CATEGORIES.map(cat=>`<button onclick="switchSgibuCategory('${cat.id}',${classId})" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:${_sgibuCurrentCategory===cat.id?'var(--primary)':'var(--surface2)'};color:${_sgibuCurrentCategory===cat.id?'white':'var(--text-secondary)'};cursor:pointer;font-size:0.8rem;font-family:inherit;transition:all 0.2s;white-space:nowrap;">${cat.label}</button>`).join('');
-  const catLabel=SGIBU_CATEGORIES.find(ct=>ct.id===_sgibuCurrentCategory)?.label||'';
-  c.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${catNav}</div>
+  const CATS=getSgibuCategories();
+  const currentCat=CATS.find(ct=>ct.id===_sgibuCurrentCategory)||CATS[0];
+  const catNav=`<button onclick="openModal('addSgibuCategoryModal')" style="padding:7px 10px;border:2px dashed var(--border);border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:0.8rem;font-family:inherit;transition:all 0.2s;white-space:nowrap;flex-shrink:0;" title="새 항목 추가">+ 항목 추가</button>`
+  +CATS.map(cat=>{
+    const isActive=_sgibuCurrentCategory===cat.id;
+    const isFixed=SGIBU_FIXED_IDS.includes(cat.id);
+    const limitParts=[];
+    if(cat.maxChar>0)limitParts.push(cat.maxChar+'자');
+    if(cat.maxByte>0)limitParts.push(cat.maxByte+'B');
+    const limitInfo=limitParts.length?`<span style="font-size:0.65rem;margin-left:3px;opacity:0.85;">(${limitParts.join('/')})</span>`:'';
+    return `<div class="sgibu-cat-wrap"><button onclick="switchSgibuCategory('${cat.id}',${classId})" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:${isActive?'var(--primary)':'var(--surface2)'};color:${isActive?'white':'var(--text-secondary)'};cursor:pointer;font-size:0.8rem;font-family:inherit;transition:all 0.2s;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;">${escHtml(cat.label)}${limitInfo}</button><button class="sgibu-cat-edit-btn${isFixed?' no-del':''}" onclick="event.stopPropagation();openEditSgibuCategoryModal('${cat.id}')">✏</button>${!isFixed?`<button class="sgibu-cat-del-btn" onclick="event.stopPropagation();deleteSgibuCategory('${cat.id}')">✕</button>`:''}</div>`;
+  }).join('');
+  const catLabel=currentCat?.label||'';
+  const maxChar=currentCat?.maxChar||0;
+  const maxByte=currentCat?.maxByte||0;
+  const limitHint=(maxChar>0||maxByte>0)?` <span style="font-size:0.78rem;color:var(--text-secondary);font-weight:400;">(목표: ${maxChar>0?maxChar+'자':''}${maxChar>0&&maxByte>0?' / ':''}${maxByte>0?maxByte+' 바이트':''})</span>`:'';
+  c.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">${catNav}</div>
   <div class="card" style="padding:0;overflow:hidden;">
     <div style="padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span style="font-weight:700;font-size:0.95rem;">${cls.grade}학년 ${cls.classNum}반 — ${catLabel}</span>
+      <span style="font-weight:700;font-size:0.95rem;">${cls.grade}학년 ${cls.classNum}반 — ${catLabel}${limitHint}</span>
       <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center;">
         <button onclick="openSgibuAiModal()" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;">⚙️ AI 설정</button>
         <button onclick="runSgibuAiReview(${classId},'${_sgibuCurrentCategory}')" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid rgba(129,140,248,0.5);background:rgba(79,70,229,0.15);color:var(--primary-light);cursor:pointer;font-family:inherit;">🤖 AI 검토 시작</button>
@@ -3428,18 +3538,28 @@ function renderSgibuSection(classId){
         else if(sr&&typeof sr==='object'){text=sr[_sgibuCurrentCategory]||'';}
         const charLen=text.length;
         const byteLen=getSgibuByteLength(text);
-        const charColor=charLen>500?'sgibu-limit-over':charLen>400?'sgibu-limit-warn':'';
-        const byteColor=byteLen>1000?'sgibu-limit-over':byteLen>800?'sgibu-limit-warn':'';
+        let charColor='',byteColor='',charDisplay=`${charLen}자`,byteDisplay=`${byteLen} 바이트`;
+        if(maxChar>0){const diff=maxChar-charLen;if(diff<0){charColor='sgibu-limit-over';charDisplay=`${charLen}자 (${Math.abs(diff)}자 초과)`;}else if(diff<=Math.max(Math.floor(maxChar*0.1),10)){charColor='sgibu-limit-warn';charDisplay=`${charLen}/${maxChar}자 (${diff}자 남음)`;}else{charDisplay=`${charLen}/${maxChar}자 (${diff}자 남음)`;}}
+        else{if(charLen>500)charColor='sgibu-limit-over';else if(charLen>400)charColor='sgibu-limit-warn';}
+        if(maxByte>0){const diff=maxByte-byteLen;if(diff<0){byteColor='sgibu-limit-over';byteDisplay=`${byteLen}B (${Math.abs(diff)}B 초과)`;}else if(diff<=Math.max(Math.floor(maxByte*0.1),20)){byteColor='sgibu-limit-warn';byteDisplay=`${byteLen}/${maxByte}B (${diff}B 남음)`;}else{byteDisplay=`${byteLen}/${maxByte}B (${diff}B 남음)`;}}
+        else{if(byteLen>1000)byteColor='sgibu-limit-over';else if(byteLen>800)byteColor='sgibu-limit-warn';}
+        const _sLevel=getSgibuStudentLevel(classId,s.id);
+        const _sLv=SGIBU_LEVELS.find(l=>l.id===_sLevel);
+        const _sLvStyle=_sLv?`background:${_sLv.color};color:${_sLv.textColor};border-color:transparent;`:`background:var(--surface2);color:var(--text-secondary);border:1px dashed var(--border);`;
+        const _sLvPopup=[{id:'',label:'미설정',bg:'var(--surface2)',tc:'var(--text-secondary)'},...SGIBU_LEVELS].map(lv=>`<button class="sgibu-level-popup-btn" onclick="event.stopPropagation();setSgibuAchievement('${classId}',${s.id},'${lv.id}')" style="background:${lv.bg||lv.color};color:${lv.tc||lv.textColor};">${lv.label||lv.id}</button>`).join('');
         return `<div class="sgibu-row">
           <div class="sgibu-student-info">
             <span class="sgibu-num">${s.number??''}번</span>
             <span class="sgibu-name">${escHtml(s.name)}</span>
+                        <button class="sgibu-level-badge" id="levelBadge_${classId}_${s.id}" onclick="event.stopPropagation();toggleSgibuLevelPopup('${classId}',${s.id},this)" style="${_sLvStyle}">${_sLevel||'성취도'}</button>
+            <div class="sgibu-level-popup" id="levelPopup_${classId}_${s.id}">${_sLvPopup}</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;">
             <textarea class="sgibu-textarea" id="sgibu_${classId}_${s.id}" placeholder="내용을 입력하세요..." oninput="onSgibuInput(${classId},${s.id},this)">${escHtml(text)}</textarea>
             <div style="display:flex;justify-content:flex-end;gap:10px;">
-              <span class="sgibu-char-count ${charColor}" id="sgibuChar_${classId}_${s.id}">${charLen}자</span>
-<span class="sgibu-byte-count ${byteColor}" id="sgibuByte_${classId}_${s.id}">${byteLen} 바이트</span>            </div>
+              <span class="sgibu-char-count ${charColor}" id="sgibuChar_${classId}_${s.id}">${charDisplay}</span>
+              <span class="sgibu-byte-count ${byteColor}" id="sgibuByte_${classId}_${s.id}">${byteDisplay}</span>
+            </div>
             <div class="sgibu-ai-feedback" id="aiFeedback_${classId}_${s.id}"></div>
           </div>
         </div>`;
@@ -3462,7 +3582,7 @@ function openSgibuAiModal(){
   document.getElementById('sgibuApiKey').value=localStorage.getItem('sgibuApiKey')||'';
 document.getElementById('sgibuAiModel').value=localStorage.getItem('sgibuAiModel')||'llama-3.3-70b-versatile';
   const container=document.getElementById('sgibuAiPromptsContainer');
-  container.innerHTML=SGIBU_CATEGORIES.map(cat=>{
+  container.innerHTML=getSgibuCategories().map(cat=>{
     const saved=localStorage.getItem(`sgibuAiPrompt_${cat.id}`)||'';
     return `<div class="form-group" style="margin-bottom:0;"><label class="form-label" style="font-size:0.82rem;">${cat.label}</label><textarea rows="3" style="font-size:0.82rem;min-height:70px;" spellcheck="false" id="sgibuAiPrompt_${cat.id}" placeholder="${escHtml(SGIBU_AI_DEFAULT_PROMPTS[cat.id]||'')}">${escHtml(saved)}</textarea></div>`;
   }).join('');
@@ -3471,7 +3591,7 @@ document.getElementById('sgibuAiModel').value=localStorage.getItem('sgibuAiModel
 function saveSgibuAiSettings(){
   localStorage.setItem('sgibuApiKey',document.getElementById('sgibuApiKey').value.trim());
   localStorage.setItem('sgibuAiModel',document.getElementById('sgibuAiModel').value);
-  SGIBU_CATEGORIES.forEach(cat=>{
+  getSgibuCategories().forEach(cat=>{
     const el=document.getElementById(`sgibuAiPrompt_${cat.id}`);
     if(el)localStorage.setItem(`sgibuAiPrompt_${cat.id}`,el.value);
   });
@@ -3571,12 +3691,7 @@ async function exportSgibuToExcel(classId){
   const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
   const getVal=(sr,cat)=>{if(!sr)return'';if(typeof sr==='string')return cat==='subject'?sr:'';return sr[cat]||'';};
   const getByteLen=(str)=>{let b=0;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);if(c<=0x7F)b+=1;else if(c<=0x7FF)b+=2;else b+=3;}return b;};
-  const CATEGORIES=[
-    {id:'subject',label:'과목별세부능력및특기사항'},
-    {id:'autonomous',label:'자율자치활동'},
-    {id:'club',label:'동아리활동'},
-    {id:'behavior',label:'행동특성및종합의견'},
-  ];
+  const CATEGORIES=getSgibuCategories();
   const thinBorder={style:'thin',color:{argb:'FFCCCCCC'}};
   const cellBorder={top:thinBorder,bottom:thinBorder,left:thinBorder,right:thinBorder};
   const workbook=new ExcelJS.Workbook();
@@ -3640,7 +3755,7 @@ cell.font={size:10,name:'함초롬바탕',charset:129};
   a.download=`생활기록부_${cls.grade}학년${cls.classNum}반.xlsx`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('✅ Excel 파일 내보내기 완료! (시트 4개)');
+  showToast(`✅ Excel 파일 내보내기 완료! (시트 ${CATEGORIES.length}개)`);
 }
 function clearSgibuAiResults(classId){
   const cls=DB.get('classes').find(c=>c.id===Number(classId));
@@ -3654,6 +3769,38 @@ function clearSgibuAiResults(classId){
   _sgibuAiRunning=false;
   showToast('🗑️ AI 검토 결과가 초기화되었습니다');
 }
+/* ── 생기부 성취도 ── */
+const SGIBU_LEVELS=[
+  {id:'상',color:'#34D399',textColor:'#064E3B'},
+  {id:'중상',color:'#60A5FA',textColor:'#1E3A5F'},
+  {id:'중',color:'#FBBF24',textColor:'#78350F'},
+  {id:'중하',color:'#FB923C',textColor:'#7C2D12'},
+  {id:'하',color:'#F87171',textColor:'#7F1D1D'},
+];
+function getSgibuAchievements(){const a=DB.get('sgibuAchievements');if(!a||Array.isArray(a))return{};return a;}
+function getSgibuStudentLevel(classId,studentId){const cid=String(classId),sid=String(studentId);const a=getSgibuAchievements();return(a[cid]&&a[cid][sid])||'';}
+function setSgibuAchievement(classId,studentId,level){
+  const cid=String(classId),sid=String(studentId);
+  let a=getSgibuAchievements();
+  if(!a[cid])a[cid]={};
+  if(level==='')delete a[cid][sid];
+  else a[cid][sid]=level;
+  DB.set('sgibuAchievements',a);
+  const badge=document.getElementById(`levelBadge_${cid}_${sid}`);
+  if(badge){
+    const lv=SGIBU_LEVELS.find(l=>l.id===level);
+    if(lv){badge.textContent=lv.id;badge.style.background=lv.color;badge.style.color=lv.textColor;badge.style.borderColor='transparent';}
+    else{badge.textContent='성취도';badge.style.background='var(--surface2)';badge.style.color='var(--text-secondary)';badge.style.border='1px dashed var(--border)';}
+  }
+  closeSgibuLevelPopup();
+  showToast(`✅ 성취도: ${level||'미설정'}`);
+}
+function toggleSgibuLevelPopup(classId,studentId,btn){
+  document.querySelectorAll('.sgibu-level-popup.open').forEach(p=>{if(p.id!==`levelPopup_${classId}_${studentId}`)p.classList.remove('open');});
+  const popup=document.getElementById(`levelPopup_${classId}_${studentId}`);
+  if(popup)popup.classList.toggle('open');
+}
+function closeSgibuLevelPopup(){document.querySelectorAll('.sgibu-level-popup.open').forEach(p=>p.classList.remove('open'));}
 function onSgibuInput(classId,studentId,el){
   el.style.height='auto';el.style.height=el.scrollHeight+'px';
   const text=el.value;
@@ -3661,8 +3808,10 @@ function onSgibuInput(classId,studentId,el){
   const byteLen=getSgibuByteLength(text);
   const charEl=document.getElementById(`sgibuChar_${classId}_${studentId}`);
   const byteEl=document.getElementById(`sgibuByte_${classId}_${studentId}`);
-  if(charEl){charEl.textContent=`${charLen}자`;charEl.className='sgibu-char-count '+(charLen>500?'sgibu-limit-over':charLen>400?'sgibu-limit-warn':'');}
-if(byteEl){byteEl.textContent=`${byteLen} 바이트`;byteEl.className='sgibu-byte-count '+(byteLen>1000?'sgibu-limit-over':byteLen>800?'sgibu-limit-warn':'');}
+  const _curCat=getSgibuCategories().find(c=>c.id===_sgibuCurrentCategory);
+  const _mxC=_curCat?.maxChar||0,_mxB=_curCat?.maxByte||0;
+  if(charEl){let d=`${charLen}자`,col='';if(_mxC>0){const r=_mxC-charLen;if(r<0){col='sgibu-limit-over';d=`${charLen}자 (${Math.abs(r)}자 초과)`;}else if(r<=Math.max(Math.floor(_mxC*0.1),10)){col='sgibu-limit-warn';d=`${charLen}/${_mxC}자 (${r}자 남음)`;}else{d=`${charLen}/${_mxC}자 (${r}자 남음)`;}}else{if(charLen>500)col='sgibu-limit-over';else if(charLen>400)col='sgibu-limit-warn';}charEl.textContent=d;charEl.className='sgibu-char-count '+col;}
+  if(byteEl){let d=`${byteLen} 바이트`,col='';if(_mxB>0){const r=_mxB-byteLen;if(r<0){col='sgibu-limit-over';d=`${byteLen}B (${Math.abs(r)}B 초과)`;}else if(r<=Math.max(Math.floor(_mxB*0.1),20)){col='sgibu-limit-warn';d=`${byteLen}/${_mxB}B (${r}B 남음)`;}else{d=`${byteLen}/${_mxB}B (${r}B 남음)`;}}else{if(byteLen>1000)col='sgibu-limit-over';else if(byteLen>800)col='sgibu-limit-warn';}byteEl.textContent=d;byteEl.className='sgibu-byte-count '+col;}
   clearTimeout(_sgibuSaveTimer);
   _sgibuSaveTimer=setTimeout(()=>{
     let records=DB.get('sgibuRecords');if(!records||Array.isArray(records))records={};
@@ -3809,6 +3958,7 @@ function resetTextColor(){
 document.addEventListener('click',e=>{
   if(_tabFabOpen&&!e.target.closest('#tabFabWrap'))closeTabFab();
   if(typeof _webThemeOpen!=='undefined'&&_webThemeOpen&&!e.target.closest('#webThemeWrap'))closeWebTheme();
+  if(!e.target.closest('.sgibu-level-badge')&&!e.target.closest('.sgibu-level-popup'))closeSgibuLevelPopup();
 });
 /* ── 즐겨찾기 바 ── */
 function getFavBarIds(){return DB.get('favBarIds');}
@@ -3912,7 +4062,7 @@ import{initializeApp}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-app
 import{getFirestore,doc,setDoc,getDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyCqoVkHtnEsQRwExsthe4sASWID5H2bzuQ",authDomain:"kosick-dashboard.firebaseapp.com",projectId:"kosick-dashboard",storageBucket:"kosick-dashboard.firebasestorage.app",messagingSenderId:"990702080590",appId:"1:990702080590:web:9fe9a356db03c0eea4291f"};
 const fb=initializeApp(cfg),fs=getFirestore(fb);
-const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords','favBarIds'];
+const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords','favBarIds','sgibuCategories','sgibuAchievements'];
 const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','homeroomMyClassId','appThemeColor','userTextColor'];
 const ref=doc(fs,'kosick','data');
 let _isSaving=false;
@@ -3922,8 +4072,8 @@ let _saveToastTimer=null;
 function syncAll(isManual=false){
   if(!_firebaseReady){console.warn('🛡️ 안전장치: Firebase 미로드 상태에서 저장 차단');showToast('⏳ 데이터 로딩 중... 잠시 후 자동 저장됩니다');return;}
 const p={};
-  DK.forEach(k=>{p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'?'{}':'[]'));if(k==='sgibuRecords'&&Array.isArray(p[k]))p[k]={};});
-  const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
+  DK.forEach(k=>{p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'||k==='sgibuAchievements'?'{}':'[]'));if((k==='sgibuRecords'||k==='sgibuAchievements')&&Array.isArray(p[k]))p[k]={};});
+const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
   const _hasSettings=SK.some(k=>localStorage.getItem(k)&&localStorage.getItem(k)!=='');
   if(!_hasData&&!_hasSettings){console.warn('🛡️ 안전장치: 로컬이 비어있어 Firebase 덮어쓰기 차단');showToast('⚠️ 데이터가 비어있어 저장이 차단되었습니다');return;}
   SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
@@ -3935,7 +4085,7 @@ p._savedAt=Date.now();
 }
 window._syncSettings=syncAll;
 function applyRemoteData(data){
-  DK.forEach(k=>{if(data[k]!==undefined){let _v=data[k];if(k==='sgibuRecords'&&Array.isArray(_v))_v={};localStorage.setItem(k,JSON.stringify(_v));}});
+  DK.forEach(k=>{if(data[k]!==undefined){let _v=data[k];if((k==='sgibuRecords'||k==='sgibuAchievements')&&Array.isArray(_v))_v={};localStorage.setItem(k,JSON.stringify(_v));}});
   SK.forEach(k=>{if(data[k]!==undefined&&data[k]!=='')localStorage.setItem(k,data[k]);});
   localStorage.setItem('_savedAt',Number(data._savedAt||0));
   initHeaderTitle();initColors();
