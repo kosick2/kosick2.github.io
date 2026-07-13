@@ -1,0 +1,3 @@
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo...여기에_전체_문자열">
+<link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgo...여기에_전체_문자열">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgo...여기에_전체_문자열">
