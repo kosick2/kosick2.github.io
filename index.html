@@ -4342,6 +4342,8 @@ function renderSgibuSection(classId){
  <button onclick="openSgibuAiModal()" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;"> AI 설정</button>
  <button onclick="runSgibuAiReview(${classId},'${_sgibuCurrentCategory}')" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid rgba(129,140,248,0.5);background:rgba(79,70,229,0.15);color:var(--primary-light);cursor:pointer;font-family:inherit;"> AI 검토 시작</button>
  <button onclick="exportSgibuToExcel(${classId})" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid rgba(52,211,153,0.5);background:rgba(16,185,129,0.15);color:#10B981;cursor:pointer;font-family:inherit;"> Excel 내보내기</button>
+ <button onclick="importSgibuFromExcel(${classId})" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid rgba(96,165,250,0.5);background:rgba(59,130,246,0.15);color:#60A5FA;cursor:pointer;font-family:inherit;"> Excel 가져오기</button>
+ <input type="file" id="sgibuImportInput" accept=".xlsx,.xls" style="display:none" onchange="handleSgibuExcelFile(event,${classId})">
  <button onclick="clearSgibuAiResults(${classId})" style="padding:5px 10px;font-size:0.78rem;font-weight:600;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;">✕ 결과 지우기</button>
  </div>
  </div>
@@ -4580,6 +4582,76 @@ cell.font={size:10,name:'함초롬바탕',charset:129};
  a.click();
  URL.revokeObjectURL(url);
  showToast(` Excel 파일 내보내기 완료! (시트 ${CATEGORIES.length}개)`);
+}
+function importSgibuFromExcel(classId){
+ const inp=document.getElementById('sgibuImportInput');
+ if(inp)inp.click();
+}
+async function handleSgibuExcelFile(event,classId){
+ const file=event.target.files[0];
+ event.target.value='';
+ if(!file)return;
+ if(typeof ExcelJS==='undefined'){showToast(' 라이브러리 로딩 중... 잠시 후 다시 시도해주세요');return;}
+ const cls=DB.get('classes').find(c=>c.id===Number(classId));
+ if(!cls){showToast(' 학급 정보를 찾을 수 없어요');return;}
+ const cat=getSgibuCategories().find(c=>c.id===_sgibuCurrentCategory);
+ if(!cat){showToast(' 현재 선택된 항목을 확인할 수 없어요');return;}
+ let workbook;
+ try{
+ const buf=await file.arrayBuffer();
+ workbook=new ExcelJS.Workbook();
+ await workbook.xlsx.load(buf);
+ }catch(e){
+ alert('❌ 파일을 읽을 수 없어요. Excel 내보내기로 받은 .xlsx 파일이 맞는지 확인해주세요.');
+ return;
+ }
+ /* 파일에 여러 항목(시트)이 들어있어도, 지금 화면에서 보고 있는 항목의 시트만 반영한다 */
+ const ws=workbook.getWorksheet(cat.label);
+ if(!ws){
+ alert(`⚠️ 이 파일에서 "${cat.label}" 시트를 찾지 못했어요.\n지금 보고 있는 항목("${cat.label}")이 담긴 Excel 파일이 맞는지 확인해주세요.`);
+ return;
+ }
+ const changes=[];
+ let notFoundRows=0;
+ const mismatchedClasses=new Set();
+ ws.eachRow((row,rowNum)=>{
+ if(rowNum===1)return;
+ const rowGrade=String(row.getCell(1).value??'').trim();
+ const rowClassNum=String(row.getCell(2).value??'').trim();
+ const number=row.getCell(3).value;
+ const name=String(row.getCell(4).value??'').trim();
+ const content=row.getCell(6).value;
+ if(number===null||number===undefined||content===null||content===undefined)return;
+ if(rowGrade&&rowClassNum&&(rowGrade!==String(cls.grade)||rowClassNum!==String(cls.classNum))){
+ mismatchedClasses.add(`${rowGrade}학년 ${rowClassNum}반`);
+ return;
+ }
+ const student=cls.students.find(s=>s.number===Number(number)&&s.name===name)||cls.students.find(s=>s.number===Number(number));
+ if(!student){notFoundRows++;return;}
+ changes.push({studentId:student.id,content:String(content)});
+ });
+ if(!changes.length){
+ if(mismatchedClasses.size){
+ alert(`⚠️ 이 파일은 다른 학급(${[...mismatchedClasses].join(', ')})의 파일인 것 같아요.\n현재 선택된 학급(${cls.grade}학년 ${cls.classNum}반)과 일치하지 않아 아무것도 반영하지 않았어요.`);
+ }else{
+ alert('⚠️ 반영할 내용을 찾지 못했어요. Excel 내보내기로 받은 파일 형식 그대로인지 확인해주세요.');
+ }
+ return;
+ }
+ if(!confirm(`"${cat.label}" 항목에서 ${changes.length}명의 학생 데이터를 업로드한 파일 내용으로 교체합니다.\n(다른 항목은 이 파일에 있어도 반영되지 않아요)\n계속할까요?`))return;
+ let records=DB.get('sgibuRecords');
+ if(!records||Array.isArray(records))records={};
+ if(!records[classId])records[classId]={};
+ changes.forEach(({studentId,content})=>{
+ if(typeof records[classId][studentId]!=='object'||records[classId][studentId]===null)records[classId][studentId]={};
+ records[classId][studentId][_sgibuCurrentCategory]=content;
+ });
+ DB.set('sgibuRecords',records);
+ if(window._syncSettings)window._syncSettings();
+ if(_sgibuCurrentClassId)renderSgibuSection(_sgibuCurrentClassId);
+ let msg=`✅ "${cat.label}" 항목 — ${changes.length}명의 학생 데이터가 교체되었습니다.`;
+ if(notFoundRows>0)msg+=`\n\n⚠️ ${notFoundRows}개 행은 이 학급 명단과 일치하는 학생을 찾지 못해 건너뛰었어요.`;
+ alert(msg);
 }
 function clearSgibuAiResults(classId){
  const cls=DB.get('classes').find(c=>c.id===Number(classId));
