@@ -4105,8 +4105,31 @@ function noteFormatHighlight(){
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 }
 function noteInsertCheckbox(){
- document.getElementById('noteContentInput')?.focus();
- document.execCommand('insertHTML',false,'<label contenteditable="false" style="display:inline-flex;align-items:center;vertical-align:middle;user-select:none;"><input type="checkbox" style="width:15px;height:15px;margin:0 5px 0 0;"></label>&nbsp;');
+ const ed=document.getElementById('noteContentInput');
+ if(!ed)return;
+ ed.focus();
+ const sel=window.getSelection();
+ if(!sel||!sel.rangeCount)return;
+ const temp=document.createElement('div');
+ temp.innerHTML='<label contenteditable="false" style="display:inline-flex;align-items:center;vertical-align:middle;user-select:none;margin-right:5px;"><input type="checkbox" style="width:15px;height:15px;margin:0;"></label>';
+ const checkboxNode=temp.firstChild;
+ /* 클릭(터치)한 정확한 글자 위치가 아니라, 그 줄의 맨 왼쪽에 삽입한다 */
+ let node=sel.focusNode;
+ while(node&&node.parentNode&&node.parentNode!==ed){
+ node=node.parentNode;
+ }
+ if(node&&node.nodeType===1&&node.parentNode===ed){
+ /* 줄이 자체 블록(div 등)으로 감싸여 있는 경우: 그 블록의 맨 앞에 삽입 */
+ node.insertBefore(checkboxNode,node.firstChild);
+ }else if(node&&node.parentNode===ed){
+ /* 줄바꿈이 <br>로만 되어 있는 평문 구조: 직전 <br> 뒤(없으면 맨 앞)에 삽입 */
+ let prevBr=null,n=node.previousSibling;
+ while(n){if(n.nodeName==='BR'){prevBr=n;break;}n=n.previousSibling;}
+ if(prevBr)ed.insertBefore(checkboxNode,prevBr.nextSibling);
+ else ed.insertBefore(checkboxNode,ed.firstChild);
+ }else{
+ ed.insertBefore(checkboxNode,ed.firstChild);
+ }
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 }
 function noteChangeFontSize(delta){
