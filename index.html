@@ -470,6 +470,10 @@ textarea{resize:vertical;min-height:80px;}
 .note-toolbar-btn:hover{background:var(--surface2);color:var(--text);}
 .note-toolbar-btn:active{background:var(--primary);color:#fff;}
 .note-toolbar-sep{width:18px;height:1px;background:var(--border);margin:5px auto;flex-shrink:0;}
+.note-symbol-popup{position:fixed;z-index:260;display:none;grid-template-columns:repeat(4,1fr);gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:8px;width:176px;right:64px;top:50%;transform:translateY(-50%);}
+.note-symbol-popup.open{display:grid;}
+.note-symbol-btn{width:36px;height:36px;border-radius:10px;border:none;background:transparent;color:var(--text);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;font-family:inherit;}
+.note-symbol-btn:hover{background:var(--surface2);}
 #noticeContent[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-secondary);opacity:0.45;pointer-events:none;display:block;}
 .notepad-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-secondary);gap:10px;}
 .notepad-mobile-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:rgba(15,23,42,0.55);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.18);font-size:1.4rem;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:490;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all 0.2s;}
@@ -482,6 +486,7 @@ textarea{resize:vertical;min-height:80px;}
  .notepad-mobile-fab{display:flex;}
  .note-toolbar{left:50%;right:auto;top:auto;bottom:18px;transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
  .note-toolbar-sep{width:1px;height:18px;margin:auto 5px;}
+ .note-symbol-popup{left:50%;right:auto;top:auto;bottom:70px;transform:translateX(-50%);}
  .notepad-content-input{padding-bottom:70px;}
 }
 /* ── 생기부 ── */
@@ -4086,7 +4091,7 @@ function loadNoteIntoEditor(noteId){
  const notes=DB.get('noteItems'),note=notes.find(n=>n.id===noteId);if(!note)return;
  const ea=document.getElementById('notepadEditorArea');if(!ea)return;
  const updStr=note.updatedAt?new Date(note.updatedAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
- ea.innerHTML=`<div class="notepad-editor-topbar"><button onclick="closeNoteEditorMobile()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:600;">← 목록</button><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"> 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div><div class="note-toolbar" id="noteToolbar"><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatBold()" title="굵게"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h5.5a3.5 3.5 0 0 1 0 7H6z"></path><path d="M6 11h6.5a3.5 3.5 0 0 1 0 7H6z"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatHighlight()" title="하이라이트"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"></path><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteInsertCheckbox()" title="체크박스"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 2.5 2.5L16 9"></path></svg></button><div class="note-toolbar-sep"></div><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(2)" title="글자 크게" style="font-size:1.05rem;font-weight:700;">가</button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(-2)" title="글자 작게" style="font-size:0.7rem;font-weight:700;">가</button></div>`;
+ ea.innerHTML=`<div class="notepad-editor-topbar"><button onclick="closeNoteEditorMobile()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:600;">← 목록</button><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"> 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div><div class="note-toolbar" id="noteToolbar"><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatBold()" title="굵게"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h5.5a3.5 3.5 0 0 1 0 7H6z"></path><path d="M6 11h6.5a3.5 3.5 0 0 1 0 7H6z"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatHighlight()" title="하이라이트"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"></path><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteInsertCheckbox()" title="체크박스"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 2.5 2.5L16 9"></path></svg></button><div class="note-toolbar-sep"></div><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(2)" title="글자 크게" style="font-size:1.05rem;font-weight:700;">가</button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(-2)" title="글자 작게" style="font-size:0.7rem;font-weight:700;">가</button><div class="note-toolbar-sep"></div><button class="note-toolbar-btn" id="noteSymbolBtn" onmousedown="event.preventDefault()" onclick="toggleSymbolPopup()" title="특수문자" style="font-size:1rem;">※</button></div><div class="note-symbol-popup" id="noteSymbolPopup"></div>`;
  const _nc=document.getElementById('noteContentInput');
  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
 }
@@ -4110,26 +4115,21 @@ function noteInsertCheckbox(){
  ed.focus();
  const sel=window.getSelection();
  if(!sel||!sel.rangeCount)return;
- const temp=document.createElement('div');
+ /* 클릭(터치)한 정확한 글자 위치가 아니라, 그 "보이는 줄"의 맨 왼쪽으로 캐럿을 옮긴다.
+ 실제 메모는 div/span/br가 여러 겹으로 뒤섞여 있어(붙여넣기 등), DOM 구조를 직접
+ 추정하지 않고 브라우저의 줄 경계 판정(lineboundary)에 맡기는 게 훨씬 안전하다. */
+ if(typeof sel.modify==='function'){
+ sel.modify('move','backward','lineboundary');
+ }
+ const range=sel.getRangeAt(0);
+ const temp=document.createElement('span');
  temp.innerHTML='<label contenteditable="false" style="display:inline-flex;align-items:center;vertical-align:middle;user-select:none;margin-right:5px;"><input type="checkbox" style="width:15px;height:15px;margin:0;"></label>';
  const checkboxNode=temp.firstChild;
- /* 클릭(터치)한 정확한 글자 위치가 아니라, 그 줄의 맨 왼쪽에 삽입한다 */
- let node=sel.focusNode;
- while(node&&node.parentNode&&node.parentNode!==ed){
- node=node.parentNode;
- }
- if(node&&node.nodeType===1&&node.parentNode===ed){
- /* 줄이 자체 블록(div 등)으로 감싸여 있는 경우: 그 블록의 맨 앞에 삽입 */
- node.insertBefore(checkboxNode,node.firstChild);
- }else if(node&&node.parentNode===ed){
- /* 줄바꿈이 <br>로만 되어 있는 평문 구조: 직전 <br> 뒤(없으면 맨 앞)에 삽입 */
- let prevBr=null,n=node.previousSibling;
- while(n){if(n.nodeName==='BR'){prevBr=n;break;}n=n.previousSibling;}
- if(prevBr)ed.insertBefore(checkboxNode,prevBr.nextSibling);
- else ed.insertBefore(checkboxNode,ed.firstChild);
- }else{
- ed.insertBefore(checkboxNode,ed.firstChild);
- }
+ range.insertNode(checkboxNode);
+ range.setStartAfter(checkboxNode);
+ range.collapse(true);
+ sel.removeAllRanges();
+ sel.addRange(range);
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 }
 function noteChangeFontSize(delta){
@@ -4147,6 +4147,25 @@ function noteChangeFontSize(delta){
  f.removeAttribute('size');
  f.style.fontSize=newSize+'px';
  });
+ if(_currentNoteId)scheduleNoteSave(_currentNoteId);
+}
+const NOTE_SYMBOLS=['→','←','↑','↓','⇒','⇐','★','☆','•','·','▶','▷','○','●','□','■','◇','◆','✓','✗','※'];
+function toggleSymbolPopup(){
+ const popup=document.getElementById('noteSymbolPopup');
+ if(!popup)return;
+ if(!popup.classList.contains('open')){
+ popup.innerHTML=NOTE_SYMBOLS.map(s=>`<button class="note-symbol-btn" onmousedown="event.preventDefault()" onclick="insertNoteSymbol('${s}')">${s}</button>`).join('');
+ }
+ popup.classList.toggle('open');
+}
+function closeSymbolPopup(){
+ document.getElementById('noteSymbolPopup')?.classList.remove('open');
+}
+function insertNoteSymbol(sym){
+ const ed=document.getElementById('noteContentInput');
+ if(!ed)return;
+ ed.focus();
+ document.execCommand('insertText',false,sym);
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 }
 
@@ -4918,6 +4937,7 @@ function closeTabFab(){
 document.addEventListener('click',e=>{
  if(_tabFabOpen&&!e.target.closest('#tabFabWrap'))closeTabFab();
  if(!e.target.closest('.sgibu-level-badge')&&!e.target.closest('.sgibu-level-popup'))closeSgibuLevelPopup();
+ if(!e.target.closest('#noteSymbolPopup')&&!e.target.closest('#noteSymbolBtn'))closeSymbolPopup();
 });
 /* ── 즐겨찾기 바 ── */
 function getFavBarIds(){return DB.get('favBarIds');}
