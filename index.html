@@ -169,7 +169,10 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFo
  .m-hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
  .m-hero-greeting{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;}
  .m-hero-sub{font-size:0.82rem;color:var(--text-secondary);font-weight:500;margin-top:4px;}
- .m-hero-cal-btn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;cursor:pointer;}
+ .m-hero-cal-btn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;cursor:pointer;position:relative;}
+ .m-hero-cal-badges{position:absolute;top:-5px;right:-5px;display:flex;}
+ .m-hero-cal-badge{min-width:16px;height:16px;padding:0 3px;border-radius:8px;color:#fff;font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--background);box-sizing:content-box;}
+ .m-hero-cal-badge+.m-hero-cal-badge{margin-left:-6px;}
  .m-hero-card{margin-top:16px;background:var(--primary);border-radius:24px;padding:18px 20px 18px;color:#F2F0E4;position:relative;}
  .m-hero-card-label{font-size:12px;font-weight:600;opacity:0.75;letter-spacing:0.3px;}
  .m-hero-card-title{font-size:22px;font-weight:800;margin-top:4px;letter-spacing:-0.3px;}
@@ -591,7 +594,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="m-hero-greeting">안녕하세요, 선생님 👋</div>
  <div class="m-hero-sub" id="mHeroSub"></div>
  </div>
- <button class="m-hero-cal-btn" onclick="openCalendarModal()" title="캘린더"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg></button>
+ <button class="m-hero-cal-btn" onclick="openCalendarModal()" title="캘린더"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><div class="m-hero-cal-badges" id="mHeroCalBadges"></div></button>
  </div>
  <div class="m-hero-card" id="mHeroCard" style="display:none;">
  <button class="m-hero-card-arrow" onclick="showSection('homeroom',null)" title="담임"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
@@ -2023,6 +2026,7 @@ function buildMobileHero(){
  const d=new Date();
  const days=['일','월','화','수','목','금','토'];
  let subText=`${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+ updateHeroCalBadges();
  const badgesEl=document.getElementById('mHeroBadges');
  const cardEl=document.getElementById('mHeroCard');
  const classNameEl=document.getElementById('mHeroClassName');
@@ -2067,6 +2071,25 @@ function buildMobileHero(){
  }
  const clsEl=document.getElementById('mStatClasses');
  if(clsEl)clsEl.innerHTML=`${classCnt}<small> 교시</small>`;
+}
+function updateHeroCalBadges(){
+ const wrap=document.getElementById('mHeroCalBadges');
+ if(!wrap)return;
+ const todayStr=_getLocalTodayStr();
+ const todaySchedules=DB.get('schedules').filter(s=>{
+ const start=s.date,end=s.dateEnd||s.date;
+ return start<=todayStr&&todayStr<=end;
+ });
+ if(!todaySchedules.length){wrap.innerHTML='';return;}
+ const types=getScheduleTypes();
+ const colorById={};types.forEach(t=>colorById[t.id]=t.color);
+ const countByType={};
+ todaySchedules.forEach(s=>{const tid=s.type||'none';countByType[tid]=(countByType[tid]||0)+1;});
+ wrap.innerHTML=Object.keys(countByType).map(tid=>{
+ const color=colorById[tid]||'#374151';
+ const count=countByType[tid];
+ return `<div class="m-hero-cal-badge" style="background:${color};">${count>9?'9+':count}</div>`;
+ }).join('');
 }
 function buildHomeQuickLinks(){
  const wrap=document.getElementById('homeQuickLinks');
@@ -2195,7 +2218,20 @@ function getDeadlineBadgeHtml(item){
  else{const dlColor=diff<=3?'#FBBF24':'#60A5FA';badge=`<span style="font-size:0.72rem;background:${dlColor}22;color:${dlColor};border:1px solid ${dlColor}55;border-radius:20px;padding:2px 8px;font-weight:600;"> ${item.deadline} <span style="font-weight:700;">(D-${diff})</span></span>`;}
  return `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;margin-bottom:2px;">${badge}<button onclick="clearMemoDeadline(${item.id})" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.65rem;padding:0;line-height:1;opacity:0.6;">✕</button></div>`;
 }
-function setMemoDeadline(id){const wrap=document.getElementById(`dlWrap_${id}`);if(!wrap)return;const show=wrap.style.display==='none'||!wrap.style.display;wrap.style.display=show?'block':'none';if(show){const inp=wrap.querySelector('input');if(inp){if(!inp.value)inp.value=new Date().toISOString().split('T')[0];inp.focus();}}}
+function setMemoDeadline(id){
+ const wrap=document.getElementById(`dlWrap_${id}`);if(!wrap)return;
+ const inp=wrap.querySelector('input');
+ const opening=wrap.style.display==='none'||!wrap.style.display;
+ if(opening&&inp&&!inp.value){
+ /* 기한이 없을 때 처음 열면 달력에 "오늘"이 미리 채워지는데, 이미 채워진 값과
+ 같은 오늘을 다시 선택해도 change 이벤트가 안 일어나 저장이 안 되던 문제 방지:
+ 열자마자 오늘 날짜로 바로 저장한다. */
+ updateMemoDeadline(id,new Date().toISOString().split('T')[0]);
+ return;
+ }
+ wrap.style.display=opening?'block':'none';
+ if(opening&&inp)inp.focus();
+}
 function updateMemoDeadline(id,val){
  const items=DB.get('memoItems'),item=items.find(i=>i.id===id);
  if(!item)return;
@@ -3727,8 +3763,12 @@ function showHrTab(tabId,btn){
 function toggleNoticeDoneFolder(){_noticesDoneOpen=!_noticesDoneOpen;renderNoticeTab();}
 function changeNoticeDate(dir){const d=new Date(noticeSelectedDate+'T12:00:00');d.setDate(d.getDate()+dir);noticeSelectedDate=d.toISOString().split('T')[0];renderNoticeTab();}
 function carryOverUndoneNotices(){
- const today=new Date().toISOString().split('T')[0];
- if(noticeSelectedDate!==today)return;
+ /* noticeSelectedDate(현재 보고 있는 날짜)와 무관하게 항상 "진짜 오늘"을 기준으로 이월한다.
+ 예전엔 보고 있는 날짜가 오늘이 아니면 그냥 넘어가버려서, 자정에 앱이 켜져있지 않으면
+ (모바일은 백그라운드로 가면 타이머가 거의 항상 죽는다) 다음에 우연히 오늘 탭을 봐야만
+ 이월이 됐다. 그리고 toISOString()은 UTC 기준이라 한국 시간 자정~오전 9시 사이엔
+ "오늘"을 어제로 잘못 계산하던 버그도 있었다. */
+ const today=_getLocalTodayStr();
  const notices=DB.get('dailyNotices');
  const todaySourceIds=new Set(notices.filter(n=>n.date===today&&n.carriedOverFrom).map(n=>n.carriedOverFrom));
  const undoneOld=notices.filter(n=>!n.done&&n.date<today);
@@ -3743,7 +3783,20 @@ function carryOverUndoneNotices(){
  }
  });
  if(changed)DB.set('dailyNotices',notices);
+ return changed;
 }
+function _checkNoticeCarryOver(){
+ if(!carryOverUndoneNotices())return;
+ const noticeTab=document.getElementById('hrNoticeTab');
+ if(noticeTab&&noticeTab.style.display!=='none'&&noticeSelectedDate===_getLocalTodayStr())renderNoticeTab();
+}
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='visible')_checkNoticeCarryOver();
+});
+window.addEventListener('pageshow',(e)=>{
+ if(e.persisted)_checkNoticeCarryOver();
+});
+_checkNoticeCarryOver();
 function scheduleMidnightCarryOver(){
  const now=new Date();
  const midnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,0,0);
