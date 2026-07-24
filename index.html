@@ -487,7 +487,7 @@ textarea{resize:vertical;min-height:80px;}
  .notepad-sidebar{display:none;}
  .notepad-editor-area{min-height:calc(100vh - 200px);}
  .notepad-mobile-fab{display:flex;}
- .note-toolbar{left:50%;right:auto;top:auto;bottom:18px;transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
+ .note-toolbar{left:50%;right:auto;top:auto;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:bottom 0.15s;}
  .note-toolbar-sep{width:1px;height:18px;margin:auto 5px;}
  .note-symbol-popup{left:50%;right:auto;top:auto;bottom:70px;transform:translateX(-50%);}
  .notepad-content-input{padding-bottom:70px;}
@@ -4147,6 +4147,21 @@ function loadNoteIntoEditor(noteId){
  ea.innerHTML=`<div class="notepad-editor-topbar"><button onclick="closeNoteEditorMobile()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:600;">← 목록</button><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"> 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div><div class="note-toolbar" id="noteToolbar"><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatBold()" title="굵게"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h5.5a3.5 3.5 0 0 1 0 7H6z"></path><path d="M6 11h6.5a3.5 3.5 0 0 1 0 7H6z"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatHighlight()" title="하이라이트"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"></path><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteInsertCheckbox()" title="체크박스"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 2.5 2.5L16 9"></path></svg></button><div class="note-toolbar-sep"></div><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(2)" title="글자 크게" style="font-size:1.05rem;font-weight:700;">가</button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(-2)" title="글자 작게" style="font-size:0.7rem;font-weight:700;">가</button><div class="note-toolbar-sep"></div><button class="note-toolbar-btn" id="noteSymbolBtn" onmousedown="event.preventDefault()" onclick="toggleSymbolPopup()" title="특수문자" style="font-size:1rem;">※</button></div><div class="note-symbol-popup" id="noteSymbolPopup"></div>`;
  const _nc=document.getElementById('noteContentInput');
  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
+ _adjustNoteToolbarForKeyboard();
+}
+/* 모바일 키보드가 올라오면(iOS Safari는 레이아웃 뷰포트가 안 줄어들어 fixed 요소가
+ 키보드 뒤에 숨어버림) 실제 보이는 영역(visualViewport) 기준으로 툴바를 키보드 바로
+ 위로 옮긴다. 키보드가 없으면 원래 위치(홈 인디케이터 위)로 되돌린다. */
+function _adjustNoteToolbarForKeyboard(){
+ const toolbar=document.getElementById('noteToolbar');
+ if(!toolbar||!window.visualViewport)return;
+ const vv=window.visualViewport;
+ const keyboardHeight=window.innerHeight-vv.height-vv.offsetTop;
+ toolbar.style.bottom=keyboardHeight>60?(keyboardHeight+6)+'px':'';
+}
+if(window.visualViewport){
+ window.visualViewport.addEventListener('resize',_adjustNoteToolbarForKeyboard);
+ window.visualViewport.addEventListener('scroll',_adjustNoteToolbarForKeyboard);
 }
 function noteFormatBold(){
  document.getElementById('noteContentInput')?.focus();
