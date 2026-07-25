@@ -487,7 +487,7 @@ textarea{resize:vertical;min-height:80px;}
  .notepad-sidebar{display:none;}
  .notepad-editor-area{min-height:calc(100vh - 200px);}
  .notepad-mobile-fab{display:flex;}
- .note-toolbar{left:50%;right:auto;top:auto;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:bottom 0.15s;}
+ .note-toolbar{left:50%;right:auto;top:auto;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:bottom 0.15s;}
  .note-toolbar-sep{width:1px;height:18px;margin:auto 5px;}
  .note-symbol-popup{left:50%;right:auto;top:auto;bottom:70px;transform:translateX(-50%);}
  .notepad-content-input{padding-bottom:70px;}
@@ -573,7 +573,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="header-left">
  <span class="header-title-emoji" id="headerEmoji" style="display:none;"></span>
  <span class="header-title-text" id="headerName" style="display:none;">Kosick</span>
- <div id="headerSectionTitle" style="font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;display:flex;align-items:center;gap:5px;"></div>
+ <div id="headerSectionTitle" style="font-size:1.4rem;line-height:1.3;font-weight:800;letter-spacing:-0.02em;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:visible;"></div>
  </div>
  <nav class="header-nav">
  <button class="nav-btn active" onclick="showSection('home',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></span><span class="nav-label">홈</span></button>
