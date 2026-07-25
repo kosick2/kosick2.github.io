@@ -19,7 +19,7 @@
 button{-webkit-tap-highlight-color:transparent;}
 #topSafeArea{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--background);z-index:200;pointer-events:none;}
 :root{--primary:#1F6B5B;--primary-light:#3C8A76;--secondary:#10B981;--background:#F5F1E6;--surface:#FFFDF7;--surface2:#EAE4D3;--text:#1E2B25;--text-secondary:#6B7A72;--border:#E4DECB;--danger:#EF4444;--radius:16px;--shadow:0 4px 10px -2px rgba(30,43,37,0.12);}
-html{background:#F5F1E6;scrollbar-width:none;-ms-overflow-style:none;}
+html{background:#F5F1E6;scrollbar-width:none;-ms-overflow-style:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 html::-webkit-scrollbar{display:none;width:0;height:0;}
 body::-webkit-scrollbar{display:none;width:0;height:0;}
 *{scrollbar-width:none;-ms-overflow-style:none;}
@@ -3366,7 +3366,12 @@ function closeArcFab(){
  const saveBtn=document.getElementById('saveBtn');
  if(saveBtn){saveBtn.style.opacity='';saveBtn.style.pointerEvents='';saveBtn.style.transform='';}
 }
-function arcGoSection(id){closeArcFab();showSection(id,null);}
+function arcGoSection(id){
+ closeArcFab();
+ /* 홈 꾹 눌러서 들어갈 땐 이전에 보던 세부 화면이 아니라 그 탭의 기본 화면으로 진입한다 */
+ if(id==='notepad'){_currentNoteId=null;_notepadActiveTab='all';}
+ showSection(id,null);
+}
 
 function buildSidebarNav(){
  const list=document.getElementById('sidebarNavList');
