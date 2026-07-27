@@ -4153,13 +4153,18 @@ function loadNoteIntoEditor(noteId){
  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
  _adjustNoteToolbarForKeyboard();
 }
-/* <meta viewport interactive-widget=resizes-content>를 켜두면, 키보드가 뜰 때 브라우저가
- 레이아웃 뷰포트 자체(=window.innerHeight)를 키보드 위까지로 줄여준다. 그러면 순정
- position:fixed;bottom:88px만으로 이미 "키보드 바로 위"가 되므로(88px는 원래 홈 버튼
- 여백용이라 키보드가 뜬 상태에선 그만큼을 빼줘야 함), JS는 더 이상 매 프레임 픽셀
- 좌표를 계산할 필요가 없다 — 키보드가 떠 있는지 여부(참/거짓)만 판단해서 88px↔6px,
- 두 값 중 하나로 전환해주면 된다. 이전처럼 visualViewport 값을 실시간 추적하지 않으니
- 드래그 중 뒤늦게 따라오는 현상 자체가 생길 수 없다. */
+/* interactive-widget=resizes-content가 붙어있어도, 실제로 그걸 지원/적용하는지는
+ 브라우저·OS 버전마다 다르다. 지원 안 되는 기기에서는 window.innerHeight(레이아웃
+ 뷰포트)가 키보드가 떠도 그대로라, 그 값만 보는 방식으로는 키보드가 떴는지 절대
+ 못 알아챈다 — 그래서 툴바도 안 움직이고 FAB도 안 숨어버림. 두 신호를 같이 본다:
+ 1) window.innerHeight가 기존 최대치보다 줄었으면(resizes-content가 실제로 먹힌
+ 기기) → 이미 레이아웃이 키보드 위까지 줄어든 것이므로 6px만 더하면 된다.
+ 2) visualViewport.height가 window.innerHeight보다 작으면(resizes-content가 안
+ 먹혀 레이아웃은 그대로고 "보이는 영역"만 줄어든 기기) → 그 차이(vv gap)만큼 직접
+ 띄워야 한다.
+ 'resize' 이벤트만 듣고 'scroll'은 듣지 않아서(visualViewport pan은 일반 스크롤 중
+ 에도 계속 발생해 드래그 중 뒤늦게 따라오는 원인이었다) 드래그 중엔 아무 것도
+ 재계산하지 않는다. */
 let _noteToolbarRAF=null,_noteKbVisible=false,_noteKbConfirmTimer=null,_noteMaxViewportHeight=window.innerHeight;
 function _adjustNoteToolbarForKeyboard(){
  if(_noteToolbarRAF)cancelAnimationFrame(_noteToolbarRAF);
@@ -4178,8 +4183,12 @@ function _applyNoteToolbarForKeyboard(){
  return;
  }
  if(window.innerHeight>_noteMaxViewportHeight)_noteMaxViewportHeight=window.innerHeight;
- const keyboardVisible=(_noteMaxViewportHeight-window.innerHeight)>120;
- toolbar.style.bottom=keyboardVisible?'6px':'';
+ const heightShrink=_noteMaxViewportHeight-window.innerHeight;
+ const vv=window.visualViewport;
+ const vvGap=vv?Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop)):0;
+ const keyboardVisible=heightShrink>120||vvGap>80;
+ const bottomPx=vvGap>80?(vvGap+6):6;
+ toolbar.style.bottom=keyboardVisible?bottomPx+'px':'';
  _scheduleNoteFabVisibility(keyboardVisible);
 }
 /* 키보드 애니메이션 중이나 iOS 주소창이 접혔다 펼쳐질 때 window.innerHeight가 잠깐씩
