@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Kosick</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="shortcut icon" href="logo.png">
@@ -4153,48 +4153,39 @@ function loadNoteIntoEditor(noteId){
  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
  _adjustNoteToolbarForKeyboard();
 }
-/* 모바일 키보드가 올라오면(iOS Safari는 레이아웃 뷰포트가 안 줄어들어 fixed 요소가
- 키보드 뒤에 숨어버림) 실제 보이는 영역(visualViewport) 기준으로 툴바를 키보드 바로
- 위로 옮긴다. 키보드가 없으면 원래 위치(홈 버튼 위)로 되돌리고, 저장/홈/추가 FAB은
- 키보드가 떠 있는 동안 가려서 편집을 방해하지 않게 한다.
- window.innerHeight - vv.height만으로 키보드 높이를 구하면, 포커스 시 iOS가 자동으로
- 페이지를 스크롤시켜 vv.offsetTop이 함께 바뀌는 걸 놓쳐서 값이 어긋난다(툴바가 순간
- 순간 튀는 원인). offsetTop까지 더해서 계산하고, rAF로 한 프레임에 한 번만 반영해
- resize/scroll/focus 이벤트가 겹쳐 들어와도 흔들리지 않게 한다. */
-let _noteToolbarRAF=null,_noteCaretRAF=null,_noteComposing=false,_noteKbVisible=false,_noteKbConfirmTimer=null;
+/* <meta viewport interactive-widget=resizes-content>를 켜두면, 키보드가 뜰 때 브라우저가
+ 레이아웃 뷰포트 자체(=window.innerHeight)를 키보드 위까지로 줄여준다. 그러면 순정
+ position:fixed;bottom:88px만으로 이미 "키보드 바로 위"가 되므로(88px는 원래 홈 버튼
+ 여백용이라 키보드가 뜬 상태에선 그만큼을 빼줘야 함), JS는 더 이상 매 프레임 픽셀
+ 좌표를 계산할 필요가 없다 — 키보드가 떠 있는지 여부(참/거짓)만 판단해서 88px↔6px,
+ 두 값 중 하나로 전환해주면 된다. 이전처럼 visualViewport 값을 실시간 추적하지 않으니
+ 드래그 중 뒤늦게 따라오는 현상 자체가 생길 수 없다. */
+let _noteToolbarRAF=null,_noteKbVisible=false,_noteKbConfirmTimer=null,_noteMaxViewportHeight=window.innerHeight;
 function _adjustNoteToolbarForKeyboard(){
  if(_noteToolbarRAF)cancelAnimationFrame(_noteToolbarRAF);
  _noteToolbarRAF=requestAnimationFrame(_applyNoteToolbarForKeyboard);
 }
-/* 이 키보드 회피 로직(툴바 이동, FAB 숨김, 캐럿 스크롤)은 전부 모바일의 하단 고정
- 툴바 레이아웃(.note-toolbar가 bottom:88px로 붙는 @media(max-width:768px) 케이스)
- 전용이다. 웹(데스크톱)에서는 툴바가 화면 오른쪽 중앙에 세로로 떠 있는 별개의
- 레이아웃이라, 이 로직이 같이 돌면 툴바 위치를 화면 아래로 착각해 메모 아래쪽을
- 클릭할 때마다 페이지가 아래로 스크롤되는 오작동이 생긴다. */
+/* 이 키보드 회피 로직(툴바 이동, FAB 숨김)은 전부 모바일의 하단 고정 툴바 레이아웃
+ (.note-toolbar가 bottom:88px로 붙는 @media(max-width:768px) 케이스) 전용이다. 웹
+ (데스크톱)에서는 툴바가 화면 오른쪽 중앙에 세로로 떠 있는 별개의 레이아웃이다. */
 function _isNoteMobileLayout(){return window.innerWidth<=768;}
 function _applyNoteToolbarForKeyboard(){
  _noteToolbarRAF=null;
  const toolbar=document.getElementById('noteToolbar');
- if(!toolbar||!window.visualViewport)return;
+ if(!toolbar)return;
  if(!_isNoteMobileLayout()){
  toolbar.style.bottom='';
- const ed=document.getElementById('noteContentInput');
- if(ed)ed.style.paddingBottom='';
  return;
  }
- const vv=window.visualViewport;
- const keyboardHeight=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
- const keyboardVisible=keyboardHeight>80;
- toolbar.style.bottom=keyboardVisible?(keyboardHeight+6)+'px':'';
- _updateNoteContentBottomClearance(keyboardVisible,toolbar);
- _keepNoteCaretClearOfToolbar(toolbar);
+ if(window.innerHeight>_noteMaxViewportHeight)_noteMaxViewportHeight=window.innerHeight;
+ const keyboardVisible=(_noteMaxViewportHeight-window.innerHeight)>120;
+ toolbar.style.bottom=keyboardVisible?'6px':'';
  _scheduleNoteFabVisibility(keyboardVisible);
 }
-/* 빠르게 스크롤/드래그하면 iOS가 주소창을 접었다 펼치며 visualViewport 값이 잠깐씩
- 흔들리는데, 이 순간의 값을 그대로 저장/홈/추가 FAB 표시 여부에 반영하면 버튼이
- 보였다 사라졌다 깜빡인다. 그래서 FAB 노출 상태만은 같은 값이 짧게(120ms) 유지될 때
- 딱 한 번 적용하고, 그 사이에 값이 다시 뒤집히면 아무 것도 하지 않는다(위치·여백은
- 즉시 반영해 자연스럽게 CSS 트랜지션으로 따라가게 둔다). */
+/* 키보드 애니메이션 중이나 iOS 주소창이 접혔다 펼쳐질 때 window.innerHeight가 잠깐씩
+ 흔들리는데, 그 순간 값을 그대로 저장/홈/추가 FAB 표시 여부에 반영하면 버튼이 보였다
+ 사라졌다 깜빡인다. 그래서 FAB 노출 상태만은 같은 값이 짧게(120ms) 유지될 때 딱 한 번
+ 적용하고, 그 사이에 값이 다시 뒤집히면 아무 것도 하지 않는다. */
 function _scheduleNoteFabVisibility(keyboardVisible){
  if(keyboardVisible===_noteKbVisible){
  if(_noteKbConfirmTimer){clearTimeout(_noteKbConfirmTimer);_noteKbConfirmTimer=null;}
@@ -4210,49 +4201,7 @@ function _scheduleNoteFabVisibility(keyboardVisible){
  });
  },120);
 }
-/* 키보드가 떠서 편집 중일 때만, 실제 측정된 키보드+툴바 높이만큼 콘텐츠 아래에
- 스크롤 여유 공간을 만든다(고정된 150px 대신). 키보드 높이는 기종/자판마다 달라서
- 고정값으로는 긴 메모의 마지막 줄이 종종 툴바에 가려졌었다. 편집을 마치면 다시
- 원래(CSS 기본) 여백으로 되돌려 평소엔 빈 공간이 남지 않게 한다. */
-function _updateNoteContentBottomClearance(keyboardVisible,toolbar){
- const ed=document.getElementById('noteContentInput');
- if(!ed)return;
- if(!keyboardVisible){ed.style.paddingBottom='';return;}
- const toolbarH=Math.ceil(toolbar.getBoundingClientRect().height);
- const kbH=parseInt(toolbar.style.bottom,10)||0;
- ed.style.paddingBottom=(kbH+toolbarH+24)+'px';
-}
-/* 편집 중인 줄(캐럿)이 툴바에 가려지면, 화면 전체를 중앙 정렬하는 대신 딱 가려지지
- 않을 만큼만 콘텐츠를 스크롤한다 — 아이폰 메모 앱처럼 타이핑할 때마다 화면이 크게
- 움직이지 않고, 필요한 순간에만 살짝 따라간다.
- 모바일 레이아웃에서는 #noteContentInput 자체가 아니라 문서(html)가 스크롤 컨테이너다
- (.notepad-editor-area가 min-height만 갖고 고정 높이가 없어서 내부 요소들이 자연스럽게
- 늘어나며 페이지 전체가 길어짐). 그래서 ed.scrollTop이 아니라
- document.scrollingElement를 스크롤시켜야 실제로 화면이 움직인다. */
-function _keepNoteCaretClearOfToolbar(toolbar){
- if(_noteComposing||!_isNoteMobileLayout())return;
- const ed=document.getElementById('noteContentInput');
- if(!ed||document.activeElement!==ed)return;
- const sel=window.getSelection();
- if(!sel||!sel.rangeCount||!sel.isCollapsed)return;
- const rect=sel.getRangeAt(0).getBoundingClientRect();
- if(!rect||(rect.top===0&&rect.bottom===0&&rect.left===0))return;
- const editorRect=ed.getBoundingClientRect();
- const toolbarRect=toolbar.getBoundingClientRect();
- const margin=14;
- const visibleBottom=(toolbarRect.height>0?toolbarRect.top:editorRect.bottom)-margin;
- const visibleTop=Math.max(editorRect.top,0)+margin;
- const scroller=document.scrollingElement||document.documentElement;
- if(rect.bottom>visibleBottom){
- scroller.scrollTop+=Math.ceil(rect.bottom-visibleBottom);
- }else if(rect.top<visibleTop){
- scroller.scrollTop+=Math.floor(rect.top-visibleTop);
- }
-}
-/* 'scroll'(visualViewport pan) 이벤트는 일부러 듣지 않는다 — 일반 스크롤/드래그 중에도
- 계속 발생해서, 그때마다 위치를 다시 계산하면 순정 position:fixed보다 오히려 한 박자
- 늦게 쫓아오는 것처럼 보인다(툴바가 "고정된 느낌"이 아니게 되는 원인). 키보드 높이는
- 'resize'만으로 충분히 감지된다. */
+window.addEventListener('resize',_adjustNoteToolbarForKeyboard);
 if(window.visualViewport){
  window.visualViewport.addEventListener('resize',_adjustNoteToolbarForKeyboard);
 }
@@ -4268,29 +4217,6 @@ document.addEventListener('focusout',e=>{
  if(e.target&&(e.target.id==='noteContentInput'||e.target.id==='noteTitleInput')){
  setTimeout(_adjustNoteToolbarForKeyboard,50);
  setTimeout(_adjustNoteToolbarForKeyboard,350);
- }
-});
-/* 캐럿이 옮겨질 때마다(타이핑, 화살표, 탭으로 위치 이동, 서식/체크박스 삽입 등)
- selectionchange가 공통으로 발생하므로 여기 한 곳에서만 감지한다. 한글 조합 중에는
- 조합이 끝난 뒤 한 번만 반영해 IME 동작을 방해하지 않는다. */
-document.addEventListener('selectionchange',()=>{
- const ed=document.getElementById('noteContentInput');
- if(!ed||document.activeElement!==ed)return;
- if(_noteCaretRAF)cancelAnimationFrame(_noteCaretRAF);
- _noteCaretRAF=requestAnimationFrame(()=>{
- _noteCaretRAF=null;
- const toolbar=document.getElementById('noteToolbar');
- if(toolbar)_keepNoteCaretClearOfToolbar(toolbar);
- });
-});
-document.addEventListener('compositionstart',e=>{
- if(e.target&&e.target.id==='noteContentInput')_noteComposing=true;
-});
-document.addEventListener('compositionend',e=>{
- if(e.target&&e.target.id==='noteContentInput'){
- _noteComposing=false;
- const toolbar=document.getElementById('noteToolbar');
- if(toolbar)_keepNoteCaretClearOfToolbar(toolbar);
  }
 });
 function noteFormatBold(){
