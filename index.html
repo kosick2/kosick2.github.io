@@ -4156,18 +4156,69 @@ function loadNoteIntoEditor(noteId){
 /* 모바일 키보드가 올라오면(iOS Safari는 레이아웃 뷰포트가 안 줄어들어 fixed 요소가
  키보드 뒤에 숨어버림) 실제 보이는 영역(visualViewport) 기준으로 툴바를 키보드 바로
  위로 옮긴다. 키보드가 없으면 원래 위치(홈 버튼 위)로 되돌리고, 저장/홈/추가 FAB은
- 키보드가 떠 있는 동안 가려서 편집을 방해하지 않게 한다. */
+ 키보드가 떠 있는 동안 가려서 편집을 방해하지 않게 한다.
+ window.innerHeight - vv.height만으로 키보드 높이를 구하면, 포커스 시 iOS가 자동으로
+ 페이지를 스크롤시켜 vv.offsetTop이 함께 바뀌는 걸 놓쳐서 값이 어긋난다(툴바가 순간
+ 순간 튀는 원인). offsetTop까지 더해서 계산하고, rAF로 한 프레임에 한 번만 반영해
+ resize/scroll/focus 이벤트가 겹쳐 들어와도 흔들리지 않게 한다. */
+let _noteToolbarRAF=null,_noteCaretRAF=null,_noteComposing=false;
 function _adjustNoteToolbarForKeyboard(){
+ if(_noteToolbarRAF)cancelAnimationFrame(_noteToolbarRAF);
+ _noteToolbarRAF=requestAnimationFrame(_applyNoteToolbarForKeyboard);
+}
+function _applyNoteToolbarForKeyboard(){
+ _noteToolbarRAF=null;
  const toolbar=document.getElementById('noteToolbar');
  if(!toolbar||!window.visualViewport)return;
  const vv=window.visualViewport;
- const keyboardHeight=Math.round(window.innerHeight-vv.height);
+ const keyboardHeight=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
  const keyboardVisible=keyboardHeight>80;
  toolbar.style.bottom=keyboardVisible?(keyboardHeight+6)+'px':'';
  ['saveBtn','arcFabMain','tabFabWrap'].forEach(elId=>{
  const el=document.getElementById(elId);
  if(el){el.style.visibility=keyboardVisible?'hidden':'';el.style.pointerEvents=keyboardVisible?'none':'';}
  });
+ _updateNoteContentBottomClearance(keyboardVisible,toolbar);
+ _keepNoteCaretClearOfToolbar(toolbar);
+}
+/* 키보드가 떠서 편집 중일 때만, 실제 측정된 키보드+툴바 높이만큼 콘텐츠 아래에
+ 스크롤 여유 공간을 만든다(고정된 150px 대신). 키보드 높이는 기종/자판마다 달라서
+ 고정값으로는 긴 메모의 마지막 줄이 종종 툴바에 가려졌었다. 편집을 마치면 다시
+ 원래(CSS 기본) 여백으로 되돌려 평소엔 빈 공간이 남지 않게 한다. */
+function _updateNoteContentBottomClearance(keyboardVisible,toolbar){
+ const ed=document.getElementById('noteContentInput');
+ if(!ed)return;
+ if(!keyboardVisible){ed.style.paddingBottom='';return;}
+ const toolbarH=Math.ceil(toolbar.getBoundingClientRect().height);
+ const kbH=parseInt(toolbar.style.bottom,10)||0;
+ ed.style.paddingBottom=(kbH+toolbarH+24)+'px';
+}
+/* 편집 중인 줄(캐럿)이 툴바에 가려지면, 화면 전체를 중앙 정렬하는 대신 딱 가려지지
+ 않을 만큼만 콘텐츠를 스크롤한다 — 아이폰 메모 앱처럼 타이핑할 때마다 화면이 크게
+ 움직이지 않고, 필요한 순간에만 살짝 따라간다.
+ 모바일 레이아웃에서는 #noteContentInput 자체가 아니라 문서(html)가 스크롤 컨테이너다
+ (.notepad-editor-area가 min-height만 갖고 고정 높이가 없어서 내부 요소들이 자연스럽게
+ 늘어나며 페이지 전체가 길어짐). 그래서 ed.scrollTop이 아니라
+ document.scrollingElement를 스크롤시켜야 실제로 화면이 움직인다. */
+function _keepNoteCaretClearOfToolbar(toolbar){
+ if(_noteComposing)return;
+ const ed=document.getElementById('noteContentInput');
+ if(!ed||document.activeElement!==ed)return;
+ const sel=window.getSelection();
+ if(!sel||!sel.rangeCount||!sel.isCollapsed)return;
+ const rect=sel.getRangeAt(0).getBoundingClientRect();
+ if(!rect||(rect.top===0&&rect.bottom===0&&rect.left===0))return;
+ const editorRect=ed.getBoundingClientRect();
+ const toolbarRect=toolbar.getBoundingClientRect();
+ const margin=14;
+ const visibleBottom=(toolbarRect.height>0?toolbarRect.top:editorRect.bottom)-margin;
+ const visibleTop=Math.max(editorRect.top,0)+margin;
+ const scroller=document.scrollingElement||document.documentElement;
+ if(rect.bottom>visibleBottom){
+ scroller.scrollTop+=Math.ceil(rect.bottom-visibleBottom);
+ }else if(rect.top<visibleTop){
+ scroller.scrollTop+=Math.floor(rect.top-visibleTop);
+ }
 }
 if(window.visualViewport){
  window.visualViewport.addEventListener('resize',_adjustNoteToolbarForKeyboard);
@@ -4185,6 +4236,29 @@ document.addEventListener('focusout',e=>{
  if(e.target&&(e.target.id==='noteContentInput'||e.target.id==='noteTitleInput')){
  setTimeout(_adjustNoteToolbarForKeyboard,50);
  setTimeout(_adjustNoteToolbarForKeyboard,350);
+ }
+});
+/* 캐럿이 옮겨질 때마다(타이핑, 화살표, 탭으로 위치 이동, 서식/체크박스 삽입 등)
+ selectionchange가 공통으로 발생하므로 여기 한 곳에서만 감지한다. 한글 조합 중에는
+ 조합이 끝난 뒤 한 번만 반영해 IME 동작을 방해하지 않는다. */
+document.addEventListener('selectionchange',()=>{
+ const ed=document.getElementById('noteContentInput');
+ if(!ed||document.activeElement!==ed)return;
+ if(_noteCaretRAF)cancelAnimationFrame(_noteCaretRAF);
+ _noteCaretRAF=requestAnimationFrame(()=>{
+ _noteCaretRAF=null;
+ const toolbar=document.getElementById('noteToolbar');
+ if(toolbar)_keepNoteCaretClearOfToolbar(toolbar);
+ });
+});
+document.addEventListener('compositionstart',e=>{
+ if(e.target&&e.target.id==='noteContentInput')_noteComposing=true;
+});
+document.addEventListener('compositionend',e=>{
+ if(e.target&&e.target.id==='noteContentInput'){
+ _noteComposing=false;
+ const toolbar=document.getElementById('noteToolbar');
+ if(toolbar)_keepNoteCaretClearOfToolbar(toolbar);
  }
 });
 function noteFormatBold(){
