@@ -56,7 +56,7 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFo
 .nav-icon{font-size:1.2rem;}.nav-label{font-size:0.72rem;}
 .nav-badge{position:absolute;top:2px;right:2px;background:#EF4444;color:white;font-size:0.6rem;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;}
 .nav-badge.show{display:flex;}
-@media(max-width:768px){.header{display:flex;padding:0 10px;gap:4px;}.header-date{display:none;}.nav-label{display:none;}.nav-btn{padding:6px 10px;}.header-title-emoji,.header-title-text{font-size:1rem;}.memo-drag-handle{opacity:0.5 !important;}}
+@media(max-width:768px){.header{display:flex;padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right));padding-top:env(safe-area-inset-top);gap:4px;}.header-date{display:none;}.nav-label{display:none;}.nav-btn{padding:6px 10px;}.header-title-emoji,.header-title-text{font-size:1rem;}.memo-drag-handle{opacity:0.5 !important;}}
 @media(max-width:420px){.nav-btn{padding:5px 7px;}.nav-icon{font-size:1.1rem;}}
 .sub-nav{display:flex;gap:3px;margin-bottom:20px;flex-wrap:nowrap;border-bottom:none;padding:5px;background:var(--surface);border-radius:999px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .sub-nav.fit .sub-nav-btn{flex:1 1 0;min-width:0;}
@@ -477,6 +477,8 @@ textarea{resize:vertical;min-height:80px;}
 .note-symbol-popup.open{display:grid;}
 .note-symbol-btn{width:36px;height:36px;border-radius:10px;border:none;background:transparent;color:var(--text);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;font-family:inherit;}
 .note-symbol-btn:hover{background:var(--surface2);}
+.note-checkitem-box{display:inline-flex;align-items:center;vertical-align:middle;user-select:none;margin-right:5px;}
+.note-checkitem-box input[type=checkbox]{width:15px;height:15px;margin:0;cursor:pointer;}
 #noticeContent[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-secondary);opacity:0.45;pointer-events:none;display:block;}
 .notepad-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-secondary);gap:10px;}
 .notepad-mobile-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:rgba(15,23,42,0.55);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.18);font-size:1.4rem;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:490;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all 0.2s;}
@@ -487,10 +489,10 @@ textarea{resize:vertical;min-height:80px;}
  .notepad-sidebar{display:none;}
  .notepad-editor-area{min-height:calc(100vh - 200px);}
  .notepad-mobile-fab{display:flex;}
- .note-toolbar{left:50%;right:auto;top:auto;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:bottom 0.15s;}
+ .note-toolbar{left:50%;right:auto;top:auto;bottom:88px;transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:bottom 0.15s;}
  .note-toolbar-sep{width:1px;height:18px;margin:auto 5px;}
- .note-symbol-popup{left:50%;right:auto;top:auto;bottom:70px;transform:translateX(-50%);}
- .notepad-content-input{padding-bottom:70px;}
+ .note-symbol-popup{left:50%;right:auto;top:auto;bottom:140px;transform:translateX(-50%);}
+ .notepad-content-input{padding-bottom:150px;}
 }
 /* ── 생기부 ── */
 .sgibu-layout{display:flex;flex-direction:column;gap:12px;}
@@ -1570,6 +1572,8 @@ const titleEl=document.getElementById('mobileTabTitle');
  const _sa=document.getElementById('topSafeArea');if(_sa)_sa.style.background=_bg;
  const _hd=document.querySelector('.header');if(_hd)_hd.style.background=_bg;
  closeDrawer();
+ /* ★ 메모 탭은 어떤 경로로 들어오든(상단 탭/홈 바로가기/홈 꾹 눌러 진입) 항상 기본 화면(전체)으로 진입한다 */
+ if(id==='notepad'){_currentNoteId=null;_notepadActiveTab='all';}
 ({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,notepad:renderNotepadSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[id])?.();
  updateTabFab(id);
 }
@@ -3366,12 +3370,7 @@ function closeArcFab(){
  const saveBtn=document.getElementById('saveBtn');
  if(saveBtn){saveBtn.style.opacity='';saveBtn.style.pointerEvents='';saveBtn.style.transform='';}
 }
-function arcGoSection(id){
- closeArcFab();
- /* 홈 꾹 눌러서 들어갈 땐 이전에 보던 세부 화면이 아니라 그 탭의 기본 화면으로 진입한다 */
- if(id==='notepad'){_currentNoteId=null;_notepadActiveTab='all';}
- showSection(id,null);
-}
+function arcGoSection(id){closeArcFab();showSection(id,null);}
 
 function buildSidebarNav(){
  const list=document.getElementById('sidebarNavList');
@@ -4156,18 +4155,38 @@ function loadNoteIntoEditor(noteId){
 }
 /* 모바일 키보드가 올라오면(iOS Safari는 레이아웃 뷰포트가 안 줄어들어 fixed 요소가
  키보드 뒤에 숨어버림) 실제 보이는 영역(visualViewport) 기준으로 툴바를 키보드 바로
- 위로 옮긴다. 키보드가 없으면 원래 위치(홈 인디케이터 위)로 되돌린다. */
+ 위로 옮긴다. 키보드가 없으면 원래 위치(홈 버튼 위)로 되돌리고, 저장/홈/추가 FAB은
+ 키보드가 떠 있는 동안 가려서 편집을 방해하지 않게 한다. */
 function _adjustNoteToolbarForKeyboard(){
  const toolbar=document.getElementById('noteToolbar');
  if(!toolbar||!window.visualViewport)return;
  const vv=window.visualViewport;
- const keyboardHeight=window.innerHeight-vv.height-vv.offsetTop;
- toolbar.style.bottom=keyboardHeight>60?(keyboardHeight+6)+'px':'';
+ const keyboardHeight=Math.round(window.innerHeight-vv.height);
+ const keyboardVisible=keyboardHeight>80;
+ toolbar.style.bottom=keyboardVisible?(keyboardHeight+6)+'px':'';
+ ['saveBtn','arcFabMain','tabFabWrap'].forEach(elId=>{
+ const el=document.getElementById(elId);
+ if(el){el.style.visibility=keyboardVisible?'hidden':'';el.style.pointerEvents=keyboardVisible?'none':'';}
+ });
 }
 if(window.visualViewport){
  window.visualViewport.addEventListener('resize',_adjustNoteToolbarForKeyboard);
  window.visualViewport.addEventListener('scroll',_adjustNoteToolbarForKeyboard);
 }
+/* visualViewport 이벤트만으로는 타이밍이 어긋나 가끔 반영이 안 될 때가 있어,
+ 메모 입력창/제목에 포커스가 들고 날 때도 지연 후 한 번 더 확인한다 */
+document.addEventListener('focusin',e=>{
+ if(e.target&&(e.target.id==='noteContentInput'||e.target.id==='noteTitleInput')){
+ setTimeout(_adjustNoteToolbarForKeyboard,50);
+ setTimeout(_adjustNoteToolbarForKeyboard,350);
+ }
+});
+document.addEventListener('focusout',e=>{
+ if(e.target&&(e.target.id==='noteContentInput'||e.target.id==='noteTitleInput')){
+ setTimeout(_adjustNoteToolbarForKeyboard,50);
+ setTimeout(_adjustNoteToolbarForKeyboard,350);
+ }
+});
 function noteFormatBold(){
  document.getElementById('noteContentInput')?.focus();
  document.execCommand('bold');
@@ -4182,29 +4201,172 @@ function noteFormatHighlight(){
  }
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 }
+/* contenteditable="false"인 체크박스 라벨은 캐럿이 그 안으로 들어갈 수 없는 원자 노드라,
+ 줄의 시작 위치에 도착하는 경로에 따라 캐럿이 라벨의 "바로 뒤"(같은 줄 안에서 backward
+ lineboundary로 이동해온 경우)에 멈추기도 하고 "바로 앞"(옆 줄에서 forward로 넘어온
+ 경우)에 멈추기도 한다. 그래서 "이 줄에 이미 체크박스가 있는가"는 양쪽을 모두 검사해야 한다. */
+function _lineStartHasCheckbox(range){
+ return !!_lineHasLeadingCheckbox(range);
+}
+function _lineHasLeadingCheckbox(range){
+ if(!range.collapsed)return null;
+ const container=range.startContainer,offset=range.startOffset;
+ const isBox=n=>!!(n&&n.nodeType===1&&n.classList&&n.classList.contains('note-checkitem-box'));
+ let prev=null,next=null;
+ if(container.nodeType===3){
+ if(offset===0)prev=container.previousSibling;
+ if(offset===container.length)next=container.nextSibling;
+ }else{
+ prev=offset>0?container.childNodes[offset-1]:null;
+ next=container.childNodes[offset]||null;
+ }
+ if(isBox(prev))return prev;
+ if(isBox(next))return next;
+ return null;
+}
+/* 캐럿이 체크박스 라벨 바로 뒤(타이핑하다가 지우는 자연스러운 위치)에 있을 때만 그
+ 라벨 엘리먼트를 반환한다. Backspace로 체크박스만 지우는 데 사용 — 라벨 앞쪽은
+ 일부러 제외해 줄 맨 앞(체크박스 앞)에서 Backspace를 누르면 평소처럼 이전 줄과
+ 합쳐지도록 둔다. */
+function _caretRightAfterCheckbox(range){
+ if(!range.collapsed)return null;
+ const container=range.startContainer,offset=range.startOffset;
+ let prev;
+ if(container.nodeType===3){
+ if(offset!==0)return null;
+ prev=container.previousSibling;
+ }else{
+ if(offset===0)return null;
+ prev=container.childNodes[offset-1];
+ }
+ return (prev&&prev.nodeType===1&&prev.classList&&prev.classList.contains('note-checkitem-box'))?prev:null;
+}
+/* 현재 캐럿이 속한 줄의 맨 앞으로 살짝 옮겨 체크박스 유무를 확인한 뒤,
+ 원래 캐럿 위치로 되돌린다(화면상 커서 이동 없이 조사만 하기 위함). */
+function _findLineStartCheckbox(sel){
+ if(!sel.rangeCount)return null;
+ const original=sel.getRangeAt(0).cloneRange();
+ if(typeof sel.modify==='function')sel.modify('move','backward','lineboundary');
+ const lineStart=sel.getRangeAt(0).cloneRange();
+ sel.removeAllRanges();
+ sel.addRange(original);
+ return _lineHasLeadingCheckbox(lineStart);
+}
+/* 캐럿(collapsed) 또는 넘겨받은 range 위치가 속한 한 줄의 맨 앞에 체크박스 1개를 삽입한다.
+ 이미 체크박스가 있으면 건너뛴다. */
+function noteInsertCheckboxAtCaret(range){
+ const sel=window.getSelection();
+ if(!range){
+ if(!sel||!sel.rangeCount)return null;
+ if(typeof sel.modify==='function')sel.modify('move','backward','lineboundary');
+ range=sel.getRangeAt(0);
+ }
+ if(_lineStartHasCheckbox(range))return null;
+ const temp=document.createElement('span');
+ temp.innerHTML='<label class="note-checkitem-box" contenteditable="false"><input type="checkbox"></label>';
+ const checkboxNode=temp.firstChild;
+ range.insertNode(checkboxNode);
+ /* range.insertNode가 텍스트 노드를 offset 0에서 쪼개면 빈 텍스트 노드가 라벨 앞에
+ 남는데, 이 빈 노드가 이후 Selection.modify의 줄/문자 단위 이동을 혼란시켜 여러 줄
+ 삽입 시 다음 줄에서 체크박스가 이미 있는지 오판(중복 삽입)하게 만든다. */
+ if(checkboxNode.parentNode)checkboxNode.parentNode.normalize();
+ range.setStartAfter(checkboxNode);
+ range.collapse(true);
+ sel.removeAllRanges();
+ sel.addRange(range);
+ return checkboxNode;
+}
+function _isAtOrAfterMarker(range,marker){
+ if(range.startContainer===marker)return true;
+ return !!(marker.compareDocumentPosition(range.startContainer)&Node.DOCUMENT_POSITION_FOLLOWING);
+}
+/* 툴바의 체크박스 버튼: 캐럿만 있으면 그 줄에 1개, 여러 줄이 드래그 선택돼 있으면
+ 선택된 각 줄의 맨 앞에 하나씩 체크박스를 삽입한다(아이폰 메모 앱과 동일한 동작). */
 function noteInsertCheckbox(){
  const ed=document.getElementById('noteContentInput');
  if(!ed)return;
  ed.focus();
  const sel=window.getSelection();
  if(!sel||!sel.rangeCount)return;
- /* 클릭(터치)한 정확한 글자 위치가 아니라, 그 "보이는 줄"의 맨 왼쪽으로 캐럿을 옮긴다.
- 실제 메모는 div/span/br가 여러 겹으로 뒤섞여 있어(붙여넣기 등), DOM 구조를 직접
- 추정하지 않고 브라우저의 줄 경계 판정(lineboundary)에 맡기는 게 훨씬 안전하다. */
- if(typeof sel.modify==='function'){
- sel.modify('move','backward','lineboundary');
+ if(sel.isCollapsed){
+ noteInsertCheckboxAtCaret();
+ if(_currentNoteId)scheduleNoteSave(_currentNoteId);
+ return;
  }
- const range=sel.getRangeAt(0);
- const temp=document.createElement('span');
- temp.innerHTML='<label contenteditable="false" style="display:inline-flex;align-items:center;vertical-align:middle;user-select:none;margin-right:5px;"><input type="checkbox" style="width:15px;height:15px;margin:0;"></label>';
- const checkboxNode=temp.firstChild;
- range.insertNode(checkboxNode);
- range.setStartAfter(checkboxNode);
- range.collapse(true);
+ const origRange=sel.getRangeAt(0).cloneRange();
+ const endMarker=document.createElement('span');
+ const endRange=origRange.cloneRange();
+ endRange.collapse(false);
+ endRange.insertNode(endMarker);
+ const startRange=origRange.cloneRange();
+ startRange.collapse(true);
  sel.removeAllRanges();
- sel.addRange(range);
+ sel.addRange(startRange);
+ sel.modify('move','backward','lineboundary');
+ let guard=0;
+ while(guard++<500){
+ const lineStartRange=sel.getRangeAt(0).cloneRange();
+ if(_isAtOrAfterMarker(lineStartRange,endMarker))break;
+ noteInsertCheckboxAtCaret(lineStartRange);
+ sel.modify('move','forward','lineboundary');
+ const before=sel.getRangeAt(0);
+ const beforeNode=before.startContainer,beforeOffset=before.startOffset;
+ sel.modify('move','forward','character');
+ const after=sel.getRangeAt(0);
+ if(beforeNode===after.startContainer&&beforeOffset===after.startOffset)break;
+ if(_isAtOrAfterMarker(sel.getRangeAt(0),endMarker))break;
+ }
+ endMarker.remove();
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 }
+/* Enter: 체크박스가 있는 줄이면 다음 줄에도 자동으로 체크박스를 이어서 만든다.
+ 단, 내용 없이 체크박스만 있는 줄에서 Enter를 누르면(빈 항목) 목록에서 빠져나온다.
+ Backspace: 캐럿이 체크박스 바로 뒤(줄의 실질적 시작)에 있으면 체크박스만 지운다. */
+function handleNoteContentKeydown(e){
+ if(!e.target||e.target.id!=='noteContentInput')return;
+ if(e.key!=='Enter'&&e.key!=='Backspace')return;
+ const sel=window.getSelection();
+ if(!sel||!sel.rangeCount||!sel.isCollapsed)return;
+ if(e.key==='Backspace'){
+ const cbLabel=_caretRightAfterCheckbox(sel.getRangeAt(0));
+ if(cbLabel){
+ e.preventDefault();
+ cbLabel.remove();
+ if(_currentNoteId)scheduleNoteSave(_currentNoteId);
+ }
+ return;
+ }
+ const originalRange=sel.getRangeAt(0).cloneRange();
+ const cbLabel=_findLineStartCheckbox(sel);
+ if(!cbLabel)return;
+ sel.removeAllRanges();
+ sel.addRange(originalRange.cloneRange());
+ sel.modify('move','backward','lineboundary');
+ sel.modify('extend','forward','lineboundary');
+ const lineText=sel.toString();
+ sel.removeAllRanges();
+ sel.addRange(originalRange);
+ e.preventDefault();
+ if(lineText.trim()===''){
+ cbLabel.remove();
+ document.execCommand('insertParagraph');
+ }else{
+ document.execCommand('insertParagraph');
+ noteInsertCheckboxAtCaret();
+ }
+ if(_currentNoteId)scheduleNoteSave(_currentNoteId);
+}
+document.addEventListener('keydown',handleNoteContentKeydown);
+/* 체크박스를 클릭해 체크/해제하면 DOM 프로퍼티뿐 아니라 HTML 속성도 함께 맞춰줘야
+ innerHTML로 저장할 때 체크 상태가 유지된다. */
+document.addEventListener('change',e=>{
+ const t=e.target;
+ if(!t||t.type!=='checkbox')return;
+ const ed=document.getElementById('noteContentInput');
+ if(!ed||!ed.contains(t))return;
+ if(t.checked)t.setAttribute('checked','');else t.removeAttribute('checked');
+ if(_currentNoteId)scheduleNoteSave(_currentNoteId);
+});
 function noteChangeFontSize(delta){
  const ed=document.getElementById('noteContentInput');
  ed?.focus();
