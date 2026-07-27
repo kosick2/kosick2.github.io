@@ -4161,25 +4161,54 @@ function loadNoteIntoEditor(noteId){
  페이지를 스크롤시켜 vv.offsetTop이 함께 바뀌는 걸 놓쳐서 값이 어긋난다(툴바가 순간
  순간 튀는 원인). offsetTop까지 더해서 계산하고, rAF로 한 프레임에 한 번만 반영해
  resize/scroll/focus 이벤트가 겹쳐 들어와도 흔들리지 않게 한다. */
-let _noteToolbarRAF=null,_noteCaretRAF=null,_noteComposing=false;
+let _noteToolbarRAF=null,_noteCaretRAF=null,_noteComposing=false,_noteKbVisible=false,_noteKbConfirmTimer=null;
 function _adjustNoteToolbarForKeyboard(){
  if(_noteToolbarRAF)cancelAnimationFrame(_noteToolbarRAF);
  _noteToolbarRAF=requestAnimationFrame(_applyNoteToolbarForKeyboard);
 }
+/* 이 키보드 회피 로직(툴바 이동, FAB 숨김, 캐럿 스크롤)은 전부 모바일의 하단 고정
+ 툴바 레이아웃(.note-toolbar가 bottom:88px로 붙는 @media(max-width:768px) 케이스)
+ 전용이다. 웹(데스크톱)에서는 툴바가 화면 오른쪽 중앙에 세로로 떠 있는 별개의
+ 레이아웃이라, 이 로직이 같이 돌면 툴바 위치를 화면 아래로 착각해 메모 아래쪽을
+ 클릭할 때마다 페이지가 아래로 스크롤되는 오작동이 생긴다. */
+function _isNoteMobileLayout(){return window.innerWidth<=768;}
 function _applyNoteToolbarForKeyboard(){
  _noteToolbarRAF=null;
  const toolbar=document.getElementById('noteToolbar');
  if(!toolbar||!window.visualViewport)return;
+ if(!_isNoteMobileLayout()){
+ toolbar.style.bottom='';
+ const ed=document.getElementById('noteContentInput');
+ if(ed)ed.style.paddingBottom='';
+ return;
+ }
  const vv=window.visualViewport;
  const keyboardHeight=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
  const keyboardVisible=keyboardHeight>80;
  toolbar.style.bottom=keyboardVisible?(keyboardHeight+6)+'px':'';
+ _updateNoteContentBottomClearance(keyboardVisible,toolbar);
+ _keepNoteCaretClearOfToolbar(toolbar);
+ _scheduleNoteFabVisibility(keyboardVisible);
+}
+/* 빠르게 스크롤/드래그하면 iOS가 주소창을 접었다 펼치며 visualViewport 값이 잠깐씩
+ 흔들리는데, 이 순간의 값을 그대로 저장/홈/추가 FAB 표시 여부에 반영하면 버튼이
+ 보였다 사라졌다 깜빡인다. 그래서 FAB 노출 상태만은 같은 값이 짧게(120ms) 유지될 때
+ 딱 한 번 적용하고, 그 사이에 값이 다시 뒤집히면 아무 것도 하지 않는다(위치·여백은
+ 즉시 반영해 자연스럽게 CSS 트랜지션으로 따라가게 둔다). */
+function _scheduleNoteFabVisibility(keyboardVisible){
+ if(keyboardVisible===_noteKbVisible){
+ if(_noteKbConfirmTimer){clearTimeout(_noteKbConfirmTimer);_noteKbConfirmTimer=null;}
+ return;
+ }
+ if(_noteKbConfirmTimer)clearTimeout(_noteKbConfirmTimer);
+ _noteKbConfirmTimer=setTimeout(()=>{
+ _noteKbConfirmTimer=null;
+ _noteKbVisible=keyboardVisible;
  ['saveBtn','arcFabMain','tabFabWrap'].forEach(elId=>{
  const el=document.getElementById(elId);
  if(el){el.style.visibility=keyboardVisible?'hidden':'';el.style.pointerEvents=keyboardVisible?'none':'';}
  });
- _updateNoteContentBottomClearance(keyboardVisible,toolbar);
- _keepNoteCaretClearOfToolbar(toolbar);
+ },120);
 }
 /* 키보드가 떠서 편집 중일 때만, 실제 측정된 키보드+툴바 높이만큼 콘텐츠 아래에
  스크롤 여유 공간을 만든다(고정된 150px 대신). 키보드 높이는 기종/자판마다 달라서
@@ -4201,7 +4230,7 @@ function _updateNoteContentBottomClearance(keyboardVisible,toolbar){
  늘어나며 페이지 전체가 길어짐). 그래서 ed.scrollTop이 아니라
  document.scrollingElement를 스크롤시켜야 실제로 화면이 움직인다. */
 function _keepNoteCaretClearOfToolbar(toolbar){
- if(_noteComposing)return;
+ if(_noteComposing||!_isNoteMobileLayout())return;
  const ed=document.getElementById('noteContentInput');
  if(!ed||document.activeElement!==ed)return;
  const sel=window.getSelection();
@@ -4220,9 +4249,12 @@ function _keepNoteCaretClearOfToolbar(toolbar){
  scroller.scrollTop+=Math.floor(rect.top-visibleTop);
  }
 }
+/* 'scroll'(visualViewport pan) 이벤트는 일부러 듣지 않는다 — 일반 스크롤/드래그 중에도
+ 계속 발생해서, 그때마다 위치를 다시 계산하면 순정 position:fixed보다 오히려 한 박자
+ 늦게 쫓아오는 것처럼 보인다(툴바가 "고정된 느낌"이 아니게 되는 원인). 키보드 높이는
+ 'resize'만으로 충분히 감지된다. */
 if(window.visualViewport){
  window.visualViewport.addEventListener('resize',_adjustNoteToolbarForKeyboard);
- window.visualViewport.addEventListener('scroll',_adjustNoteToolbarForKeyboard);
 }
 /* visualViewport 이벤트만으로는 타이밍이 어긋나 가끔 반영이 안 될 때가 있어,
  메모 입력창/제목에 포커스가 들고 날 때도 지연 후 한 번 더 확인한다 */
@@ -4266,10 +4298,39 @@ function noteFormatBold(){
  document.execCommand('bold');
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 }
+/* document.queryCommandValue('hiliteColor')는 선택 범위 중 한 지점(주로 시작 경계)의
+ 값만 보는데, 그 경계가 하필 하이라이트 span의 시작/끝과 겹치면 브라우저마다 안/밖
+ 어느 쪽 값을 주는지 달라져서 이미 하이라이트된 부분을 드래그로 재선택해도 "하이라이트
+ 없음"으로 잘못 판단하는 경우가 있었다(그러면 지워야 할 때 오히려 다시 칠함). 선택
+ 범위 안의 텍스트 노드를 전부 순회해 실제 배경색을 직접 확인하는 방식이 더 확실하다. */
+function _isSelectionFullyHighlighted(range){
+ /* commonAncestorContainer가 텍스트 노드 자체인 경우(선택 범위가 노드 하나 안에 통째로
+ 들어있는 흔한 경우) TreeWalker를 그 노드 자신에 rooting하면 자식이 없어 nextNode()가
+ 곧장 null을 반환해 아무 것도 못 찾는다. 이때는 부모 요소를 root로 올려준다. */
+ const root=range.commonAncestorContainer.nodeType===3?range.commonAncestorContainer.parentNode:range.commonAncestorContainer;
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+ acceptNode(node){
+ if(!node.nodeValue||!node.nodeValue.trim())return NodeFilter.FILTER_SKIP;
+ const nodeRange=document.createRange();
+ nodeRange.selectNodeContents(node);
+ const before=range.compareBoundaryPoints(Range.START_TO_END,nodeRange)<=0;
+ const after=range.compareBoundaryPoints(Range.END_TO_START,nodeRange)>=0;
+ return(!before&&!after)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP;
+ }
+ });
+ let sawText=false,n;
+ while(n=walker.nextNode()){
+ sawText=true;
+ const bg=n.parentElement?getComputedStyle(n.parentElement).backgroundColor:'';
+ if(!bg||bg==='transparent'||bg==='rgba(0, 0, 0, 0)')return false;
+ }
+ return sawText;
+}
 function noteFormatHighlight(){
  document.getElementById('noteContentInput')?.focus();
- const cur=document.queryCommandValue('hiliteColor');
- const isHighlighted=cur&&cur!=='transparent'&&cur!=='rgba(0, 0, 0, 0)';
+ const sel=window.getSelection();
+ const range=sel&&sel.rangeCount?sel.getRangeAt(0):null;
+ const isHighlighted=!!(range&&!range.collapsed&&_isSelectionFullyHighlighted(range));
  if(!document.execCommand('hiliteColor',false,isHighlighted?'transparent':'#FFF59D')){
  document.execCommand('backColor',false,isHighlighted?'transparent':'#FFF59D');
  }
