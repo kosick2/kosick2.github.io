@@ -4228,6 +4228,17 @@ document.addEventListener('focusout',e=>{
  setTimeout(_adjustNoteToolbarForKeyboard,350);
  }
 });
+/* 체크박스는 contenteditable="false" 라벨(수정 불가 섬) 안에 있는데, 그 섬을 탭하면
+ 브라우저가 기본 동작으로 캐럿을 가장 가까운 편집 가능한 위치로 옮기면서 부모
+ #noteContentInput에 포커스를 준다 — 그 결과로 키보드가 뜬다. mousedown 시점에
+ preventDefault로 그 포커스 이동만 막으면, 체크박스 자체의 클릭 이벤트(=체크/해제)는
+ 그대로 동작한다. delegation으로 걸어서 이미 저장된 메모의 체크박스에도 똑같이
+ 적용된다(새로 삽입한 것만이 아니라). */
+document.addEventListener('mousedown',e=>{
+ if(e.target&&e.target.closest&&e.target.closest('.note-checkitem-box')){
+ e.preventDefault();
+ }
+});
 function noteFormatBold(){
  document.getElementById('noteContentInput')?.focus();
  document.execCommand('bold');
