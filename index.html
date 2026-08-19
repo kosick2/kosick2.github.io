@@ -345,6 +345,8 @@ textarea{resize:vertical;min-height:80px;}
 @media(max-width:768px){
  .ank-layout{flex-direction:column;height:auto;}
  .ank-sidebar{width:100%;max-height:180px;}
+ .ank-composer-wrap{position:fixed;left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));background:var(--surface2);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.14);z-index:130;transition:bottom 0.15s;}
+ .ank-thread{padding-bottom:160px;}
 }
 /* ── 시간표 ── */
 .timetable{overflow-x:auto;}
@@ -379,6 +381,14 @@ textarea{resize:vertical;min-height:80px;}
 .fab-save{position:fixed;bottom:24px;left:20px;width:58px;height:58px;border-radius:50%;background:rgba(15,23,42,0.5);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15);cursor:pointer;transition:all 0.25s;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);z-index:500;transition:all 0.2s;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0.5;}
 .fab-save:hover{background:rgba(79,70,229,0.7);transform:scale(1.1);opacity:1;}
 .fab-save:active{transform:scale(0.93);}
+@media(max-width:768px){
+ /* 하단 알약형 탭바와 겹치지 않도록, 저장 버튼과 탭 전용 FAB을 상단 헤더의
+ 우상단으로 옮기고 홈 캘린더 버튼과 같은 원형 스타일로 맞춘다. */
+ .fab-save{top:calc(env(safe-area-inset-top) + 9px);bottom:auto;left:auto;right:calc(10px + env(safe-area-inset-right));width:40px;height:40px;background:var(--surface);color:var(--primary);border:1px solid var(--border);opacity:1;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;z-index:150;}
+ .fab-save svg{width:16px;height:16px;}
+ .fab-save:hover{background:var(--surface2);transform:none;}
+ body.on-home .fab-save{display:none;}
+}
 .toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:2000;pointer-events:none;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 32px);}
 .toast{background:var(--surface2);color:var(--text);padding:11px 20px;border-radius:30px;font-size:0.88rem;border:1px solid var(--border);opacity:0;transform:translateY(16px);transition:opacity 0.28s,transform 0.28s;pointer-events:none;max-width:230px;word-break:keep-all;text-align:center;line-height:1.4;}
 .toast.show{opacity:1;transform:translateY(0);}
@@ -561,6 +571,14 @@ textarea{resize:vertical;min-height:80px;}
 .tab-fab-item.show{opacity:1;transform:translateY(0);pointer-events:all;}
 .tab-fab-item button{white-space:nowrap;padding:10px 20px;border-radius:30px;border:1px solid rgba(255,255,255,0.15);background:rgba(15,23,42,0.75);color:rgba(255,255,255,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:background 0.2s;font-family:inherit;}
 .tab-fab-item button:hover{background:rgba(79,70,229,0.7);}
+@media(max-width:768px){
+ .tab-fab-wrap{top:calc(env(safe-area-inset-top) + 9px);bottom:auto;right:calc(10px + env(safe-area-inset-right));flex-direction:column-reverse;gap:8px;z-index:150;}
+ .tab-fab-main{width:40px;height:40px;background:var(--surface);color:var(--primary);border:1px solid var(--border);font-size:1.2rem;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;}
+ .tab-fab-main svg{width:16px;height:16px;}
+ .tab-fab-main:hover{background:var(--surface2);transform:none;}
+ .tab-fab-item button{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:0 6px 16px rgba(0,0,0,0.12);backdrop-filter:none;-webkit-backdrop-filter:none;}
+ .tab-fab-item button:hover{background:var(--surface2);}
+}
 @keyframes themePopIn{from{opacity:0;transform:translateY(8px) scale(0.94);}to{opacity:1;transform:translateY(0) scale(1);}}
 .drawer-theme-panel{overflow:hidden;max-height:0;transition:max-height 0.38s cubic-bezier(0.4,0,0.2,1),opacity 0.3s,padding 0.3s;opacity:0;padding:0 12px;margin:0 12px;}
 .drawer-theme-panel.open{max-height:500px;opacity:1;padding:8px;margin:0 12px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,0.25);}
@@ -646,7 +664,7 @@ textarea{resize:vertical;min-height:80px;}
  .notepad-sidebar{display:none;}
  .notepad-editor-area{flex:none;height:calc(100dvh - 200px);}
  .notepad-mobile-fab{display:flex;}
- .note-toolbar{left:50%;right:auto;top:auto;bottom:88px;transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:bottom 0.15s;}
+ .note-toolbar{left:50%;right:auto;top:auto;bottom:88px;transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);opacity:0;pointer-events:none;transition:bottom 0.15s,opacity 0.15s;}
  .note-toolbar-sep{width:1px;height:18px;margin:auto 5px;}
  .note-symbol-popup{left:50%;right:auto;top:auto;bottom:140px;transform:translateX(-50%);}
  .notepad-content-input{padding-bottom:150px;}
@@ -741,14 +759,14 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div id="headerSectionTitle" style="font-size:1.4rem;line-height:1.3;font-weight:800;letter-spacing:-0.02em;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:visible;"></div>
  </div>
  <nav class="header-nav">
- <button class="nav-btn active" onclick="showSection('home',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></span><span class="nav-label">홈</span></button>
- <button class="nav-btn" onclick="showSection('homeroom',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"></path></svg></span><span class="nav-label">담임</span><span class="nav-badge" id="badgeHomeroom"></span></button>
- <button class="nav-btn" onclick="showSection('students',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-4 9 4-9 4-9-4z"></path><path d="M7 11.5V15c0 1.7 2.2 3 5 3s5-1.3 5-3v-3.5"></path></svg></span><span class="nav-label">학생관리</span></button>
-<button class="nav-btn" onclick="showSection('memos',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M8.5 12.5l2.5 2.5 4.5-5"></path></svg></span><span class="nav-label">할 일</span><span class="nav-badge" id="badgeMemos"></span></button>
- <button class="nav-btn" onclick="showSection('notepad',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l5 5v13H6z"></path><path d="M13 3v6h6"></path></svg></span><span class="nav-label">메모</span></button>
- <button class="nav-btn" onclick="showSection('bookmarks',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v18l-5-4-5 4z"></path></svg></span><span class="nav-label">즐겨찾기</span></button>
- <button class="nav-btn" onclick="showSection('timetable',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg></span><span class="nav-label">시간표</span></button>
- <button class="nav-btn" onclick="showSection('anecdotal',this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"></path></svg></span><span class="nav-label">누가기록</span></button>
+ <button class="nav-btn active" onclick="showSection('home',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🏠</span></span><span class="nav-label">홈</span></button>
+ <button class="nav-btn" onclick="showSection('homeroom',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🧑‍🏫</span></span><span class="nav-label">담임</span><span class="nav-badge" id="badgeHomeroom"></span></button>
+ <button class="nav-btn" onclick="showSection('students',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">👥</span></span><span class="nav-label">학생관리</span></button>
+<button class="nav-btn" onclick="showSection('memos',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span></span><span class="nav-label">할 일</span><span class="nav-badge" id="badgeMemos"></span></button>
+ <button class="nav-btn" onclick="showSection('notepad',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📝</span></span><span class="nav-label">메모</span></button>
+ <button class="nav-btn" onclick="showSection('bookmarks',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🔖</span></span><span class="nav-label">즐겨찾기</span></button>
+ <button class="nav-btn" onclick="showSection('timetable',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📅</span></span><span class="nav-label">시간표</span></button>
+ <button class="nav-btn" onclick="showSection('anecdotal',this)"><span class="nav-icon"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">💬</span></span><span class="nav-label">누가기록</span></button>
 </nav>
  <span class="mobile-tab-title" id="mobileTabTitle">홈</span>
  <div class="header-right">
@@ -763,10 +781,13 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="m-hero-greeting">안녕하세요, 선생님 👋</div>
  <div class="m-hero-sub" id="mHeroSub"></div>
  </div>
- <button class="m-hero-cal-btn" onclick="openCalendarModal()" title="캘린더"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><div class="m-hero-cal-badges" id="mHeroCalBadges"></div></button>
+ <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+ <button class="m-hero-cal-btn" id="mHeroSaveBtn" onclick="manualSave()" title="저장"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">💾</span></button>
+ <button class="m-hero-cal-btn" onclick="openCalendarModal()" title="캘린더"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📅</span><div class="m-hero-cal-badges" id="mHeroCalBadges"></div></button>
+ </div>
  </div>
  <div class="m-hero-card" id="mHeroCard" style="display:none;">
- <button class="m-hero-card-arrow" onclick="showSection('homeroom',null)" title="담임"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+ <button class="m-hero-card-arrow" onclick="showSection('homeroom',null)" title="담임"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">▶️</span></button>
  <div class="m-hero-card-label">우리 반</div>
  <div class="m-hero-card-title" id="mHeroClassName"></div>
  <div class="m-hero-badges" id="mHeroBadges"></div>
@@ -791,7 +812,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘의 안내사항</div><div id="homeNoticeList"></div></div>
  <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘 출결</div><div id="homeAttList"></div></div>
- <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">할 일</div><button onclick="showSection('memos',null)" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:4px 2px;margin-top:6px;">전체 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></div><div id="recentMemos"></div></div>
+ <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">할 일</div><button onclick="showSection('memos',null)" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:4px 2px;margin-top:6px;">전체 보기<span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">▶️</span></button></div><div id="recentMemos"></div></div>
  <div><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
  </div>
  </div>
@@ -800,7 +821,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <div class="modal-overlay" id="calendarModal">
  <div class="modal" style="max-width:420px;">
  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
- <div class="modal-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span>캘린더</span></div>
+ <div class="modal-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📅</span><span>캘린더</span></div>
  <button onclick="closeModal('calendarModal')" style="background:none;border:none;color:var(--text-secondary);font-size:1.2rem;cursor:pointer;padding:4px 8px;border-radius:8px;">✕</button>
  </div>
  <div class="home-cal-card" style="border:none;padding:0;box-shadow:none;">
@@ -814,7 +835,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
 </div>
  <section id="bookmarks" class="section">
- <div class="search-box"><span class="search-icon" style="display:inline-flex;align-items:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg></span><input type="text" spellcheck="false" placeholder="즐겨찾기 검색..." oninput="searchBookmarks(this.value)"></div>
+ <div class="search-box"><span class="search-icon" style="display:inline-flex;align-items:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🔍</span></span><input type="text" spellcheck="false" placeholder="즐겨찾기 검색..." oninput="searchBookmarks(this.value)"></div>
  <div id="bookmarkList"></div>
  </section>
 <section id="memos" class="section"><div class="sub-nav" id="memoSubNav"></div><div id="memoBody"></div></section>
@@ -823,14 +844,14 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="notepad-layout">
  <div class="notepad-sidebar" id="notepadSidebar">
  <div class="notepad-sidebar-header">
- <span class="notepad-sidebar-title" style="display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l5 5v13H6z"></path><path d="M13 3v6h6"></path></svg><span>메모</span></span>
+ <span class="notepad-sidebar-title" style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📝</span><span>메모</span></span>
  <button class="notepad-add-group-btn" onclick="openAddNoteGroupModal()" title="그룹 추가">+</button>
  </div>
  <div class="notepad-groups-list" id="notepadGroupsList"></div>
  </div>
  <div class="notepad-editor-area" id="notepadEditorArea">
  <div class="notepad-empty-state" id="notepadEmptyState">
- <div style="display:flex;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l5 5v13H6z"></path><path d="M13 3v6h6"></path></svg></div>
+ <div style="display:flex;"><span style="font-size:40px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📝</span></div>
  <div style="font-weight:600;">메모를 선택해주세요</div>
  <div style="font-size:0.85rem;">좌측에서 그룹을 만들고 메모를 추가해보세요</div>
  </div>
@@ -839,9 +860,9 @@ body.has-fav-bar .main{padding-bottom:100px;}
 </section>
  <section id="students" class="section">
  <div class="sub-nav" id="studentsSubNav">
- <button class="sub-nav-btn active" onclick="showStudentTab('classSection',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"></rect><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"></path></svg><span>학급 관리</span></button>
- <button class="sub-nav-btn" onclick="showStudentTab('evalSection',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"></path></svg><span>수행평가</span></button>
- <button class="sub-nav-btn" onclick="showStudentTab('sgibuSection',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6z"></path><path d="M15 3v5h5"></path></svg><span>생활기록부</span></button>
+ <button class="sub-nav-btn active" onclick="showStudentTab('classSection',this)" style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🏫</span><span>학급 관리</span></button>
+ <button class="sub-nav-btn" onclick="showStudentTab('evalSection',this)" style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📊</span><span>수행평가</span></button>
+ <button class="sub-nav-btn" onclick="showStudentTab('sgibuSection',this)" style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📄</span><span>생활기록부</span></button>
  </div>
  <div id="classSection" class="student-tab active">
  <div class="section-header" style="margin-bottom:16px;">
@@ -870,9 +891,9 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </section>
  <section id="homeroom" class="section">
  <div class="sub-nav" id="homeroomSubNav">
- <button class="sub-nav-btn active" onclick="showHrTab('hrCalendarTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span>캘린더</span></button>
-<button class="sub-nav-btn" onclick="showHrTab('hrNoticeTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg><span>오늘의 안내사항</span></button>
-<button class="sub-nav-btn" onclick="showHrTab('hrProgramTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg><span>프로그램</span></button>
+ <button class="sub-nav-btn active" onclick="showHrTab('hrCalendarTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📅</span><span>캘린더</span></button>
+<button class="sub-nav-btn" onclick="showHrTab('hrNoticeTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🔔</span><span>오늘의 안내사항</span></button>
+<button class="sub-nav-btn" onclick="showHrTab('hrProgramTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🧩</span><span>프로그램</span></button>
 </div>
  <div id="hrCalendarTab">
  <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:16px;">
@@ -917,7 +938,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="ank-editing-banner" id="ankEditingBanner"><span>기록 수정 중</span><button type="button" onclick="cancelAnkEdit()">✕</button></div>
  <div class="ank-composer">
  <div id="ankComposerInput" class="ank-composer-input" contenteditable="true" data-placeholder="@이름으로 학생을 지정하고 기록을 입력하세요..." oninput="handleAnkComposerInput()" onkeydown="handleAnkComposerKeydown(event)"></div>
- <button class="ank-send-btn" onclick="submitAnkMessage()" title="보내기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4z"></path></svg></button>
+ <button class="ank-send-btn" onclick="submitAnkMessage()" title="보내기"><span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✈️</span></button>
  </div>
  </div>
  </div>
@@ -930,12 +951,12 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 일정 -->
 <div class="modal-overlay" id="dayModal">
  <div class="modal" style="max-width:520px;">
- <div class="modal-title" id="dayModalTitle"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span>일정</span></span></div>
+ <div class="modal-title" id="dayModalTitle"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📅</span><span>일정</span></span></div>
  <div id="dayScheduleList"></div>
  <hr class="modal-divider">
- <button type="button" id="addScheduleToggleBtn" onclick="toggleScheduleForm()" class="btn btn-secondary" style="width:100%;margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>일정 추가</span></span></button>
+ <button type="button" id="addScheduleToggleBtn" onclick="toggleScheduleForm()" class="btn btn-secondary" style="width:100%;margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>일정 추가</span></span></button>
  <div id="scheduleFormArea" style="display:none;">
- <div class="modal-subtitle" style="margin-top:16px;"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>새 일정 추가</span></span></div>
+ <div class="modal-subtitle" style="margin-top:16px;"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>새 일정 추가</span></span></div>
  <div class="form-group"><label class="form-label">제목 *</label><input type="text" id="scheduleTitle" spellcheck="false" placeholder="예: 학부모 상담"></div>
  <div class="form-row">
  <div class="form-group"><label class="form-label">시작 날짜</label><input type="date" id="scheduleDateStart"></div>
@@ -948,7 +969,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="form-group"><label class="form-label">유형</label><select id="scheduleType"></select></div>
  <div class="form-group"><label class="form-label">메모</label><input type="text" id="scheduleMemo" spellcheck="false" placeholder="간단한 메모"></div>
  <div class="modal-footer">
- <button class="btn btn-secondary" onclick="openTypeManager()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>유형 관리</span></span></button>
+ <button class="btn btn-secondary" onclick="openTypeManager()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⚙️</span><span>유형 관리</span></span></button>
  <button class="btn btn-secondary" onclick="closeModal('dayModal')">닫기</button>
  <button class="btn btn-primary" onclick="addSchedule()">추가</button>
  </div>
@@ -959,7 +980,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <div class="modal-overlay" id="editScheduleModal">
  <div class="modal" style="max-width:420px;">
  <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
- <h2 class="modal-title" style="margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>일정 수정</span></span></h2>
+ <h2 class="modal-title" style="margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>일정 수정</span></span></h2>
  <button class="btn-icon" onclick="closeModal('editScheduleModal')">✕</button>
  </div>
  <div class="modal-body">
@@ -975,7 +996,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  <div class="form-group"><label class="form-label">분류</label><select id="editScheduleType"></select></div>
  <div class="form-group"><label class="form-label">메모</label><textarea id="editScheduleMemo" rows="2" spellcheck="false" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:0.9rem;resize:vertical;min-height:60px;"></textarea></div>
- <button class="btn btn-primary" onclick="saveEditSchedule()" style="width:100%;margin-top:4px;"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg><span>저장하기</span></span></button>
+ <button class="btn btn-primary" onclick="saveEditSchedule()" style="width:100%;margin-top:4px;"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">💾</span><span>저장하기</span></span></button>
  </div>
  </div>
 </div>
@@ -983,10 +1004,10 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 유형 관리 -->
 <div class="modal-overlay" id="typeManagerModal">
  <div class="modal">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span>일정 유형 관리</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📅</span><span>일정 유형 관리</span></span></div>
  <div id="typeList" style="margin-bottom:16px;"></div>
  <hr class="modal-divider">
- <div class="modal-subtitle"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>새 유형 추가</span></span></div>
+ <div class="modal-subtitle"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>새 유형 추가</span></span></div>
  <div class="form-row">
  <div class="form-group"><label class="form-label">이름</label><input type="text" id="newTypeName" spellcheck="false" placeholder="예: 회의"></div>
  <div class="form-group"><label class="form-label">색상</label><input type="hidden" id="newTypeColor" value="#1F6B5B"><div id="newTypeColorSwatches" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
@@ -997,7 +1018,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 메모 그룹 이동 -->
 <div class="modal-overlay" id="moveNoteModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 5h6l2 2h8v12H4z"></path></svg><span>다른 그룹으로 이동</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📁</span><span>다른 그룹으로 이동</span></span></div>
  <input type="hidden" id="moveNoteItemId">
  <div id="moveNoteGroupOptions" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;margin-bottom:4px;"></div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('moveNoteModal')">취소</button></div>
@@ -1006,7 +1027,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 메모장 그룹 추가 -->
 <div class="modal-overlay" id="addNoteGroupModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>새 그룹 만들기</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>새 그룹 만들기</span></span></div>
  <div class="form-group"><label class="form-label">그룹 이름</label><input type="text" id="newNoteGroupName" spellcheck="false" placeholder="예: 업무 메모" onkeydown="if(event.key==='Enter')saveNewNoteGroup()"></div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addNoteGroupModal')">취소</button><button class="btn btn-primary" onclick="saveNewNoteGroup()">만들기</button></div>
  </div>
@@ -1014,7 +1035,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 메모 목록 추가 -->
 <div class="modal-overlay" id="addListModal">
  <div class="modal">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>새 목록 만들기</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>새 목록 만들기</span></span></div>
  <div class="form-group"><label class="form-label">목록 이름</label><input type="text" id="newListName" spellcheck="false" placeholder="예: 수업관련" onkeydown="if(event.key==='Enter')saveNewList()"></div>
 <div class="form-group"><label class="form-label">배경 색상</label><div id="listColorSwatches" style="display:flex;gap:8px;flex-wrap:wrap;"></div></div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addListModal')">취소</button><button class="btn btn-primary" onclick="saveNewList()">만들기</button></div>
@@ -1023,7 +1044,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 메모 목록 수정 -->
 <div class="modal-overlay" id="editListModal">
  <div class="modal">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>목록 수정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>목록 수정</span></span></div>
  <input type="hidden" id="editListId">
  <div class="form-group"><label class="form-label">이름</label><input type="text" id="editListName" spellcheck="false" onkeydown="if(event.key==='Enter')saveEditList()"></div>
 <div class="form-group"><label class="form-label">배경 색상</label><div id="editListColorSwatches" style="display:flex;gap:8px;flex-wrap:wrap;"></div></div>
@@ -1034,7 +1055,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 메모 이동 -->
 <div class="modal-overlay" id="moveMemoModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 5h6l2 2h8v12H4z"></path></svg><span>다른 목록으로 이동</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📁</span><span>다른 목록으로 이동</span></span></div>
  <input type="hidden" id="moveMemoItemId">
  <div id="moveMemoListOptions" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;margin-bottom:4px;"></div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('moveMemoModal')">취소</button></div>
@@ -1043,7 +1064,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 즐겨찾기 추가 -->
 <div class="modal-overlay" id="bookmarkModal">
  <div class="modal">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>즐겨찾기 추가</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>즐겨찾기 추가</span></span></div>
  <div class="form-group"><label class="form-label">이름</label><input type="text" id="bookmarkName" spellcheck="false" placeholder="예: 나이스"></div>
  <div class="form-group"><label class="form-label">URL</label><input type="url" id="bookmarkUrl" spellcheck="false" placeholder="https://..."></div>
  <div class="form-group"><label class="form-label">그룹</label><select id="bookmarkGroupId"></select></div>
@@ -1053,7 +1074,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 그룹 만들기 -->
 <div class="modal-overlay" id="addGroupModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>그룹 만들기</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>그룹 만들기</span></span></div>
  <div class="form-group"><label class="form-label">그룹 이름</label><input type="text" id="newGroupName" spellcheck="false" placeholder="예: 업무" onkeydown="if(event.key==='Enter')saveNewGroup()"></div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addGroupModal')">취소</button><button class="btn btn-primary" onclick="saveNewGroup()">만들기</button></div>
  </div>
@@ -1061,7 +1082,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 그룹 수정 -->
 <div class="modal-overlay" id="editGroupModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>그룹 수정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>그룹 수정</span></span></div>
  <input type="hidden" id="editGroupId">
  <div class="form-group"><label class="form-label">그룹 이름</label><input type="text" id="editGroupName" spellcheck="false" onkeydown="if(event.key==='Enter')saveEditGroup()"></div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editGroupModal')">취소</button><button class="btn btn-primary" onclick="saveEditGroup()">저장</button></div>
@@ -1070,7 +1091,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 즐겨찾기 수정 -->
 <div class="modal-overlay" id="editBookmarkModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>즐겨찾기 수정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>즐겨찾기 수정</span></span></div>
  <input type="hidden" id="editBookmarkId">
  <div class="form-group"><label class="form-label">이름</label><input type="text" id="editBookmarkName" spellcheck="false" placeholder="예: 나이스" onkeydown="if(event.key==='Enter')saveEditBookmark()"></div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editBookmarkModal')">취소</button><button class="btn btn-primary" onclick="saveEditBookmark()">저장</button></div>
@@ -1079,7 +1100,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 시간표 편집 -->
 <div class="modal-overlay" id="timetableEditModal">
  <div class="modal">
- <div class="modal-title" id="timetableModalTitle"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>수업 편집</span></span></div>
+ <div class="modal-title" id="timetableModalTitle"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>수업 편집</span></span></div>
  <input type="hidden" id="timetableDay"><input type="hidden" id="timetablePeriod">
  <div class="form-group"><label class="form-label">과목명</label><input type="text" id="className" spellcheck="false" placeholder="예: 수학"></div>
  <div class="form-group"><label class="form-label">장소/반</label><input type="text" id="classRoom" spellcheck="false" placeholder="예: 1-3반"></div>
@@ -1096,7 +1117,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 타이틀 편집 -->
 <div class="modal-overlay" id="titleEditorModal">
  <div class="modal" style="max-width:380px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>타이틀 편집</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>타이틀 편집</span></span></div>
  <div class="form-row">
  <div class="form-group" style="flex:0 0 80px;"><label class="form-label">이모지</label><input type="text" id="titleEmoji" placeholder="" maxlength="2" style="text-align:center;font-size:1.3rem;padding:8px;"></div>
  <div class="form-group"><label class="form-label">이름</label><input type="text" id="titleName" spellcheck="false" placeholder="예: Kosick"></div>
@@ -1123,7 +1144,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 학급 추가 -->
 <div class="modal-overlay" id="addClassModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>학급 추가</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>학급 추가</span></span></div>
  <div class="form-row">
  <div class="form-group"><label class="form-label">학년</label><input type="text" id="newClassGrade" spellcheck="false" placeholder="예: 1,2,3" onkeydown="if(event.key==='Enter')saveNewClass()"></div>
  <div class="form-group"><label class="form-label">반</label><input type="text" id="newClassNum" spellcheck="false" placeholder="예: 1,2,3" onkeydown="if(event.key==='Enter')saveNewClass()"></div>
@@ -1134,7 +1155,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 학급 수정 -->
 <div class="modal-overlay" id="editClassModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>학급 수정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>학급 수정</span></span></div>
  <input type="hidden" id="editClassId">
  <div class="form-row">
  <div class="form-group"><label class="form-label">학년</label><input type="text" id="editClassGrade" spellcheck="false" onkeydown="if(event.key==='Enter')saveEditClass()"></div>
@@ -1146,7 +1167,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 학생 목록 -->
 <div class="modal-overlay" id="classDetailModal">
  <div class="modal" style="max-width:440px;">
- <div class="modal-title" id="classDetailTitle"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 9l9-4 9 4-9 4-9-4z"></path><path d="M7 11.5V15c0 1.7 2.2 3 5 3s5-1.3 5-3v-3.5"></path></svg><span>학급 학생</span></span></div>
+ <div class="modal-title" id="classDetailTitle"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">👥</span><span>학급 학생</span></span></div>
  <input type="hidden" id="classDetailId">
  <div style="display:grid;grid-template-columns:72px 1fr auto;gap:8px;margin-bottom:8px;align-items:center;">
  <input type="text" id="newStudentNumber" placeholder="번호" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
@@ -1166,7 +1187,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 수행평가 추가 -->
 <div class="modal-overlay" id="addEvalModal">
  <div class="modal" style="max-width:500px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>수행평가 추가</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>수행평가 추가</span></span></div>
  <div class="form-group"><label class="form-label">평가명 *</label><input type="text" id="evalTitle" spellcheck="false" placeholder="예: 구술평가"></div>
  <div class="form-group"><label class="form-label">과목</label><input type="text" id="evalSubject" spellcheck="false" placeholder="예: 수학"></div>
  <hr class="modal-divider">
@@ -1181,7 +1202,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 수행평가 수정 -->
 <div class="modal-overlay" id="editEvalModal">
  <div class="modal" style="max-width:500px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>수행평가 수정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>수행평가 수정</span></span></div>
  <input type="hidden" id="editEvalId">
  <div class="form-group"><label class="form-label">평가명 *</label><input type="text" id="editEvalTitle" spellcheck="false"></div>
  <div class="form-group"><label class="form-label">과목</label><input type="text" id="editEvalSubject" spellcheck="false"></div>
@@ -1198,7 +1219,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <div class="modal-overlay" id="scoreModal">
  <div class="modal" style="max-width:920px;width:100%;">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
- <div class="modal-title" id="scoreModalTitle" style="margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 20V10M12 20V4M20 20v-7"></path></svg><span>점수 입력</span></span></div>
+ <div class="modal-title" id="scoreModalTitle" style="margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📊</span><span>점수 입력</span></span></div>
  <button class="btn-icon" onclick="closeScoreModal()">✕</button>
  </div>
  <div id="scoreModalMeta" style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;"></div>
@@ -1239,7 +1260,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 담임 학급 설정 -->
 <div class="modal-overlay" id="hrClassSettingModal">
  <div class="modal" style="max-width:360px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 9l9-4 9 4-9 4-9-4z"></path><path d="M7 11.5V15c0 1.7 2.2 3 5 3s5-1.3 5-3v-3.5"></path></svg><span>내 담임 학급 설정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">👥</span><span>내 담임 학급 설정</span></span></div>
  <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:16px;">한 번 설정하면 매번 선택하지 않아도 돼요.</p>
  <div id="hrClassSettingList" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;"></div>
  <div class="modal-footer" style="margin-top:16px;">
@@ -1251,22 +1272,22 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <div class="modal-overlay" id="hrDayModal">
  <div class="modal" style="max-width:520px;">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
- <div class="modal-title" id="hrDayModalTitle" style="margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span>날짜</span></span></div>
+ <div class="modal-title" id="hrDayModalTitle" style="margin-bottom:0;"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📅</span><span>날짜</span></span></div>
  <button class="btn-icon" onclick="closeModal('hrDayModal')">✕</button>
  </div>
  <div id="hrDayContent" style="max-height:55vh;overflow-y:auto;"></div>
  <hr class="modal-divider">
  <div style="display:flex;gap:8px;flex-wrap:wrap;">
- <button class="btn btn-primary" style="flex:1;min-width:100px;" onclick="openAddAttModal()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>출결 추가</span></span></button>
- <button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="openAddFieldTripModal()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>현체 추가</span></span></button>
- <button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="openAddSpecialProgModal()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>특수출결</span></span></button>
+ <button class="btn btn-primary" style="flex:1;min-width:100px;" onclick="openAddAttModal()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>출결 추가</span></span></button>
+ <button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="openAddFieldTripModal()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>현체 추가</span></span></button>
+ <button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="openAddSpecialProgModal()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>특수출결</span></span></button>
  </div>
  </div>
 </div>
 <!-- 모달: 출결 추가 -->
 <div class="modal-overlay" id="addAttModal">
  <div class="modal" style="max-width:400px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>출결 기록 추가</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>출결 기록 추가</span></span></div>
  <div class="form-group"><label class="form-label">학급</label><select id="attClassId" onchange="onAttClassChange(this.value)"></select></div>
  <div class="form-group"><label class="form-label">학생</label><select id="attStudentId"></select></div>
  <div class="form-row">
@@ -1291,7 +1312,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 현장체험학습 추가 -->
 <div class="modal-overlay" id="addFieldTripModal">
  <div class="modal" style="max-width:400px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>현장체험학습 등록</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>현장체험학습 등록</span></span></div>
  <div class="form-group"><label class="form-label">학급</label><select id="ftClassId" onchange="onFtClassChange(this.value)"></select></div>
  <div class="form-group"><label class="form-label">학생</label><select id="ftStudentId"></select></div>
  <div class="form-row">
@@ -1308,7 +1329,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 특수출결 추가 -->
 <div class="modal-overlay" id="addSpecialProgModal">
  <div class="modal" style="max-width:400px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>특수 출결 등록</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>특수 출결 등록</span></span></div>
  <div class="form-group"><label class="form-label">학급</label><select id="spClassId" onchange="onSpClassChange(this.value)"></select></div>
  <div class="form-group"><label class="form-label">학생</label><select id="spStudentId"></select></div>
  <div class="form-group"><label class="form-label">유형</label>
@@ -1332,7 +1353,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 생기부 항목 추가 -->
 <div class="modal-overlay" id="addSgibuCategoryModal">
  <div class="modal" style="max-width:420px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>생기부 항목 추가</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>생기부 항목 추가</span></span></div>
  <div class="form-group"><label class="form-label">항목 이름 *</label><input type="text" id="newSgibuCatLabel" spellcheck="false" placeholder="예: 진로활동" onkeydown="if(event.key==='Enter')document.getElementById('newSgibuCatMaxChar').focus()"></div>
  <div class="form-row">
  <div class="form-group"><label class="form-label">최대 글자 수 <span style="font-size:0.75rem;color:var(--text-secondary);">(0=제한없음)</span></label><input type="number" id="newSgibuCatMaxChar" min="0" placeholder="예: 500"></div>
@@ -1345,7 +1366,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 생기부 항목 수정 -->
 <div class="modal-overlay" id="editSgibuCategoryModal">
  <div class="modal" style="max-width:420px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span>생기부 항목 수정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span><span>생기부 항목 수정</span></span></div>
  <input type="hidden" id="editSgibuCatId">
  <div class="form-group"><label class="form-label">항목 이름 *</label><input type="text" id="editSgibuCatLabel" spellcheck="false"></div>
  <div class="form-row">
@@ -1359,7 +1380,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <!-- 모달: 생기부 AI 설정 -->
 <div class="modal-overlay" id="sgibuAiModal">
  <div class="modal" style="max-width:600px;">
- <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>생기부 AI 검토 설정</span></span></div>
+ <div class="modal-title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⚙️</span><span>생기부 AI 검토 설정</span></span></div>
  <div class="form-group">
  <label class="form-label"> Groq API Key</label>
  <input type="password" id="sgibuApiKey" spellcheck="false" placeholder="AIza..." autocomplete="off">
@@ -1375,12 +1396,12 @@ body.has-fav-bar .main{padding-bottom:100px;}
 </select>
  </div>
  <hr class="modal-divider">
- <div class="modal-subtitle"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 3h9l5 5v13H6z"></path><path d="M15 3v5h5"></path></svg><span>항목별 검토 기준 프롬프트</span></span></div>
+ <div class="modal-subtitle"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📄</span><span>항목별 검토 기준 프롬프트</span></span></div>
  <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:12px;">각 항목에 대한 검토 기준을 작성하세요. 비워두면 기본 기준이 사용됩니다.</p>
  <div id="sgibuAiPromptsContainer" style="display:flex;flex-direction:column;gap:10px;max-height:40vh;overflow-y:auto;"></div>
  <div class="modal-footer">
  <button class="btn btn-secondary" onclick="closeModal('sgibuAiModal')">닫기</button>
- <button class="btn btn-primary" onclick="saveSgibuAiSettings()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg><span>저장</span></span></button>
+ <button class="btn btn-primary" onclick="saveSgibuAiSettings()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">💾</span><span>저장</span></span></button>
  </div>
  </div>
 </div>
@@ -1389,7 +1410,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="tab-fab-items" id="tabFabItems"></div>
  <button class="tab-fab-main" id="tabFabMain" onclick="toggleTabFab()">+</button>
 </div>
-<button class="fab-save" id="saveBtn" onclick="manualSave()" title="저장" style="display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg></button>
+<button class="fab-save" id="saveBtn" onclick="manualSave()" title="저장" style="display:flex;align-items:center;justify-content:center;"><span style="font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">💾</span></button>
 <div class="toast-container"><div class="toast" id="toast1"></div><div class="toast" id="toast2"></div></div>
 <script>
 /* ── 유틸 ── */
@@ -1669,9 +1690,11 @@ _applyThemeCSSVars('#F5F1E6');
 function updateTitlePreview(){const e=document.getElementById('titleEmoji').value||'',n=document.getElementById('titleName').value||'Kosick',p=document.getElementById('colorPrimary').value,s=document.getElementById('colorSecondary').value;document.getElementById('titlePreviewEmoji').textContent=e;const el=document.getElementById('titlePreviewText');el.textContent=n;el.style.color='';el.style.webkitTextStroke='';el.style.paintOrder='';document.getElementById('colorPrimaryHex').textContent=p;document.getElementById('colorSecondaryHex').textContent=s;}
 function openTitleEditor(){document.getElementById('titleEmoji').value=localStorage.getItem('titleEmoji')||'';document.getElementById('titleName').value=localStorage.getItem('titleName')||'Kosick';document.getElementById('colorPrimary').value=localStorage.getItem('colorPrimary')||'#818CF8';document.getElementById('colorSecondary').value=localStorage.getItem('colorSecondary')||'#10B981';updateTitlePreview();['titleEmoji','titleName','colorPrimary','colorSecondary'].forEach(id=>document.getElementById(id).oninput=updateTitlePreview);openModal('titleEditorModal');}
 function saveTitle(){const e=document.getElementById('titleEmoji').value.trim()||'',n=document.getElementById('titleName').value.trim()||'Kosick',p=document.getElementById('colorPrimary').value,s=document.getElementById('colorSecondary').value;localStorage.setItem('titleEmoji',e);localStorage.setItem('titleName',n);localStorage.setItem('colorPrimary',p);localStorage.setItem('colorSecondary',s);initHeaderTitle();initColors();if(window._syncSettings)window._syncSettings();closeModal('titleEditorModal');showToast(' 저장되었습니다');}
+function _saveBtnIconHtml(size){return `<span style="font-size:2px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">💾</span>`;}
 function manualSave(){
- const btn=document.getElementById('saveBtn');
- if(btn){btn.innerHTML='<span style="font-size:20px;">···</span>';btn.disabled=true;btn.style.opacity='0.7';}
+ const saveBtnEl=document.getElementById('saveBtn');
+ const heroBtnEl=document.getElementById('mHeroSaveBtn');
+ [saveBtnEl,heroBtnEl].filter(Boolean).forEach(b=>{b.innerHTML='<span style="font-size:20px;">···</span>';b.disabled=true;b.style.opacity='0.7';});
  /* ① contenteditable 중 저장 안 된 내용 먼저 강제 flush */
  document.querySelectorAll('[contenteditable="true"]').forEach(el=>{
  if(!_dirtyEls.has(el))return;
@@ -1701,12 +1724,14 @@ function manualSave(){
  setTimeout(()=>{
  window._manualSave();
  setTimeout(()=>{
- if(btn){btn.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg>';btn.disabled=false;btn.style.opacity='';}
+ if(saveBtnEl){saveBtnEl.innerHTML=_saveBtnIconHtml(22);saveBtnEl.disabled=false;saveBtnEl.style.opacity='';}
+ if(heroBtnEl){heroBtnEl.innerHTML=_saveBtnIconHtml(16);heroBtnEl.disabled=false;heroBtnEl.style.opacity='';}
  showToast(' 수동 저장 완료!');
  },1500);
  },150);
  }else{
- if(btn){btn.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg>';btn.disabled=false;}
+ if(saveBtnEl){saveBtnEl.innerHTML=_saveBtnIconHtml(22);saveBtnEl.disabled=false;}
+ if(heroBtnEl){heroBtnEl.innerHTML=_saveBtnIconHtml(16);heroBtnEl.disabled=false;}
  showToast(' 저장 모듈 초기화 중입니다. 잠시 후 다시 시도해주세요.');
  }
 }
@@ -1717,6 +1742,7 @@ function showSection(id,btn){
  if(btn)btn.classList.add('active');
  if(id==='homeroom')fitSubNav('homeroomSubNav');
  if(id==='students')fitSubNav('studentsSubNav');
+ if(typeof _adjustAnkComposerForKeyboard==='function')_adjustAnkComposerForKeyboard();
  /* ★ 모바일 탭 제목 업데이트 */
 const SECTION_NAMES={home:'홈',bookmarks:'즐겨찾기',memos:'할 일',notepad:'메모',students:'학생관리',timetable:'시간표',homeroom:'담임',anecdotal:'누가기록',settings:'설정'};
 const SECTION_EMOJIS={home:'',bookmarks:'',memos:'',notepad:'',students:'',timetable:'',homeroom:'',anecdotal:'',settings:''};
@@ -1758,8 +1784,8 @@ function showToast(msg){
   const isWarn=/실패|오류|불가|필요해요|안돼|이미|없어요|입력해|선택해|확인해/.test(msg);
   const clean=escHtml(msg.trim());
   const iconSvg=isWarn
-    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 9v4M12 17h.01"></path><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>'
-    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 6L9 17l-5-5"></path></svg>';
+    ? '<span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⚠️</span>'
+    : '<span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span>';
   slot.innerHTML='<span style="display:inline-flex;align-items:center;gap:7px;">'+iconSvg+'<span>'+clean+'</span></span>';
   slot.classList.add('show');
   clearTimeout(slot._tid);
@@ -2023,7 +2049,7 @@ function renderDayScheduleList(){
  const dr=s.dateEnd&&s.dateEnd!==s.date
  ?`<div class="schedule-time"> ${s.date} ~ ${s.dateEnd}</div>`
  :'';
-return `<div class="schedule-item"><div class="schedule-type-bar" style="background:${ti.color};"></div><div class="schedule-info"><div class="schedule-title-text">${s.title}</div>${dr}${ts?`<div class="schedule-time"> ${ts}</div>`:''}${s.memo?`<div class="schedule-time"> ${s.memo}</div>`:''}</div><span class="schedule-type-badge" style="background:${ti.color}33;color:${ti.color};">${ti.label}</span><button class="btn-icon" onclick="editSchedule(${s.id})" title="수정"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button class="btn-icon" onclick="deleteSchedule(${s.id})" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div>`;
+return `<div class="schedule-item"><div class="schedule-type-bar" style="background:${ti.color};"></div><div class="schedule-info"><div class="schedule-title-text">${s.title}</div>${dr}${ts?`<div class="schedule-time"> ${ts}</div>`:''}${s.memo?`<div class="schedule-time"> ${s.memo}</div>`:''}</div><span class="schedule-type-badge" style="background:${ti.color}33;color:${ti.color};">${ti.label}</span><button class="btn-icon" onclick="editSchedule(${s.id})" title="수정"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span></button><button class="btn-icon" onclick="deleteSchedule(${s.id})" title="삭제"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗑️</span></button></div>`;
  }).join('');
  }
  c.innerHTML=html;
@@ -2093,7 +2119,7 @@ function saveEditSchedule(){
 function deleteSchedule(id){if(!confirm('정말 삭제할까요?'))return;DB.set('schedules',DB.get('schedules').filter(s=>s.id!==id));renderDayScheduleList();renderCalendar();}
 function openTypeManager(){renderTypeList();document.getElementById('newTypeColor').value=LIST_COLORS[0];buildColorSwatches('newTypeColorSwatches',LIST_COLORS[0],'pickNewTypeColor');openModal('typeManagerModal');}
 function pickNewTypeColor(color){document.getElementById('newTypeColor').value=color;buildColorSwatches('newTypeColorSwatches',color,'pickNewTypeColor');}
-function renderTypeList(){document.getElementById('typeList').innerHTML=getScheduleTypes().map(t=>`<div id="typeRow_${t.id}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);"><div style="width:20px;height:20px;border-radius:50%;background:${t.color};border:1px solid rgba(255,255,255,0.2);flex-shrink:0;"></div><span style="flex:1;">${t.label}</span>${t.id!=='none'?`<button class="btn-icon" onclick="openEditTypeInline('${t.id}')" title="수정"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button class="btn-icon" onclick="deleteScheduleType('${t.id}')"></button>`:`<span style="font-size:0.72rem;color:var(--text-secondary);padding:0 6px;">기본</span>`}</div>`).join('');}
+function renderTypeList(){document.getElementById('typeList').innerHTML=getScheduleTypes().map(t=>`<div id="typeRow_${t.id}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);"><div style="width:20px;height:20px;border-radius:50%;background:${t.color};border:1px solid rgba(255,255,255,0.2);flex-shrink:0;"></div><span style="flex:1;">${t.label}</span>${t.id!=='none'?`<button class="btn-icon" onclick="openEditTypeInline('${t.id}')" title="수정"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span></button><button class="btn-icon" onclick="deleteScheduleType('${t.id}')"></button>`:`<span style="font-size:0.72rem;color:var(--text-secondary);padding:0 6px;">기본</span>`}</div>`).join('');}
 function buildInlineSwatches(id,current){
   const c=document.getElementById('typeSwatches_'+id);if(!c)return;
   c.innerHTML=LIST_COLORS.map(color=>{
@@ -2116,28 +2142,28 @@ function deleteScheduleType(id){
  showToast(' 유형이 삭제되었습니다');
 }
 
-const ICON_PATHS={
- home:'<path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path>',
- homeroom:'<circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"></path>',
- students:'<path d="M3 9l9-4 9 4-9 4-9-4z"></path><path d="M7 11.5V15c0 1.7 2.2 3 5 3s5-1.3 5-3v-3.5"></path>',
- memos:'<rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M8.5 12.5l2.5 2.5 4.5-5"></path>',
- notepad:'<path d="M6 3h8l5 5v13H6z"></path><path d="M13 3v6h6"></path>',
- bookmarks:'<path d="M7 3h10v18l-5-4-5 4z"></path>',
- timetable:'<rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path>',
- calendar:'<rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path>',
- search:'<circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path>',
- clipboard:'<rect x="4" y="4" width="16" height="16" rx="4"></rect><path d="M8.5 12.5l2.5 2.5 4.5-5"></path>',
- chat:'<path d="M4 4h16v12H8l-4 4z"></path>',
- bell:'<path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z"></path><path d="M10 20a2 2 0 0 0 4 0"></path>',
- building:'<rect x="4" y="3" width="16" height="18" rx="1"></rect><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"></path>',
- chart:'<path d="M4 20V10M12 20V4M20 20v-7"></path>',
- doc:'<path d="M6 3h9l5 5v13H6z"></path><path d="M15 3v5h5"></path>',
- note:'<path d="M6 3h8l5 5v13H6z"></path><path d="M13 3v6h6"></path>',
- settings:'<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>',
+const ICON_EMOJI={
+ home:'🏠',
+ homeroom:'🧑‍🏫',
+ students:'👥',
+ memos:'✅',
+ notepad:'📝',
+ bookmarks:'🔖',
+ timetable:'📅',
+ calendar:'📅',
+ search:'🔍',
+ clipboard:'📋',
+ chat:'💬',
+ bell:'🔔',
+ building:'🏫',
+ chart:'📊',
+ doc:'📄',
+ note:'📝',
+ settings:'⚙️',
 };
 function iconSvg(name,size){
  size=size||18;
- return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICON_PATHS[name]||'')+'</svg>';
+ return `<span style="font-size:${size}px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">${ICON_EMOJI[name]||''}</span>`;
 }
 const DRAWER_SECTIONS=[
  {id:'home', icon:'home', name:'홈'},
@@ -2329,7 +2355,7 @@ function updateHome(){
  <div style="font-size:14px;font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${plainText||'(내용 없음)'}</div>
  ${dateHint?`<div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${dateHint}</div>`:''}
  </div>
- <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${item.priority?'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="flex-shrink:0;color:#D4A24C;"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>':''}${dlHtml}</div>
+ <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${item.priority?'<span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⭐</span>':''}${dlHtml}</div>
  </div>`;
  }).join('');
  c.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;">${slotsHtml}</div>`;
@@ -2471,7 +2497,7 @@ ${!isCompleted?`<div class="memo-drag-handle" title="드래그로 순서 변경"
  <div class="memo-item-detail" contenteditable="${ed}" spellcheck="false" data-id="${item.id}" data-placeholder="세부 사항..." onkeydown="handleDetailKeydown(event,${item.id},this)" style="color:${_tcDetail};"></div>
  </div>
  <div class="memo-item-actions">
- ${!isCompleted?`<button class="btn-icon memo-move-btn" onclick="openMoveMemoModal(${item.id})" title="다른 목록으로 이동" style="font-size:0.78rem;width:28px;height:28px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"></path><path d="M9 5l3-3 3 3"></path><path d="M15 19l3 3 3-3"></path><path d="M19 9l3 3-3 3"></path><path d="M2 12h20M12 2v20"></path></svg></button><button class="btn-icon star-btn${item.priority?' on':''}" onclick="togglePriority(${item.id})" title="우선순위" style="width:28px;height:28px;color:${item.priority?'#D4A24C':'var(--text-secondary)'};">${item.priority?'<svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>'}</button><button class="btn-icon" onclick="setMemoDeadline(${item.id})" title="기한 설정" style="font-size:0.78rem;width:28px;height:28px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></button>`:''}
+ ${!isCompleted?`<button class="btn-icon memo-move-btn" onclick="openMoveMemoModal(${item.id})" title="다른 목록으로 이동" style="font-size:0.78rem;width:28px;height:28px;"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📂</span></button><button class="btn-icon star-btn${item.priority?' on':''}" onclick="togglePriority(${item.id})" title="우선순위" style="width:28px;height:28px;color:${item.priority?'#D4A24C':'var(--text-secondary)'};">${item.priority?'<span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⭐</span>':'<span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">☆</span>'}</button><button class="btn-icon" onclick="setMemoDeadline(${item.id})" title="기한 설정" style="font-size:0.78rem;width:28px;height:28px;"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⏰</span></button>`:''}
  <button class="btn-icon" onclick="deleteMemoItem(${item.id})" style="width:28px;height:28px;font-size:0.78rem;">✕</button>
  </div>
  </div>`;
@@ -2559,17 +2585,17 @@ const pItems=items.filter(i=>i.priority&&!i.completed);
  let pSection='';
  if(pItems.length||dlItems.length){
  const totalCount=pItems.length+dlItems.length;
- pSection=`<div class="priority-card"><div class="priority-card-title" style="display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg><span>우선순위 & 기한</span> <span style="font-size:0.78rem;font-weight:400;color:var(--text-secondary);">${totalCount}개</span></div>
+ pSection=`<div class="priority-card"><div class="priority-card-title" style="display:flex;align-items:center;gap:6px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">☆</span><span>우선순위 & 기한</span> <span style="font-size:0.78rem;font-weight:400;color:var(--text-secondary);">${totalCount}개</span></div>
  ${pItems.map(item=>{const list=lists.find(l=>l.id===item.listId),color=list?.color||'#FCD34D';
  let dlHtml='';
  if(item.deadline){const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-todayP)/(1000*60*60*24));let dlColor='#94A3B8',dlText=item.deadline;if(diff<0){dlColor='#EF4444';dlText='⚠ 기한초과';}else if(diff===0){dlColor='#F59E0B';dlText=' 오늘까지';}else if(diff<=3){dlColor='#FBBF24';dlText=` D-${diff}`;}dlHtml=`<span style="font-size:0.7rem;color:${dlColor};margin-left:4px;">${dlText}</span>`;}
-return `<div class="priority-item"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}${dlHtml}</div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn on" onclick="togglePriority(${item.id})" style="color:#D4A24C;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg></button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
- ${dlItems.length?`<div style="font-size:0.78rem;font-weight:700;color:#60A5FA;margin:${pItems.length?'10px':'0'} 0 6px;display:flex;align-items:center;gap:6px;"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span>기한 있는 할 일</span></div>`:''}
+return `<div class="priority-item"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}${dlHtml}</div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn on" onclick="togglePriority(${item.id})" style="color:#D4A24C;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⭐</span></button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
+ ${dlItems.length?`<div style="font-size:0.78rem;font-weight:700;color:#60A5FA;margin:${pItems.length?'10px':'0'} 0 6px;display:flex;align-items:center;gap:6px;"><span style="display:inline-flex;align-items:center;gap:5px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⏰</span><span>기한 있는 할 일</span></div>`:''}
  ${dlItems.map(item=>{const list=lists.find(l=>l.id===item.listId),color=list?.color||'#60A5FA';
  const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-todayP)/(1000*60*60*24));
  let dlColor='#94A3B8',dlText=item.deadline;
  if(diff<0){dlColor='#EF4444';dlText='⚠ 기한초과';}else if(diff===0){dlColor='#F59E0B';dlText=' 오늘까지';}else if(diff<=3){dlColor='#FBBF24';dlText=` D-${diff}`;}else{dlColor='#60A5FA';dlText=` D-${diff}`;}
-return `<div class="priority-item" style="background:rgba(96,165,250,0.08);border-left-color:#60A5FA;"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}<span style="font-size:0.7rem;color:${dlColor};margin-left:4px;">${dlText}</span></div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn${item.priority?' on':''}" onclick="togglePriority(${item.id})" style="color:${item.priority?'#D4A24C':'var(--text-secondary)'};">${item.priority?'<svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>'}</button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
+return `<div class="priority-item" style="background:rgba(96,165,250,0.08);border-left-color:#60A5FA;"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}<span style="font-size:0.7rem;color:${dlColor};margin-left:4px;">${dlText}</span></div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn${item.priority?' on':''}" onclick="togglePriority(${item.id})" style="color:${item.priority?'#D4A24C':'var(--text-secondary)'};">${item.priority?'<span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⭐</span>':'<span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">☆</span>'}</button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
  </div>`;
  }
  let body='';
@@ -2624,7 +2650,7 @@ ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).joi
  <span style="font-size:1rem;font-weight:700;color:${_ctc};">${escHtml(list.name)}</span>
  <span style="font-size:0.82rem;color:${_ctcs};">${li.length}개</span>
  </div>
- <div style="display:flex;gap:2px;"><button class="btn-icon" onclick="openEditListModal(${list.id})" style="color:${_ctcs};"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button class="btn-icon" onclick="deleteList(${list.id})" style="color:${_ctcs};"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div>
+ <div style="display:flex;gap:2px;"><button class="btn-icon" onclick="openEditListModal(${list.id})" style="color:${_ctcs};"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span></button><button class="btn-icon" onclick="deleteList(${list.id})" style="color:${_ctcs};"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗑️</span></button></div>
  </div>
  <div style="max-height:600px;overflow-y:auto;padding-right:4px;">
 ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).join(''):'<div style="text-align:center;padding:8px 0;color:'+_ctcs+';font-size:0.85rem;">항목이 없어요</div>'}
@@ -2771,7 +2797,7 @@ function renderBookmarks(filter=''){
  html+=`<div class="bm-group" ondragover="grpDragOver(event,${g.id},this)" ondrop="grpDrop(event,${g.id},this)" ondragleave="this.classList.remove('drag-over-item')">
  <div class="bm-group-header">
  <span class="bm-group-title"><span class="drag-handle" draggable="true" ondragstart="grpDragStart(event,${g.id})">⠿</span> ${escHtml(g.name)}</span>
- <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:0.75rem;color:var(--text-secondary);">${gbms.length}개</span><button class="btn-icon" onclick="openEditGroupModal(${g.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button class="btn-icon" onclick="deleteGroup(${g.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div>
+ <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:0.75rem;color:var(--text-secondary);">${gbms.length}개</span><button class="btn-icon" onclick="openEditGroupModal(${g.id})"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span></button><button class="btn-icon" onclick="deleteGroup(${g.id})"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗑️</span></button></div>
  </div>
  <div class="bm-group-body" id="${zid}" ondragover="event.preventDefault();document.getElementById('${zid}').classList.add('drag-over')" ondragleave="if(!document.getElementById('${zid}').contains(event.relatedTarget))document.getElementById('${zid}').classList.remove('drag-over')" ondrop="bmGroupDrop(event,${g.id},document.getElementById('${zid}'))">
  ${gbms.map(b=>bmCardHtml(b)).join('')}${!gbms.length?`<div class="bm-drop-hint">여기에 드래그해서 넣어보세요 </div>`:''}
@@ -2893,7 +2919,7 @@ function renderAnkThread(){
  if(c.studentId!=null&&c.classId!=null)return c.studentId===student.id&&c.classId===cls.id;
  return c.studentName===student.name;
  }).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)||(a.date||'').localeCompare(b.date||''));
- const bubbles=entries.length?entries.map(e=>`<div class="ank-bubble"><div class="ank-bubble-actions"><button type="button" class="ank-bubble-action-btn" onclick="editAnkEntry(${e.id})" title="수정"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button type="button" class="ank-bubble-action-btn danger" onclick="deleteAnkEntry(${e.id})" title="삭제"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg></button></div><div class="ank-bubble-date">${e.date}</div><div class="ank-bubble-content">${escHtml(e.content).replace(/\n/g,'<br>')}</div></div>`).join(''):'<div class="ank-thread-empty">아직 기록이 없어요. 아래에 첫 기록을 남겨보세요.</div>';
+ const bubbles=entries.length?entries.map(e=>`<div class="ank-bubble"><div class="ank-bubble-actions"><button type="button" class="ank-bubble-action-btn" onclick="editAnkEntry(${e.id})" title="수정"><span style="font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span></button><button type="button" class="ank-bubble-action-btn danger" onclick="deleteAnkEntry(${e.id})" title="삭제"><span style="font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗑️</span></button></div><div class="ank-bubble-date">${e.date}</div><div class="ank-bubble-content">${escHtml(e.content).replace(/\n/g,'<br>')}</div></div>`).join(''):'<div class="ank-thread-empty">아직 기록이 없어요. 아래에 첫 기록을 남겨보세요.</div>';
  wrap.innerHTML=`<div class="ank-thread-header">${escHtml(String(cls.grade))}학년 ${escHtml(String(cls.classNum))}반 ${student.number?student.number+'번 ':''}${escHtml(student.name)}</div>${bubbles}`;
  wrap.scrollTop=wrap.scrollHeight;
 }
@@ -3102,7 +3128,7 @@ function openSeatProgram(){
  if(!cls){renderProgramTab();return;}
  const saved=DB.get('seatCharts')[cls.id];
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">🪑 자리 바꾸기 — ${cls.grade}학년 ${cls.classNum}반</span></div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">🪑 자리 바꾸기 — ${cls.grade}학년 ${cls.classNum}반</span></div>
  <div class="seat-entry-center">
  <div class="seat-entry-icon">🪑</div>
  <div class="seat-entry-actions">
@@ -3148,7 +3174,7 @@ function renderSeatStep1(){
  if(!wrap||!_seat)return;
  const gridHtml=_seatBuildGridHtml('layout');
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="openSeatProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">자리 형식 설정</span>${_seatStepDots()}</div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openSeatProgram()"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">자리 형식 설정</span>${_seatStepDots()}</div>
  <div class="seat-layout">
  <div class="seat-roster"><div class="seat-roster-title">우리 반 (${_seat.students.length}명)</div>${_seatRosterHtml()}</div>
  <div class="seat-editor">
@@ -3242,7 +3268,7 @@ function renderSeatStep2(){
  const frontCnt=_seat.students.filter(s=>s.frontPref).length;
  const teacherCnt=_seat.pairAssign.length+_seat.pairExclude.length;
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="_seat.step=1;renderSeatStep1();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">배치 설정</span>${_seatStepDots()}</div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_seat.step=1;renderSeatStep1();"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">배치 설정</span>${_seatStepDots()}</div>
  <div class="seat-settings-grid">
  <button class="seat-setting-card" onclick="openSeatSetting('fixed')"><div class="seat-setting-title">📍 학생 자리 지정</div><div class="seat-setting-desc">특정 학생의 자리를 미리 정해둬요</div>${fixedCnt?`<span class="seat-setting-badge">${fixedCnt}명 지정됨</span>`:''}</button>
  <button class="seat-setting-card" onclick="openSeatSetting('gender')"><div class="seat-setting-title">🚻 성별 지정</div><div class="seat-setting-desc">학생별 성별을 지정해요</div>${genderCnt?`<span class="seat-setting-badge">${genderCnt}명 지정됨</span>`:''}</button>
@@ -3475,7 +3501,7 @@ function renderSeatStep3(){
  if(!wrap||!_seat)return;
  const gridHtml=_seatBuildGridHtml('result');
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="_seat.step=2;renderSeatStep2();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">배치 결과</span>${_seatStepDots()}</div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_seat.step=2;renderSeatStep2();"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">배치 결과</span>${_seatStepDots()}</div>
  <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">학생 두 명을 순서대로 누르면 자리를 서로 바꿔요.</p>
  <div id="seatPrintArea">
  ${_seatBoardWrapHtml(gridHtml)}
@@ -3547,7 +3573,7 @@ function viewSavedSeatChart(){
  const gridHtml=_seatBuildGridHtml('result');
  const savedDate=new Date(saved.savedAt).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="openSeatProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">저장된 자리</span><span style="margin-left:auto;font-size:0.76rem;color:var(--text-secondary);">${savedDate} 저장</span></div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openSeatProgram()"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">저장된 자리</span><span style="margin-left:auto;font-size:0.76rem;color:var(--text-secondary);">${savedDate} 저장</span></div>
  <div id="seatPrintArea">
  ${_seatBoardWrapHtml(gridHtml)}
  </div>
@@ -3588,7 +3614,7 @@ function openCleaningProgram(){
  if(!cls){renderProgramTab();return;}
  const saved=DB.get('cleaningCharts')[cls.id];
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">🧹 청소 당번 뽑기 — ${cls.grade}학년 ${cls.classNum}반</span></div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">🧹 청소 당번 뽑기 — ${cls.grade}학년 ${cls.classNum}반</span></div>
  <div class="seat-entry-center">
  <div class="seat-entry-icon">🧹</div>
  <div class="seat-entry-actions">
@@ -3666,7 +3692,7 @@ function renderCleanStep1(){
  const wrap=document.getElementById('hrProgramContent');
  if(!wrap||!_clean)return;
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="openCleaningProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">청소 기간 설정</span>${_cleanStepDots()}</div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openCleaningProgram()"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">청소 기간 설정</span>${_cleanStepDots()}</div>
  <div class="seat-layout">
  <div class="seat-roster"><div class="seat-roster-title">우리 반 (${_clean.students.length}명)</div>${_cleanRosterHtml()}</div>
  <div class="seat-editor">
@@ -3694,7 +3720,7 @@ function renderCleanStep2(){
  const excludedCnt=_clean.excluded.length;
  const dayExcludedCnt=Object.values(_clean.dayExcluded).filter(a=>a&&a.length).length;
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="_clean.step=1;renderCleanStep1();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">배정 설정</span>${_cleanStepDots()}</div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_clean.step=1;renderCleanStep1();"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">배정 설정</span>${_cleanStepDots()}</div>
  <div class="seat-settings-grid">
  <button class="seat-setting-card" onclick="openCleanSetting('excluded')"><div class="seat-setting-title">🚫 청소 제외</div><div class="seat-setting-desc">이 기간 청소를 아예 안 하는 학생</div>${excludedCnt?`<span class="seat-setting-badge">${excludedCnt}명 지정됨</span>`:''}</button>
  <button class="seat-setting-card" onclick="openCleanSetting('dayExcluded')"><div class="seat-setting-title">📅 요일 제외</div><div class="seat-setting-desc">특정 요일에 청소를 안 하는 학생</div>${dayExcludedCnt?`<span class="seat-setting-badge">${dayExcludedCnt}명 지정됨</span>`:''}</button>
@@ -3858,7 +3884,7 @@ function renderCleanStep3(){
  const wrap=document.getElementById('hrProgramContent');
  if(!wrap||!_clean)return;
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="_clean.step=2;renderCleanStep2();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">청소 당번 결과</span>${_cleanStepDots()}</div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_clean.step=2;renderCleanStep2();"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">청소 당번 결과</span>${_cleanStepDots()}</div>
  <div id="cleanPrintArea">
  ${_cleanResultCalendarHtml(_clean.students,_clean.result,_clean.holidays,_clean.startDate,_clean.endDate)}
  </div>
@@ -3889,7 +3915,7 @@ function viewSavedCleaningChart(){
  const wrap=document.getElementById('hrProgramContent');
  const savedDate=new Date(saved.savedAt).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="openCleaningProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">저장된 청소 당번</span><span style="margin-left:auto;font-size:0.76rem;color:var(--text-secondary);">${savedDate} 저장</span></div>
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openCleaningProgram()"><span style="font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">◀️</span></button><span class="seat-entry-title">저장된 청소 당번</span><span style="margin-left:auto;font-size:0.76rem;color:var(--text-secondary);">${savedDate} 저장</span></div>
  <div id="cleanPrintArea">
  ${_cleanResultCalendarHtml(saved.students||[],saved.result,saved.holidays,saved.startDate,saved.endDate)}
  </div>
@@ -3914,8 +3940,8 @@ function renderClasses(){
  <div style="font-size:1.05rem;font-weight:700;">${cls.grade}학년 ${cls.classNum}반</div>
  <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">학생 ${cls.students.length}명</div>
  <div style="position:absolute;top:4px;right:4px;display:flex;gap:2px;">
- <button class="btn-icon" style="width:22px;height:22px;" onclick="event.stopPropagation();openEditClassModal(${cls.id})" title="수정"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
- <button class="btn-icon" style="width:22px;height:22px;" onclick="event.stopPropagation();deleteClass(${cls.id})" title="삭제"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
+ <button class="btn-icon" style="width:22px;height:22px;" onclick="event.stopPropagation();openEditClassModal(${cls.id})" title="수정"><span style="font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span></button>
+ <button class="btn-icon" style="width:22px;height:22px;" onclick="event.stopPropagation();deleteClass(${cls.id})" title="삭제"><span style="font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗑️</span></button>
  </div>
  </div>`).join('')}</div>`;
 }
@@ -4054,7 +4080,7 @@ const scoreInfo=sessions.length>1
  <div class="card" style="margin-bottom:0;">
  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px;">
  <div style="display:flex;align-items:flex-start;gap:6px;flex:1;min-width:0;"><span class="drag-handle" style="margin-top:2px;" title="드래그로 순서 변경">⠿</span><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:0.97rem;margin-bottom:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${ev.title}${sessionsBadge}</div><div style="font-size:0.78rem;color:var(--text-secondary);">${ev.subject?` ${ev.subject} &nbsp;·&nbsp;`:''} ${dateInfo} &nbsp;·&nbsp; 만점 ${scoreInfo}</div></div></div>
- <div style="display:flex;gap:2px;"><button class="btn-icon" onclick="openEditEvalModal(${ev.id})" title="수정"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button class="btn-icon" onclick="deleteEval(${ev.id})" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div>
+ <div style="display:flex;gap:2px;"><button class="btn-icon" onclick="openEditEvalModal(${ev.id})" title="수정"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✏️</span></button><button class="btn-icon" onclick="deleteEval(${ev.id})" title="삭제"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗑️</span></button></div>
  </div>
  <div>${records.length?rows:`<div style="text-align:center;padding:8px 0;color:var(--text-secondary);font-size:0.82rem;">아직 추가된 반이 없어요</div>`}</div>
  <div id="${zid}" class="eval-drop-zone" ondragover="event.preventDefault();event.stopPropagation();document.getElementById('${zid}').classList.add('drag-over')" ondragleave="document.getElementById('${zid}').classList.remove('drag-over')" ondrop="event.stopPropagation();onEvalDrop(event,${ev.id},document.getElementById('${zid}'))">학급을 드래그해서 여기에 놓기</div>
@@ -4615,7 +4641,7 @@ function toggleArcFab(){
  }else{
   document.querySelectorAll('.arc-fab-item').forEach(el=>el.classList.remove('open'));
   if(bd)bd.classList.remove('open');
-  if(main)main.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>';
+  if(main)main.innerHTML='<span style="font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🏠</span>';
   if(saveBtn){saveBtn.style.opacity='';saveBtn.style.pointerEvents='';saveBtn.style.transform='';}
  }
 }
@@ -4675,7 +4701,7 @@ function closeArcFab(){
  const bd=document.getElementById('arcFabBackdrop');
  if(bd)bd.classList.remove('open');
  const main=document.getElementById('arcFabMain');
- if(main)main.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>';
+ if(main)main.innerHTML='<span style="font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🏠</span>';
  const saveBtn=document.getElementById('saveBtn');
  if(saveBtn){saveBtn.style.opacity='';saveBtn.style.pointerEvents='';saveBtn.style.transform='';}
 }
@@ -4904,21 +4930,21 @@ const deadlineRecs=DB.get('attendanceRecords').filter(r=>r.deadline===ds&&!r.doc
  if(deadlineRecs.length){
  html+=`<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 14px;margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;color:#EF4444;margin-bottom:8px;">⚠ 오늘 서류 마감 (${deadlineRecs.length}건)</div>`;
  deadlineRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];
-html+=`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid rgba(239,68,68,0.2);"><span style="background:${at?.color};color:${at?.textColor};padding:2px 8px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);font-size:0.75rem;">사유일: ${r.date}</span><button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button></div>`;
+html+=`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid rgba(239,68,68,0.2);"><span style="background:${at?.color};color:${at?.textColor};padding:2px 8px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);font-size:0.75rem;">사유일: ${r.date}</span><button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span></button></div>`;
  });html+=`</div>`;}
  if(attRecs.length){
- html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 9l9-4 9 4-9 4-9-4z"></path><path d="M7 11.5V15c0 1.7 2.2 3 5 3s5-1.3 5-3v-3.5"></path></svg><span>출결 기록</span></div>`;
+ html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);"><span style="display:inline-flex;align-items:center;gap:5px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">👥</span><span>출결 기록</span></div>`;
  attRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];const ds2=getDeadlineStatus(r.deadline);
-html+=`<div class="hr-att-item"><span class="hr-att-badge" style="background:${at?.color};color:${at?.textColor};">${at?.label}</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.88rem;">${stud?.name||'?'}</div>${r.note?`<div style="font-size:0.75rem;color:var(--text-secondary);">${r.note}</div>`:''}<div style="font-size:0.72rem;color:var(--text-secondary);">마감: ${r.deadline} <span class="hr-deadline-badge ${ds2.cls}">${ds2.text}</span></div></div>${r.documented?'<span style="font-size:0.75rem;color:#10B981;white-space:nowrap;">완료</span>':r.missedSubmission?`<span style="font-size:0.75rem;color:#94A3B8;white-space:nowrap;">미제출</span><button class="btn-icon" onclick="cancelMissedSubmission(${r.id})" title="미제출 취소"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M3 13a9 9 0 1 0 3-7"></path></svg></button>`:`<button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>`}<button class="btn-icon" onclick="deleteAttRecord(${r.id})">✕</button></div>`;
+html+=`<div class="hr-att-item"><span class="hr-att-badge" style="background:${at?.color};color:${at?.textColor};">${at?.label}</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:0.88rem;">${stud?.name||'?'}</div>${r.note?`<div style="font-size:0.75rem;color:var(--text-secondary);">${r.note}</div>`:''}<div style="font-size:0.72rem;color:var(--text-secondary);">마감: ${r.deadline} <span class="hr-deadline-badge ${ds2.cls}">${ds2.text}</span></div></div>${r.documented?'<span style="font-size:0.75rem;color:#10B981;white-space:nowrap;">완료</span>':r.missedSubmission?`<span style="font-size:0.75rem;color:#94A3B8;white-space:nowrap;">미제출</span><button class="btn-icon" onclick="cancelMissedSubmission(${r.id})" title="미제출 취소"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">↩️</span></button>`:`<button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" onclick="markDocumented(${r.id})" title="제출완료"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span></button>`}<button class="btn-icon" onclick="deleteAttRecord(${r.id})">✕</button></div>`;
  });html+=`</div>`;}
  if(fieldTrips.length){
- html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"></path><path d="M9 4v13M15 7v13"></path></svg><span>현장체험학습</span></div>`;
+ html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);"><span style="display:inline-flex;align-items:center;gap:5px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗺️</span><span>현장체험학습</span></div>`;
  fieldTrips.forEach(ft=>{const cls=classes.find(c=>c.id===ft.classId);const stud=cls?.students.find(s=>s.id===ft.studentId);
  html+=`<div style="padding:8px 12px;background:rgba(52,211,153,0.15);border-radius:8px;margin-bottom:6px;border-left:3px solid #34D399;display:flex;align-items:center;gap:8px;"><span style="font-size:0.88rem;font-weight:600;">${stud?.name||'?'}</span><span style="font-size:0.75rem;color:var(--text-secondary);">${ft.startDate}~${ft.endDate}</span>${ft.note?`<span style="font-size:0.75rem;color:var(--text-secondary);">· ${ft.note}</span>`:''}<button class="btn-icon" style="margin-left:auto;" onclick="deleteFieldTrip(${ft.id})">✕</button></div>`;});
  html+=`</div>`;
  }
  if(specialProgs.length){
- html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg><span>특수 출결</span></div>`;
+ html+=`<div style="margin-bottom:12px;"><div style="font-size:0.82rem;font-weight:700;margin-bottom:8px;color:var(--text-secondary);"><span style="display:inline-flex;align-items:center;gap:5px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">ℹ️</span><span>특수 출결</span></div>`;
  specialProgs.forEach(sp=>{const cls=classes.find(c=>c.id===sp.classId);const stud=cls?.students.find(s=>s.id===sp.studentId);const spt=SP_TYPES[sp.type];
  html+=`<div style="padding:8px 12px;background:${hexToRgba(spt?.color||'#818CF8',0.15)};border-radius:8px;margin-bottom:6px;border-left:3px solid ${spt?.color||'#818CF8'};display:flex;align-items:center;gap:8px;"><span style="font-size:0.75rem;font-weight:600;color:${spt?.color||'#818CF8'};">${spt?.label}</span><span style="font-size:0.88rem;font-weight:600;">${stud?.name||'?'}</span><span style="font-size:0.75rem;color:var(--text-secondary);">${sp.startDate}~${sp.endDate}</span>${sp.note?`<span style="font-size:0.75rem;color:var(--text-secondary);">· ${sp.note}</span>`:''}<button class="btn-icon" style="margin-left:auto;" onclick="deleteSpecialProg(${sp.id})">✕</button></div>`;});
  html+=`</div>`;
@@ -4937,8 +4963,8 @@ const missedRecs=DB.get('attendanceRecords').filter(r=>(!hrSelectedClassId||r.cl
  const urgent=recs.filter(r=>{const diff=Math.ceil((new Date(r.deadline+'T00:00:00')-today)/864e5);return diff>=0&&diff<=2;});
  const normal=recs.filter(r=>Math.ceil((new Date(r.deadline+'T00:00:00')-today)/864e5)>2);
  function recRow(r,borderColor){const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];const ds=getDeadlineStatus(r.deadline);
-return `<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid ${borderColor};flex-wrap:wrap;"><span style="background:${at?.color};color:${at?.textColor};padding:1px 7px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);">${r.date}</span><span class="hr-deadline-badge ${ds.cls}" style="margin-left:auto;">${ds.text}</span><button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" style="font-size:0.7rem;" onclick="markDocumented(${r.id})" title="제출완료"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button><button class="btn-icon" style="font-size:0.7rem;" onclick="deleteAttRecord(${r.id})">✕</button></div>`;}
- let html=recs.length?'<div class="card" style="margin-bottom:0;"><div class="card-title"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 3h9l5 5v13H6z"></path><path d="M15 3v5h5"></path></svg><span>서류 미제출 현황</span></div>':'';
+return `<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid ${borderColor};flex-wrap:wrap;"><span style="background:${at?.color};color:${at?.textColor};padding:1px 7px;border-radius:20px;font-size:0.72rem;">${at?.label}</span><span style="font-weight:600;">${stud?.name||'?'}</span><span style="color:var(--text-secondary);">${r.date}</span><span class="hr-deadline-badge ${ds.cls}" style="margin-left:auto;">${ds.text}</span><button style="padding:4px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id})" title="미제출 처리">미제출</button><button class="btn-icon" style="font-size:0.7rem;" onclick="markDocumented(${r.id})" title="제출완료"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span></button><button class="btn-icon" style="font-size:0.7rem;" onclick="deleteAttRecord(${r.id})">✕</button></div>`;}
+ let html=recs.length?'<div class="card" style="margin-bottom:0;"><div class="card-title"><span style="display:inline-flex;align-items:center;gap:5px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📄</span><span>서류 미제출 현황</span></div>':'';
  if(overdue.length){html+=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(239,68,68,0.1);border-radius:8px;border-left:3px solid #EF4444;"><div style="font-size:0.82rem;font-weight:700;color:#EF4444;margin-bottom:6px;"> 기한 초과 (${overdue.length}건)</div>${overdue.map(r=>recRow(r,'rgba(239,68,68,0.2)')).join('')}</div>`;}
  if(urgent.length){html+=`<div style="margin-bottom:10px;padding:10px 12px;background:rgba(252,211,77,0.1);border-radius:8px;border-left:3px solid #FCD34D;"><div style="font-size:0.82rem;font-weight:700;color:#D97706;margin-bottom:6px;"> 곧 마감 (${urgent.length}건)</div>${urgent.map(r=>recRow(r,'rgba(252,211,77,0.2)')).join('')}</div>`;}
  if(normal.length){html+=`<div style="padding:10px 12px;background:var(--surface2);border-radius:8px;"><div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:6px;"> 미제출 (${normal.length}건)</div>${normal.map(r=>recRow(r,'var(--border)')).join('')}</div>`;}
@@ -4976,7 +5002,7 @@ function saveAttRecord(){
 function markDocumented(id){const recs=DB.get('attendanceRecords');const rec=recs.find(r=>r.id===id);if(rec){rec.documented=true;DB.set('attendanceRecords',recs);}renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast(' 제출완료 처리되었습니다');}
 function markMissedSubmission(id){const recs=DB.get('attendanceRecords');const rec=recs.find(r=>r.id===id);if(rec){rec.missedSubmission=true;DB.set('attendanceRecords',recs);}renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast(' 미제출 처리되었습니다');}
 function cancelMissedSubmission(id){const recs=DB.get('attendanceRecords');const rec=recs.find(r=>r.id===id);if(rec){rec.missedSubmission=false;DB.set('attendanceRecords',recs);}renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast(' 미제출이 취소되었습니다');}
-function buildMissedRecordsHtml(missedRecs,classes){let html=`<div class="card" style="margin-top:12px;margin-bottom:0;border-top:3px solid #94A3B8;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0;"><div class="card-title" style="margin-bottom:0;display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 3h9l5 5v13H6z"></path><path d="M15 3v5h5"></path></svg><span>미제출 처리된 기록</span> <span style="font-size:0.78rem;color:var(--text-secondary);font-weight:400;">${missedRecs.length}건</span></div><button onclick="const b=document.getElementById('missedRecordsBody');const show=b.style.display==='none';b.style.display=show?'block':'none';this.textContent=show?'접기 ▲':'펼치기 ▼';" style="font-size:0.78rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);cursor:pointer;white-space:nowrap;">펼치기 ▼</button></div><div id="missedRecordsBody" style="display:none;margin-top:10px;">`;missedRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];html+=`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;"><span style="background:${at?.color};color:${at?.textColor};padding:1px 7px;border-radius:20px;font-size:0.72rem;opacity:0.7;">${at?.label}</span><span style="font-weight:600;color:var(--text-secondary);">${stud?.name||'?'}</span><span style="color:var(--text-secondary);font-size:0.75rem;">${r.date}</span><span style="font-size:0.72rem;color:#94A3B8;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,0.15);margin-left:auto;"> 미제출</span><button class="btn-icon" style="font-size:0.75rem;" onclick="cancelMissedSubmission(${r.id})" title="미제출 취소"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M3 13a9 9 0 1 0 3-7"></path></svg></button><button class="btn-icon" style="font-size:0.7rem;" onclick="deleteAttRecord(${r.id})">✕</button></div>`;});html+=`</div></div>`;return html;}
+function buildMissedRecordsHtml(missedRecs,classes){let html=`<div class="card" style="margin-top:12px;margin-bottom:0;border-top:3px solid #94A3B8;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0;"><div class="card-title" style="margin-bottom:0;display:flex;align-items:center;gap:6px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📄</span><span>미제출 처리된 기록</span> <span style="font-size:0.78rem;color:var(--text-secondary);font-weight:400;">${missedRecs.length}건</span></div><button onclick="const b=document.getElementById('missedRecordsBody');const show=b.style.display==='none';b.style.display=show?'block':'none';this.textContent=show?'접기 ▲':'펼치기 ▼';" style="font-size:0.78rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);cursor:pointer;white-space:nowrap;">펼치기 ▼</button></div><div id="missedRecordsBody" style="display:none;margin-top:10px;">`;missedRecs.forEach(r=>{const cls=classes.find(c=>c.id===r.classId);const stud=cls?.students.find(s=>s.id===r.studentId);const at=ATT_TYPES[r.type];html+=`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;padding:5px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;"><span style="background:${at?.color};color:${at?.textColor};padding:1px 7px;border-radius:20px;font-size:0.72rem;opacity:0.7;">${at?.label}</span><span style="font-weight:600;color:var(--text-secondary);">${stud?.name||'?'}</span><span style="color:var(--text-secondary);font-size:0.75rem;">${r.date}</span><span style="font-size:0.72rem;color:#94A3B8;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,0.15);margin-left:auto;"> 미제출</span><button class="btn-icon" style="font-size:0.75rem;" onclick="cancelMissedSubmission(${r.id})" title="미제출 취소"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">↩️</span></button><button class="btn-icon" style="font-size:0.7rem;" onclick="deleteAttRecord(${r.id})">✕</button></div>`;});html+=`</div></div>`;return html;}
 function deleteAttRecord(id){if(!confirm('삭제할까요?'))return;DB.set('attendanceRecords',DB.get('attendanceRecords').filter(r=>r.id!==id));renderHrCalendar();renderHrUnsubmitted();if(document.getElementById('hrDayModal').classList.contains('active'))renderHrDayContent();showToast(' 삭제되었습니다');}
 /* 현체 */
 function openAddFieldTripModal(){
@@ -5130,7 +5156,7 @@ function buildAttUnsubmittedHtmlForNotice(dateStr){
  <span style="font-size:0.72rem;color:var(--text-secondary);">사유일: ${r.date}</span>
  <div style="display:flex;gap:4px;margin-left:auto;">
  <button style="padding:3px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id});renderNoticeTab();">미제출</button>
- <button class="btn-icon" style="font-size:0.75rem;width:26px;height:26px;" onclick="markDocumented(${r.id});renderNoticeTab();" title="제출완료"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+ <button class="btn-icon" style="font-size:0.75rem;width:26px;height:26px;" onclick="markDocumented(${r.id});renderNoticeTab();" title="제출완료"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span></button>
  </div>
  </div>`;
  });
@@ -5150,7 +5176,7 @@ function buildAttUnsubmittedHtmlForNotice(dateStr){
  <span class="hr-deadline-badge ${ds.cls}" style="font-size:0.72rem;">${ds.text}</span>
  <div style="display:flex;gap:4px;margin-left:auto;">
  <button style="padding:3px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id});renderNoticeTab();">미제출</button>
- <button class="btn-icon" style="font-size:0.75rem;width:26px;height:26px;" onclick="markDocumented(${r.id});renderNoticeTab();" title="제출완료"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+ <button class="btn-icon" style="font-size:0.75rem;width:26px;height:26px;" onclick="markDocumented(${r.id});renderNoticeTab();" title="제출완료"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span></button>
  </div>
  </div>`;
  });
@@ -5170,7 +5196,7 @@ function buildAttUnsubmittedHtmlForNotice(dateStr){
  <span class="hr-deadline-badge ${ds.cls}" style="font-size:0.72rem;">${ds.text}</span>
  <div style="display:flex;gap:4px;margin-left:auto;">
  <button style="padding:3px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;border:1px solid #94A3B8;background:rgba(148,163,184,0.15);color:#94A3B8;cursor:pointer;white-space:nowrap;" onclick="markMissedSubmission(${r.id});renderNoticeTab();">미제출</button>
- <button class="btn-icon" style="font-size:0.75rem;width:26px;height:26px;" onclick="markDocumented(${r.id});renderNoticeTab();" title="제출완료"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+ <button class="btn-icon" style="font-size:0.75rem;width:26px;height:26px;" onclick="markDocumented(${r.id});renderNoticeTab();" title="제출완료"><span style="font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">✅</span></button>
  </div>
  </div>`;
  });
@@ -5243,10 +5269,10 @@ const isToday=noticeSelectedDate===_getLocalTodayStr();
  }
  }
  html+=`<div class="card" style="margin-top:16px;margin-bottom:0;">
- <div class="card-title" style="display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg><span>안내사항 추가</span></div>
+ <div class="card-title" style="display:flex;align-items:center;gap:6px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🔔</span><span>안내사항 추가</span></div>
  ${studentSelectHtml}
  <div class="form-group" style="margin-bottom:10px;"><div id="noticeContent" contenteditable="true" spellcheck="false" data-placeholder="안내사항 내용을 입력하세요..." style="min-height:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;line-height:1.6;word-break:break-word;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor=''" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addNotice();}"></div></div>
- <button class="btn btn-primary" style="width:100%;" onclick="addNotice()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"></path></svg><span>추가하기</span></span></button>
+ <button class="btn btn-primary" style="width:100%;" onclick="addNotice()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">➕</span><span>추가하기</span></span></button>
  <p style="font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-top:6px;">Ctrl+Enter로 빠르게 추가</p>
  </div>`;
  c.innerHTML=html;
@@ -5388,7 +5414,7 @@ function _sortNotesStarredThenRecent(arr){
 function _notepadNoteItemHtml(n,groupName){
  const updStr=n.updatedAt?new Date(n.updatedAt).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}):'';
  const preview=(n.content||'').replace(/<[^>]*>/g,'').slice(0,60);
- return `<div onclick="selectNote(${n.id})" style="padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;cursor:pointer;transition:all 0.2s;display:flex;gap:10px;align-items:flex-start;" onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--primary-light)'" onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'"><div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;"><button onclick="event.stopPropagation();toggleNoteStar(${n.id})" title="${n.starred?'중요 표시 해제':'중요 표시'}" style="background:none;border:none;cursor:pointer;font-size:1.05rem;padding:2px;line-height:1;color:${n.starred?'#F59E0B':'var(--text-secondary)'};opacity:${n.starred?'1':'0.5'};">${n.starred?'★':'☆'}</button><button onclick="event.stopPropagation();deleteNote(${n.id})" title="삭제" style="background:none;border:none;cursor:pointer;padding:2px;line-height:1;color:var(--text-secondary);opacity:0.45;transition:opacity 0.15s,color 0.15s;" onmouseover="this.style.opacity='1';this.style.color='var(--danger)'" onmouseout="this.style.opacity='0.45';this.style.color='var(--text-secondary)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div><div style="flex:1;min-width:0;">${groupName?`<div style="font-size:0.68rem;color:var(--primary-light);font-weight:700;margin-bottom:2px;">${escHtml(groupName)}</div>`:''}<div style="font-weight:600;font-size:0.92rem;margin-bottom:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(n.title||'제목 없음')}</div>${preview?`<div style="font-size:0.78rem;color:var(--text-secondary);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(preview)}</div>`:'<div style="font-size:0.78rem;color:var(--text-secondary);opacity:0.5;">(내용 없음)</div>'}${updStr?`<div style="font-size:0.7rem;color:var(--text-secondary);margin-top:4px;opacity:0.7;">${updStr}</div>`:''}</div></div>`;
+ return `<div onclick="selectNote(${n.id})" style="padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;cursor:pointer;transition:all 0.2s;display:flex;gap:10px;align-items:flex-start;" onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--primary-light)'" onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'"><div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;"><button onclick="event.stopPropagation();toggleNoteStar(${n.id})" title="${n.starred?'중요 표시 해제':'중요 표시'}" style="background:none;border:none;cursor:pointer;font-size:1.05rem;padding:2px;line-height:1;color:${n.starred?'#F59E0B':'var(--text-secondary)'};opacity:${n.starred?'1':'0.5'};">${n.starred?'★':'☆'}</button><button onclick="event.stopPropagation();deleteNote(${n.id})" title="삭제" style="background:none;border:none;cursor:pointer;padding:2px;line-height:1;color:var(--text-secondary);opacity:0.45;transition:opacity 0.15s,color 0.15s;" onmouseover="this.style.opacity='1';this.style.color='var(--danger)'" onmouseout="this.style.opacity='0.45';this.style.color='var(--text-secondary)'"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🗑️</span></button></div><div style="flex:1;min-width:0;">${groupName?`<div style="font-size:0.68rem;color:var(--primary-light);font-weight:700;margin-bottom:2px;">${escHtml(groupName)}</div>`:''}<div style="font-weight:600;font-size:0.92rem;margin-bottom:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(n.title||'제목 없음')}</div>${preview?`<div style="font-size:0.78rem;color:var(--text-secondary);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(preview)}</div>`:'<div style="font-size:0.78rem;color:var(--text-secondary);opacity:0.5;">(내용 없음)</div>'}${updStr?`<div style="font-size:0.7rem;color:var(--text-secondary);margin-top:4px;opacity:0.7;">${updStr}</div>`:''}</div></div>`;
 }
 function showNotepadEmpty(){
  const ea=document.getElementById('notepadEditorArea');if(!ea)return;
@@ -5399,7 +5425,7 @@ function showNotepadEmpty(){
  return;
  }
  const showAll=_notepadActiveTab==='all';
- let listHtml=`<div style="padding:20px;overflow-y:auto;flex:1;"><div style="font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 3h8l5 5v13H6z"></path><path d="M13 3v6h6"></path></svg><span>${showAll?'모든 메모':escHtml(groups.find(g=>g.id===_notepadActiveTab)?.name||'')}</span></div>`;
+ let listHtml=`<div style="padding:20px;overflow-y:auto;flex:1;"><div style="font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;"><span style="font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📝</span><span>${showAll?'모든 메모':escHtml(groups.find(g=>g.id===_notepadActiveTab)?.name||'')}</span></div>`;
  if(showAll){
  const groupNameById={};groups.forEach(g=>groupNameById[g.id]=g.name);
  const sorted=_sortNotesStarredThenRecent(notes);
@@ -5467,6 +5493,8 @@ function _applyNoteToolbarForKeyboard(){
  if(!toolbar)return;
  if(!_isNoteMobileLayout()){
  toolbar.style.bottom='';
+ toolbar.style.opacity='';
+ toolbar.style.pointerEvents='';
  return;
  }
  if(window.innerHeight>_noteMaxViewportHeight)_noteMaxViewportHeight=window.innerHeight;
@@ -5476,6 +5504,10 @@ function _applyNoteToolbarForKeyboard(){
  const keyboardVisible=heightShrink>120||vvGap>80;
  const bottomPx=vvGap>80?(vvGap+6):6;
  toolbar.style.bottom=keyboardVisible?bottomPx+'px':'';
+ /* 평소엔 숨겨두고, 작성을 위해 키보드를 불러왔을 때만 도구 바를 보여준다
+ (하단 탭바와는 반대 방향 — 탭바는 입력 중엔 숨고, 이 도구 바는 입력 중에만 뜬다). */
+ toolbar.style.opacity=keyboardVisible?'1':'0';
+ toolbar.style.pointerEvents=keyboardVisible?'':'none';
  _scheduleNoteFabVisibility(keyboardVisible);
 }
 /* 키보드 애니메이션 중이나 iOS 주소창이 접혔다 펼쳐질 때 window.innerHeight가 잠깐씩
@@ -5513,6 +5545,57 @@ document.addEventListener('focusout',e=>{
  if(e.target&&(e.target.id==='noteContentInput'||e.target.id==='noteTitleInput')){
  setTimeout(_adjustNoteToolbarForKeyboard,50);
  setTimeout(_adjustNoteToolbarForKeyboard,350);
+ }
+});
+/* 누가기록 채팅 입력창도 메모 툴바와 같은 방식으로 키보드를 피해 움직인다: 평소엔
+ 하단 탭바 바로 위에 떠 있다가, 입력창에 포커스가 가서 키보드가 뜨면 키보드 바로
+ 위로 옮겨가고, 입력 중엔 필요 없는 하단 탭바는 잠시 숨긴다. */
+let _ankKbHidden=false,_ankKbConfirmTimer=null,_ankMaxViewportHeight=window.innerHeight,_ankComposerRAF=null;
+function _isAnkMobileActive(){return window.innerWidth<=768&&!!document.getElementById('anecdotal')?.classList.contains('active');}
+function _adjustAnkComposerForKeyboard(){
+ if(_ankComposerRAF)cancelAnimationFrame(_ankComposerRAF);
+ _ankComposerRAF=requestAnimationFrame(_applyAnkComposerForKeyboard);
+}
+function _applyAnkComposerForKeyboard(){
+ _ankComposerRAF=null;
+ const wrap=document.querySelector('#anecdotal .ank-composer-wrap');
+ if(!wrap)return;
+ if(!_isAnkMobileActive()){wrap.style.bottom='';_scheduleAnkTabbarVisibility(false);return;}
+ if(window.innerHeight>_ankMaxViewportHeight)_ankMaxViewportHeight=window.innerHeight;
+ const heightShrink=_ankMaxViewportHeight-window.innerHeight;
+ const vv=window.visualViewport;
+ const vvGap=vv?Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop)):0;
+ const keyboardVisible=heightShrink>120||vvGap>80;
+ wrap.style.bottom=keyboardVisible?(vvGap>80?(vvGap+6):6)+'px':'';
+ _scheduleAnkTabbarVisibility(keyboardVisible);
+}
+function _scheduleAnkTabbarVisibility(hide){
+ if(hide===_ankKbHidden){
+ if(_ankKbConfirmTimer){clearTimeout(_ankKbConfirmTimer);_ankKbConfirmTimer=null;}
+ return;
+ }
+ if(_ankKbConfirmTimer)clearTimeout(_ankKbConfirmTimer);
+ _ankKbConfirmTimer=setTimeout(()=>{
+ _ankKbConfirmTimer=null;
+ _ankKbHidden=hide;
+ const tabbar=document.getElementById('mobileTabbar');
+ if(tabbar){tabbar.style.visibility=hide?'hidden':'';tabbar.style.pointerEvents=hide?'none':'';}
+ },120);
+}
+window.addEventListener('resize',_adjustAnkComposerForKeyboard);
+if(window.visualViewport){
+ window.visualViewport.addEventListener('resize',_adjustAnkComposerForKeyboard);
+}
+document.addEventListener('focusin',e=>{
+ if(e.target&&e.target.id==='ankComposerInput'){
+ setTimeout(_adjustAnkComposerForKeyboard,50);
+ setTimeout(_adjustAnkComposerForKeyboard,350);
+ }
+});
+document.addEventListener('focusout',e=>{
+ if(e.target&&e.target.id==='ankComposerInput'){
+ setTimeout(_adjustAnkComposerForKeyboard,50);
+ setTimeout(_adjustAnkComposerForKeyboard,350);
  }
 });
 /* 체크박스는 contenteditable="false" 라벨(수정 불가 섬) 안에 있는데, 그 섬을 탭하면
@@ -6475,15 +6558,21 @@ function updateHomeroomFab(){
  "다음"류 버튼과 이 FAB이 겹쳐서 클릭을 가로채는 문제가 있어, 이 탭에서는
  아예 숨긴다. */
  const wrap=document.getElementById('tabFabWrap');
- if(_activeHrTab==='hrProgramTab'){if(wrap)wrap.style.display='none';closeTabFab();return;}
+ if(_activeHrTab==='hrProgramTab'){if(wrap)wrap.style.display='none';_setMobileFabCombo(false);closeTabFab();return;}
  if(wrap)wrap.style.display='flex';
- main.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
+ _setMobileFabCombo(true);
+ main.innerHTML='<span style="font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">⚙️</span>';
  items.innerHTML=`<div class="tab-fab-item"><button onclick="openHrClassSetting();closeTabFab()">담임 학급 설정</button></div>`;
+}
+function _setMobileFabCombo(combo){
+ const sb=document.getElementById('saveBtn');
+ if(sb)sb.style.right=combo?'calc(58px + env(safe-area-inset-right))':'';
 }
 function updateTabFab(sectionId){
  const wrap=document.getElementById('tabFabWrap');
  if(!wrap)return;
  const fabSections=['homeroom','students','bookmarks','memos','notepad'];
+ _setMobileFabCombo(fabSections.includes(sectionId));
  if(!fabSections.includes(sectionId)){wrap.style.display='none';closeTabFab();return;}
  wrap.style.display='flex';
  closeTabFab();
@@ -6635,8 +6724,8 @@ renderFavBar();
  <nav class="drawer-nav-list" id="drawerNavList"></nav>
  <div class="drawer-footer" style="flex-direction:column;gap:8px;align-items:stretch;">
  <div style="display:flex;gap:8px;">
- <button onclick="exportAllData()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg><span>백업 저장</span></button>
- <button onclick="document.getElementById('importFileInput').click()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"></path><path d="M7 14l5-5 5 5"></path><path d="M5 3h14"></path></svg><span>백업 복원</span></button>
+ <button onclick="exportAllData()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📥</span><span>백업 저장</span></button>
+ <button onclick="document.getElementById('importFileInput').click()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;"><span style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">📤</span><span>백업 복원</span></button>
  </div>
  <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="importAllData(this.files[0])">
  <div style="font-size:0.7rem;color:var(--text-secondary);text-align:center;">정기적으로 백업 저장을 눌러 데이터를 안전하게 보관하세요</div>
@@ -6753,7 +6842,7 @@ window.addEventListener('pageshow', (event) => {
 <div class="arc-fab-wrap">
  <div class="arc-fab-backdrop" id="arcFabBackdrop" onclick="closeArcFab()"></div>
  <div id="arcFabItems"></div>
- <button class="arc-fab-main" id="arcFabMain" onmousedown="arcFabPointerDown()" onmouseup="arcFabPointerUp()" onmouseleave="arcFabPointerCancel()" ontouchstart="arcFabPointerDown(event)" ontouchmove="arcFabDragMove(event)" ontouchend="arcFabPointerUp(event)" ontouchcancel="arcFabPointerCancel()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></button>
+ <button class="arc-fab-main" id="arcFabMain" onmousedown="arcFabPointerDown()" onmouseup="arcFabPointerUp()" onmouseleave="arcFabPointerCancel()" ontouchstart="arcFabPointerDown(event)" ontouchmove="arcFabDragMove(event)" ontouchend="arcFabPointerUp(event)" ontouchcancel="arcFabPointerCancel()"><span style="font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center;">🏠</span></button>
 </div>
 </body>
 </html>
