@@ -462,6 +462,89 @@ textarea{resize:vertical;min-height:80px;}
 .deadline-warn{background:rgba(252,211,77,0.2);color:#D97706;}
 .deadline-over{background:rgba(239,68,68,0.2);color:#EF4444;}
 .hr-unsubmitted{margin-top:16px;}
+/* ═══ 담임 프로그램(자리 바꾸기 등) ═══ */
+.hr-program-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+.hr-program-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all 0.2s;font-family:inherit;text-align:center;}
+.hr-program-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow);}
+.hr-program-icon{font-size:2rem;}
+.hr-program-name{font-weight:700;font-size:0.95rem;color:var(--text);}
+.hr-program-desc{font-size:0.74rem;color:var(--text-secondary);}
+.seat-back-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.seat-back-btn{background:none;border:none;cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;padding:4px;border-radius:8px;}
+.seat-back-btn:hover{background:var(--surface2);color:var(--text);}
+.seat-entry-title{font-weight:700;font-size:1.05rem;}
+.seat-entry-center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:64px 20px;}
+.seat-entry-icon{font-size:3rem;margin-bottom:18px;opacity:0.8;}
+.seat-entry-actions{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:12px;}
+.seat-wizard-steps{display:flex;gap:6px;margin-left:auto;}
+.seat-wizard-step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all 0.2s;}
+.seat-wizard-step-dot.active{background:var(--primary);width:22px;border-radius:5px;}
+.seat-layout{display:flex;gap:20px;align-items:flex-start;}
+.seat-roster{width:170px;flex-shrink:0;background:var(--surface2);border-radius:14px;padding:12px;max-height:640px;overflow-y:auto;}
+.seat-roster-title{font-size:0.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;padding:0 4px;}
+.seat-roster-item{padding:8px 10px;border-radius:8px;font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:6px;}
+.seat-roster-item .n{color:var(--text-secondary);font-weight:400;font-size:0.78rem;width:20px;flex-shrink:0;}
+.seat-editor{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
+.seat-editor-controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;align-items:center;}
+.seat-toggle-group{display:flex;background:var(--surface2);border-radius:999px;padding:3px;gap:2px;}
+.seat-toggle-btn{padding:8px 16px;border-radius:999px;border:none;background:none;font-size:0.84rem;font-weight:700;color:var(--text-secondary);cursor:pointer;font-family:inherit;white-space:nowrap;}
+.seat-toggle-btn.active{background:var(--primary);color:#fff;}
+.seat-size-group{display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:999px;padding:5px 12px;font-size:0.84rem;font-weight:700;color:var(--text-secondary);}
+.seat-size-input{width:38px;padding:5px 2px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);text-align:center;font-family:inherit;font-weight:700;}
+.seat-board-wrap{display:inline-flex;flex-direction:column;gap:16px;margin:0 auto;}
+.seat-board-label{text-align:center;font-size:0.8rem;font-weight:700;color:var(--text-secondary);background:var(--surface2);border-radius:8px;padding:8px;letter-spacing:0.15em;}
+.seat-grid-wrap{display:flex;justify-content:center;overflow-x:auto;padding:4px;}
+.seat-grid{display:inline-grid;row-gap:12px;}
+.seat-cell{width:min(72px,8vw);height:min(72px,8vw);border-radius:12px;border:2px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.78rem;font-weight:700;text-align:center;position:relative;overflow:hidden;padding:2px;color:var(--text);transition:all 0.15s;line-height:1.15;}
+.seat-cell:hover{border-color:var(--primary);}
+.seat-cell.disabled{background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 4px,var(--border) 4px,var(--border) 5px);color:var(--text-secondary);}
+.seat-cell.filled{background:var(--primary);color:#fff;border-color:var(--primary);}
+.seat-cell.filled.gender-f{background:#FBCFE8;color:#7A2E55;border-color:#F9A8D4;}
+.seat-cell.filled.gender-m{background:#BFDBFE;color:#1E3A5F;border-color:#93C5FD;}
+.seat-cell.fixed{box-shadow:0 0 0 2px #F59E0B;}
+.seat-cell.picked{outline:3px solid var(--primary);outline-offset:1px;}
+.seat-gap-spacer{width:100%;height:100%;}
+.seat-settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:0;}
+.seat-setting-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color 0.15s;display:flex;flex-direction:column;}
+.seat-setting-card:hover{border-color:var(--primary);}
+.seat-setting-title{font-weight:700;font-size:0.9rem;margin-bottom:4px;color:var(--text);}
+.seat-setting-desc{font-size:0.74rem;color:var(--text-secondary);line-height:1.4;}
+.seat-setting-badge{display:inline-block;margin-top:6px;font-size:0.7rem;font-weight:700;color:var(--primary);background:rgba(31,107,91,0.1);border-radius:20px;padding:2px 8px;align-self:flex-start;}
+.seat-rule-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.seat-rule-row .seat-toggle-btn{flex:1 1 auto;padding:6px 8px;font-size:0.72rem;border-radius:8px;text-align:center;}
+.seat-wizard-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.seat-pick-list{display:flex;flex-wrap:wrap;gap:6px;max-height:340px;overflow-y:auto;padding:2px;}
+.seat-pick-chip{padding:7px 12px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface2);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text);}
+.seat-pick-chip.on{background:var(--primary);color:#fff;border-color:var(--primary);}
+.seat-pick-chip.gender-m{border-color:#60A5FA;}
+.seat-pick-chip.gender-f{border-color:#F472B6;}
+/* ═══ 청소 당번 뽑기 ═══ */
+.clean-cal-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px;}
+.clean-date-input{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:inherit;font-size:0.84rem;font-weight:600;}
+.clean-cal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.clean-cal-header{text-align:center;font-size:0.8rem;font-weight:700;color:var(--text-secondary);padding-bottom:6px;}
+.clean-cal-day{min-height:70px;border-radius:12px;border:2px solid var(--border);background:var(--surface2);padding:8px;cursor:pointer;font-size:0.82rem;font-weight:700;transition:border-color 0.15s;overflow:hidden;color:var(--text);}
+.clean-cal-day:hover{border-color:var(--primary);}
+.clean-cal-day.out-of-range{opacity:0.32;pointer-events:none;}
+.clean-cal-day.holiday{background:rgba(239,68,68,0.12);border-color:#EF4444;color:#B91C1C;}
+.clean-cal-day-reason{font-size:0.7rem;font-weight:600;color:#B91C1C;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.clean-result-chip{padding:5px 12px;border-radius:999px;background:var(--surface);font-size:0.8rem;font-weight:600;border:1px solid var(--border);}
+.clean-result-chip.board{background:var(--primary);color:#fff;border-color:var(--primary);}
+.clean-result-cal-day{min-height:92px;cursor:default;display:flex;flex-direction:column;align-items:stretch;}
+.clean-result-cal-day:hover{border-color:var(--border);}
+.clean-result-cal-day.holiday .clean-result-cal-date{color:#B91C1C;}
+.clean-result-cal-date{font-size:0.78rem;font-weight:700;margin-bottom:6px;}
+.clean-result-cal-names{display:flex;flex-direction:column;gap:4px;}
+.clean-result-chip.small{padding:3px 6px;font-size:0.7rem;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.clean-result-cal-empty{font-size:0.7rem;color:var(--text-secondary);}
+@media print{
+ body *{visibility:hidden;}
+ #seatPrintArea,#seatPrintArea *,#cleanPrintArea,#cleanPrintArea *{visibility:visible;}
+ #seatPrintArea,#cleanPrintArea{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+ #seatPrintArea .seat-grid-wrap{overflow:visible;padding:0;}
+ #cleanPrintArea .clean-cal-grid{width:auto;}
+ @page{size:A4 landscape;margin:12mm;}
+}
 @media(max-width:600px){
  .hr-cal-day{min-height:56px;padding:2px 1px;}
  .hr-cal-day-num{width:22px;height:22px;font-size:0.72rem;}
@@ -789,6 +872,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="sub-nav" id="homeroomSubNav">
  <button class="sub-nav-btn active" onclick="showHrTab('hrCalendarTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span>캘린더</span></button>
 <button class="sub-nav-btn" onclick="showHrTab('hrNoticeTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg><span>오늘의 안내사항</span></button>
+<button class="sub-nav-btn" onclick="showHrTab('hrProgramTab',this)" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg><span>프로그램</span></button>
 </div>
  <div id="hrCalendarTab">
  <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:16px;">
@@ -814,6 +898,9 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  <div id="hrNoticeTab" style="display:none;">
  <div id="hrNoticeContent"></div>
+ </div>
+ <div id="hrProgramTab" style="display:none;">
+ <div id="hrProgramContent"></div>
  </div>
 </section>
  <section id="timetable" class="section">
@@ -1023,6 +1110,14 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <span id="titlePreviewText" style="font-size:1.3rem;font-weight:700;"></span>
  </div>
  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('titleEditorModal')">취소</button><button class="btn btn-primary" onclick="saveTitle()">저장</button></div>
+ </div>
+</div>
+<!-- 모달: 자리 바꾸기 설정 -->
+<div class="modal-overlay" id="seatModal">
+ <div class="modal" style="max-width:480px;">
+ <div class="modal-title" id="seatModalTitle"></div>
+ <div id="seatModalBody"></div>
+ <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('seatModal');if(_modalConfirmCallback)_modalConfirmCallback();">확인</button></div>
  </div>
 </div>
 <!-- 모달: 학급 추가 -->
@@ -1362,7 +1457,7 @@ function _applyThemeCSSVars(color){
  root.style.setProperty('--shadow','0 4px 6px -1px rgba(0,0,0,0.45)');
  }
 }
-const DB={get:k=>JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone'?'{}':'[]')),set:(k,v)=>{localStorage.setItem(k,JSON.stringify(v));_scheduleAutoBackup();}};
+const DB={get:k=>JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone'||k==='seatCharts'||k==='cleaningCharts'?'{}':'[]')),set:(k,v)=>{localStorage.setItem(k,JSON.stringify(v));_scheduleAutoBackup();}};
 /* ── 하위 탭(sub-nav): 공간이 남으면 균등 분할, 넘치면 슬라이드 ── */
 function _applyFitBtnStyle(b){
  b.style.width='';
@@ -2988,6 +3083,823 @@ function deleteAnkEntry(id){
  showToast('삭제되었습니다');
 }
 
+/* ══════════════════ 담임 프로그램 ══════════════════ */
+function renderProgramTab(){
+ const wrap=document.getElementById('hrProgramContent');
+ if(!wrap)return;
+ wrap.innerHTML=`<div class="hr-program-list">
+ <button class="hr-program-card" onclick="openSeatProgram()"><div class="hr-program-icon">🪑</div><div class="hr-program-name">자리 바꾸기</div><div class="hr-program-desc">랜덤으로 자리를 배치해요</div></button>
+ <button class="hr-program-card" onclick="openCleaningProgram()"><div class="hr-program-icon">🧹</div><div class="hr-program-name">청소 당번 뽑기</div><div class="hr-program-desc">기간별로 당번을 배정해요</div></button>
+ </div>`;
+}
+function _seatMyClass(){
+ if(!hrSelectedClassId){showToast('⚠️ 먼저 담임 학급을 설정해주세요');return null;}
+ return DB.get('classes').find(c=>c.id===hrSelectedClassId)||null;
+}
+function openSeatProgram(){
+ const cls=_seatMyClass();
+ const wrap=document.getElementById('hrProgramContent');
+ if(!cls){renderProgramTab();return;}
+ const saved=DB.get('seatCharts')[cls.id];
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">🪑 자리 바꾸기 — ${cls.grade}학년 ${cls.classNum}반</span></div>
+ <div class="seat-entry-center">
+ <div class="seat-entry-icon">🪑</div>
+ <div class="seat-entry-actions">
+ <button class="btn btn-primary" onclick="startSeatWizard()">${saved?'새로 자리 만들기':'자리 만들기 시작'}</button>
+ ${saved?`<button class="btn btn-secondary" onclick="viewSavedSeatChart()">이전 자리 보기</button>`:''}
+ </div>
+ </div>`;
+}
+function _seatResetState(){
+ const cls=_seatMyClass();
+ const roster=cls?[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
+ _seat={
+ step:1,
+ classId:cls?cls.id:null,
+ students:roster.map(s=>({id:s.id,number:s.number,name:s.name,gender:null,fixedSeat:null,frontPref:false})),
+ rows:5,cols:6,pairMode:false,viewMode:'teacher',
+ disabled:new Set(),
+ pairAssign:[],pairExclude:[],genderRule:'none',
+ result:null,picked:null,
+ };
+}
+let _seat=null;
+function startSeatWizard(){
+ if(!_seatMyClass())return;
+ _seatResetState();
+ renderSeatStep1();
+}
+function _seatStepDots(){
+ return `<div class="seat-wizard-steps">${[1,2,3].map(n=>`<span class="seat-wizard-step-dot${_seat.step===n?' active':''}"></span>`).join('')}</div>`;
+}
+function _seatRosterHtml(highlightFn){
+ return _seat.students.map(s=>{
+ const extra=highlightFn?highlightFn(s):'';
+ return `<div class="seat-roster-item"><span class="n">${s.number??''}</span><span>${escHtml(s.name)}</span>${extra}</div>`;
+ }).join('')||'<div style="font-size:0.8rem;color:var(--text-secondary);padding:8px 4px;">학생이 없어요</div>';
+}
+function _seatBoardWrapHtml(gridHtml){
+ const boardLabel=`<div class="seat-board-label">🖍 칠 판</div>`;
+ return `<div class="seat-grid-wrap"><div class="seat-board-wrap">${_seat.viewMode==='student'?boardLabel:''}${gridHtml}${_seat.viewMode==='teacher'?boardLabel:''}</div></div>`;
+}
+function renderSeatStep1(){
+ const wrap=document.getElementById('hrProgramContent');
+ if(!wrap||!_seat)return;
+ const gridHtml=_seatBuildGridHtml('layout');
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openSeatProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">자리 형식 설정</span>${_seatStepDots()}</div>
+ <div class="seat-layout">
+ <div class="seat-roster"><div class="seat-roster-title">우리 반 (${_seat.students.length}명)</div>${_seatRosterHtml()}</div>
+ <div class="seat-editor">
+ <div class="seat-editor-controls">
+ <div class="seat-toggle-group">
+ <button type="button" class="seat-toggle-btn${_seat.viewMode==='teacher'?' active':''}" onclick="_seatSet('viewMode','teacher')">교사 시점</button>
+ <button type="button" class="seat-toggle-btn${_seat.viewMode==='student'?' active':''}" onclick="_seatSet('viewMode','student')">학생 시점</button>
+ </div>
+ <div class="seat-toggle-group">
+ <button type="button" class="seat-toggle-btn${!_seat.pairMode?' active':''}" onclick="_seatSet('pairMode',false)">개별 자리</button>
+ <button type="button" class="seat-toggle-btn${_seat.pairMode?' active':''}" onclick="_seatSet('pairMode',true)">짝 형식</button>
+ </div>
+ <div class="seat-size-group"><input type="number" min="1" max="12" class="seat-size-input" value="${_seat.rows}" onchange="_seatSetSize('rows',this.value)"> × <input type="number" min="1" max="12" class="seat-size-input" value="${_seat.cols}" onchange="_seatSetSize('cols',this.value)"></div>
+ </div>
+ <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:10px;">배치하지 않을 자리는 눌러서 X 표시해주세요.</p>
+ ${_seatBoardWrapHtml(gridHtml)}
+ </div>
+ </div>
+ <div class="seat-wizard-footer"><button class="btn btn-primary" onclick="seatGoStep2()">다음 →</button></div>
+ `;
+}
+function _seatSet(key,val){_seat[key]=val;renderSeatStep1();}
+function _seatSetSize(key,val){
+ const n=Math.max(1,Math.min(12,parseInt(val)||1));
+ _seat[key]=n;
+ _seat.disabled=new Set(); /* 크기가 바뀌면 인덱스 체계가 달라지므로 초기화 */
+ renderSeatStep1();
+}
+function _seatBuildGridHtml(mode){
+ const{rows,cols,pairMode}=_seat;
+ const cellTrack='min(72px,8vw)';
+ const gapTrack=pairMode?'10px':'16px';
+ const pairGapTrack='28px';
+ /* 짝 형식일 땐 CSS gap을 균일하게 늘리는 대신, 짝 그룹 경계에만 별도의
+ "여백 트랙"을 실제로 끼워 넣는다 — 그리드 트랙은 고정 크기라 margin으로
+ 특정 칸 사이만 벌리려 하면 다음 칸과 겹쳐버려 효과가 없기 때문이다. */
+ const colTemplate=[];
+ for(let c=0;c<cols;c++){
+ colTemplate.push(cellTrack);
+ if(pairMode&&c%2===1&&c!==cols-1)colTemplate.push(pairGapTrack);
+ }
+ let html=`<div class="seat-grid" style="grid-template-columns:${colTemplate.join(' ')};column-gap:${gapTrack};">`;
+ for(let r=0;r<rows;r++){
+ for(let c=0;c<cols;c++){
+ const idx=r*cols+c;
+ const isDisabled=_seat.disabled.has(idx);
+ let cellCls='seat-cell'+(isDisabled?' disabled':'');
+ let label=isDisabled?'✕':'';
+ let onclick=`onclick="_seatCellClickMode1(${idx})"`;
+ if(mode==='fixed'){
+ const occ=_seat.students.find(s=>s.fixedSeat===idx);
+ if(occ){cellCls+=' filled fixed';label=escHtml(occ.name);}
+ onclick=`onclick="_seatFixedCellClick(${idx})"`;
+ }else if(mode==='result'&&_seat.result){
+ const sid=_seat.result[idx];
+ const st=sid!=null?_seat.students.find(s=>s.id===sid):null;
+ if(isDisabled){label='';}
+ else if(st){
+ cellCls+=' filled'+(_seat.picked===idx?' picked':'');
+ if(st.gender==='F')cellCls+=' gender-f';else if(st.gender==='M')cellCls+=' gender-m';
+ label=escHtml(st.name);
+ }
+ onclick=`onclick="seatResultCellClick(${idx})"`;
+ }
+ html+=`<div class="${cellCls}" ${isDisabled&&mode!=='layout'?'':onclick}>${label}</div>`;
+ if(pairMode&&c%2===1&&c!==cols-1)html+='<div class="seat-gap-spacer"></div>';
+ }
+ }
+ html+='</div>';
+ return html;
+}
+function _seatCellClickMode1(idx){
+ if(_seat.disabled.has(idx))_seat.disabled.delete(idx);
+ else _seat.disabled.add(idx);
+ renderSeatStep1();
+}
+function seatGoStep2(){
+ const total=_seat.rows*_seat.cols-_seat.disabled.size;
+ if(total<_seat.students.length){
+ showToast(`⚠️ 사용 가능한 자리(${total})가 학생 수(${_seat.students.length})보다 적어요`);
+ return;
+ }
+ _seat.step=2;
+ renderSeatStep2();
+}
+function renderSeatStep2(){
+ const wrap=document.getElementById('hrProgramContent');
+ if(!wrap||!_seat)return;
+ const fixedCnt=_seat.students.filter(s=>s.fixedSeat!=null).length;
+ const genderCnt=_seat.students.filter(s=>s.gender).length;
+ const frontCnt=_seat.students.filter(s=>s.frontPref).length;
+ const teacherCnt=_seat.pairAssign.length+_seat.pairExclude.length;
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_seat.step=1;renderSeatStep1();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">배치 설정</span>${_seatStepDots()}</div>
+ <div class="seat-settings-grid">
+ <button class="seat-setting-card" onclick="openSeatSetting('fixed')"><div class="seat-setting-title">📍 학생 자리 지정</div><div class="seat-setting-desc">특정 학생의 자리를 미리 정해둬요</div>${fixedCnt?`<span class="seat-setting-badge">${fixedCnt}명 지정됨</span>`:''}</button>
+ <button class="seat-setting-card" onclick="openSeatSetting('gender')"><div class="seat-setting-title">🚻 성별 지정</div><div class="seat-setting-desc">학생별 성별을 지정해요</div>${genderCnt?`<span class="seat-setting-badge">${genderCnt}명 지정됨</span>`:''}</button>
+ <button class="seat-setting-card" onclick="openSeatSetting('front')"><div class="seat-setting-title">👀 앞자리 선호</div><div class="seat-setting-desc">1~2번째 줄에서만 배치돼요</div>${frontCnt?`<span class="seat-setting-badge">${frontCnt}명 지정됨</span>`:''}</button>
+ <button class="seat-setting-card" onclick="openSeatSetting('teacher')"><div class="seat-setting-title">🧑‍🏫 교사 설정</div>${teacherCnt?`<span class="seat-setting-badge">${teacherCnt}건 설정됨</span>`:''}</button>
+ <div class="seat-setting-card" style="cursor:default;">
+ <div class="seat-setting-title">⚖️ 성별 배치 규칙</div>
+ <div class="seat-rule-row">
+ <button type="button" class="seat-toggle-btn${_seat.genderRule==='none'?' active':''}" onclick="_seat.genderRule='none';renderSeatStep2();">고려 안함</button>
+ <button type="button" class="seat-toggle-btn${_seat.genderRule==='same'?' active':''}" onclick="_seat.genderRule='same';renderSeatStep2();">같은 성별 짝꿍</button>
+ <button type="button" class="seat-toggle-btn${_seat.genderRule==='mixed'?' active':''}" onclick="_seat.genderRule='mixed';renderSeatStep2();">남녀 혼성 짝꿍</button>
+ </div>
+ </div>
+ </div>
+ <div class="seat-wizard-footer"><button class="btn btn-primary" onclick="seatGoStep3()">자리 배치 →</button></div>
+ `;
+}
+let _seatModalKind=null,_seatFixedPicked=null,_seatTeacherMode='assign',_seatTeacherPicked=null;
+let _modalConfirmCallback=null;
+function openSeatSetting(kind){
+ _seatModalKind=kind;
+ _seatFixedPicked=null;_seatTeacherPicked=null;
+ _modalConfirmCallback=renderSeatStep2;
+ const titles={fixed:'📍 학생 자리 지정',gender:'🚻 성별 지정',front:'👀 앞자리 선호',teacher:'🧑‍🏫 교사 설정'};
+ document.getElementById('seatModalTitle').textContent=titles[kind];
+ _renderSeatModalBody();
+ openModal('seatModal');
+}
+function _renderSeatModalBody(){
+ const body=document.getElementById('seatModalBody');
+ if(!body)return;
+ if(_seatModalKind==='fixed'){
+ body.innerHTML=`<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">학생을 먼저 선택하고, 자리를 눌러 지정하세요. 지정된 자리를 다시 누르면 해제돼요.</p>
+ <div class="seat-pick-list" style="margin-bottom:14px;">${_seat.students.map(s=>`<button type="button" class="seat-pick-chip${_seatFixedPicked===s.id?' on':''}" onclick="_seatFixedPick(${s.id})">${s.number?s.number+'번 ':''}${escHtml(s.name)}${s.fixedSeat!=null?' 📍':''}</button>`).join('')}</div>
+ <div class="seat-grid-wrap">${_seatBuildGridHtml('fixed')}</div>`;
+ }else if(_seatModalKind==='gender'){
+ body.innerHTML=`<div class="seat-pick-list">${_seat.students.map(s=>`
+ <div style="display:flex;align-items:center;gap:8px;width:100%;padding:6px 2px;border-bottom:1px solid var(--border);">
+ <span style="flex:1;font-size:0.88rem;font-weight:600;">${s.number?s.number+'번 ':''}${escHtml(s.name)}</span>
+ <button type="button" class="seat-pick-chip gender-m${s.gender==='M'?' on':''}" onclick="_seatSetGender(${s.id},'M')">남</button>
+ <button type="button" class="seat-pick-chip gender-f${s.gender==='F'?' on':''}" onclick="_seatSetGender(${s.id},'F')">여</button>
+ </div>`).join('')}</div>`;
+ }else if(_seatModalKind==='front'){
+ body.innerHTML=`<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">선택한 학생은 1~2번째 줄에서만 랜덤 배치돼요.</p>
+ <div class="seat-pick-list">${_seat.students.map(s=>`<button type="button" class="seat-pick-chip${s.frontPref?' on':''}" onclick="_seatToggleFront(${s.id})">${s.number?s.number+'번 ':''}${escHtml(s.name)}</button>`).join('')}</div>`;
+ }else if(_seatModalKind==='teacher'){
+ const pairHtml=(arr,removeFn)=>arr.length?arr.map((pair,i)=>{
+ const n1=_seat.students.find(s=>s.id===pair[0])?.name||'?',n2=_seat.students.find(s=>s.id===pair[1])?.name||'?';
+ return `<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:0.85rem;"><span style="flex:1;">${escHtml(n1)} ↔ ${escHtml(n2)}</span><button class="btn-icon" onclick="${removeFn}(${i})">✕</button></div>`;
+ }).join(''):'<div style="font-size:0.8rem;color:var(--text-secondary);padding:6px 2px;">없음</div>';
+ body.innerHTML=`
+ <div class="seat-toggle-group" style="margin-bottom:14px;">
+ <button type="button" class="seat-toggle-btn${_seatTeacherMode==='assign'?' active':''}" onclick="_seatTeacherMode='assign';_seatTeacherPicked=null;_renderSeatModalBody();">짝 지정</button>
+ <button type="button" class="seat-toggle-btn${_seatTeacherMode==='exclude'?' active':''}" onclick="_seatTeacherMode='exclude';_seatTeacherPicked=null;_renderSeatModalBody();">짝 제외</button>
+ </div>
+ <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:10px;">${_seatTeacherMode==='assign'?'짝이 될 두 학생을 순서대로 선택하세요.':'짝이 되면 안 되는 두 학생을 순서대로 선택하세요.'}</p>
+ <div class="seat-pick-list" style="margin-bottom:14px;">${_seat.students.map(s=>`<button type="button" class="seat-pick-chip${_seatTeacherPicked===s.id?' on':''}" onclick="_seatTeacherPick(${s.id})">${s.number?s.number+'번 ':''}${escHtml(s.name)}</button>`).join('')}</div>
+ <div style="font-size:0.82rem;font-weight:700;margin-bottom:4px;">짝 지정 목록</div>
+ ${pairHtml(_seat.pairAssign,'_seatRemovePair_assign')}
+ <div style="font-size:0.82rem;font-weight:700;margin:10px 0 4px;">짝 제외 목록</div>
+ ${pairHtml(_seat.pairExclude,'_seatRemovePair_exclude')}
+ `;
+ }
+}
+function _seatFixedPick(id){
+ if(_seatFixedPicked===id){_seatFixedPicked=null;}
+ else _seatFixedPicked=id;
+ _renderSeatModalBody();
+}
+function _seatFixedCellClick(idx){
+ if(_seat.disabled.has(idx))return;
+ const occ=_seat.students.find(s=>s.fixedSeat===idx);
+ if(_seatFixedPicked!=null){
+ _seat.students.forEach(s=>{if(s.fixedSeat===idx)s.fixedSeat=null;});
+ const picked=_seat.students.find(s=>s.id===_seatFixedPicked);
+ if(picked)picked.fixedSeat=idx;
+ _seatFixedPicked=null;
+ }else if(occ){
+ occ.fixedSeat=null;
+ }
+ _renderSeatModalBody();
+}
+function _seatSetGender(id,g){
+ const s=_seat.students.find(x=>x.id===id);
+ if(!s)return;
+ s.gender=s.gender===g?null:g;
+ _renderSeatModalBody();
+}
+function _seatToggleFront(id){
+ const s=_seat.students.find(x=>x.id===id);
+ if(!s)return;
+ s.frontPref=!s.frontPref;
+ _renderSeatModalBody();
+}
+function _seatTeacherPick(id){
+ if(_seatTeacherPicked==null){_seatTeacherPicked=id;_renderSeatModalBody();return;}
+ if(_seatTeacherPicked===id){_seatTeacherPicked=null;_renderSeatModalBody();return;}
+ const pair=[_seatTeacherPicked,id];
+ const arr=_seatTeacherMode==='assign'?_seat.pairAssign:_seat.pairExclude;
+ const exists=arr.some(p=>(p[0]===pair[0]&&p[1]===pair[1])||(p[0]===pair[1]&&p[1]===pair[0]));
+ if(!exists)arr.push(pair);
+ _seatTeacherPicked=null;
+ _renderSeatModalBody();
+}
+function _seatRemovePair_assign(i){_seat.pairAssign.splice(i,1);_renderSeatModalBody();}
+function _seatRemovePair_exclude(i){_seat.pairExclude.splice(i,1);_renderSeatModalBody();}
+
+/* ── 자리 배치 알고리즘 ── */
+function _seatRC(idx){return{row:Math.floor(idx/_seat.cols),col:idx%_seat.cols};}
+function _seatPartnerSeat(idx){
+ /* 짝 형식: (0,1)(2,3)(4,5)... 컬럼 그룹의 나머지 한 자리. 개별 자리: 바로 옆(좌우) 자리. */
+ const{row,col}=_seatRC(idx);
+ let pc;
+ if(_seat.pairMode)pc=col%2===0?col+1:col-1;
+ else pc=col%2===0?col+1:col-1; /* 개별 자리도 "양 옆"은 동일한 좌우 이웃 산식 사용 */
+ if(pc<0||pc>=_seat.cols)return null;
+ const pIdx=row*_seat.cols+pc;
+ if(_seat.disabled.has(pIdx))return null;
+ return pIdx;
+}
+function _seatNeighborSeats(idx){
+ const{row,col}=_seatRC(idx);
+ const out=[];
+ for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+ if(dr===0&&dc===0)continue;
+ const r=row+dr,c=col+dc;
+ if(r<0||r>=_seat.rows||c<0||c>=_seat.cols)continue;
+ const nIdx=r*_seat.cols+c;
+ if(_seat.disabled.has(nIdx))continue;
+ out.push(nIdx);
+ }
+ return out;
+}
+function _seatAllPairGroups(){
+ const groups=[];
+ for(let row=0;row<_seat.rows;row++){
+ for(let col=0;col<_seat.cols;col++){
+ const idx=row*_seat.cols+col;
+ if(_seat.disabled.has(idx))continue;
+ if(_seat.pairMode){
+ if(col%2===0){
+ const pIdx=idx+1;
+ if(col+1<_seat.cols&&!_seat.disabled.has(pIdx))groups.push([idx,pIdx]);
+ }
+ }else{
+ const pIdx=idx+1;
+ if(col+1<_seat.cols&&!_seat.disabled.has(pIdx))groups.push([idx,pIdx]);
+ }
+ }
+ }
+ return groups;
+}
+function _seatShuffle(arr){
+ const a=arr.slice();
+ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+ return a;
+}
+function _seatCheckValid(seatOf,studentAt){
+ /* seatOf: studentId -> seatIndex, studentAt: seatIndex -> studentId */
+ for(const[a,b]of _seat.pairAssign){
+ const sa=seatOf[a],sb=seatOf[b];
+ if(sa==null||sb==null)continue;
+ if(_seatPartnerSeat(sa)!==sb)return false;
+ }
+ for(const[a,b]of _seat.pairExclude){
+ const sa=seatOf[a],sb=seatOf[b];
+ if(sa==null||sb==null)continue;
+ if(_seatNeighborSeats(sa).includes(sb))return false;
+ }
+ if(_seat.genderRule!=='none'){
+ for(const[i1,i2]of _seatAllPairGroups()){
+ const s1=studentAt[i1],s2=studentAt[i2];
+ if(s1==null||s2==null)continue;
+ const g1=_seat.students.find(s=>s.id===s1)?.gender;
+ const g2=_seat.students.find(s=>s.id===s2)?.gender;
+ if(!g1||!g2)continue;
+ if(_seat.genderRule==='same'&&g1!==g2)return false;
+ if(_seat.genderRule==='mixed'&&g1===g2)return false;
+ }
+ }
+ return true;
+}
+function _seatRunPlacement(){
+ const allSeats=[];
+ for(let i=0;i<_seat.rows*_seat.cols;i++)if(!_seat.disabled.has(i))allSeats.push(i);
+ const frontSeatSet=new Set(allSeats.filter(i=>_seatRC(i).row<2));
+ let best=null;
+ for(let attempt=0;attempt<1500;attempt++){
+ const studentAt={},seatOf={};
+ const usedSeats=new Set();
+ _seat.students.forEach(s=>{if(s.fixedSeat!=null&&!_seat.disabled.has(s.fixedSeat)){studentAt[s.fixedSeat]=s.id;seatOf[s.id]=s.fixedSeat;usedSeats.add(s.fixedSeat);}});
+ let remaining=_seat.students.filter(s=>seatOf[s.id]==null);
+ let freeSeats=allSeats.filter(i=>!usedSeats.has(i));
+ /* 앞자리 선호 학생 먼저 배치 */
+ const frontPrefStudents=_seatShuffle(remaining.filter(s=>s.frontPref));
+ const freeFrontSeats=_seatShuffle(freeSeats.filter(i=>frontSeatSet.has(i)));
+ const placedIds=new Set();
+ frontPrefStudents.forEach((s,i)=>{
+ if(i<freeFrontSeats.length){
+ const seat=freeFrontSeats[i];
+ studentAt[seat]=s.id;seatOf[s.id]=seat;usedSeats.add(seat);placedIds.add(s.id);
+ }
+ });
+ remaining=remaining.filter(s=>!placedIds.has(s.id));
+ freeSeats=freeSeats.filter(i=>!usedSeats.has(i));
+ /* 나머지 랜덤 배치 */
+ const shuffledStudents=_seatShuffle(remaining);
+ const shuffledSeats=_seatShuffle(freeSeats);
+ shuffledStudents.forEach((s,i)=>{
+ const seat=shuffledSeats[i];
+ if(seat==null)return;
+ studentAt[seat]=s.id;seatOf[s.id]=seat;
+ });
+ if(shuffledStudents.length>shuffledSeats.length)continue; /* 자리 부족(이론상 사전 검증되어 발생 안 함) */
+ if(_seatCheckValid(seatOf,studentAt)){best=studentAt;break;}
+ if(!best)best=studentAt; /* 완벽하지 않아도 최소한 하나는 보관 */
+ }
+ return best;
+}
+function seatGoStep3(){
+ const result=_seatRunPlacement();
+ if(!result){showToast('⚠️ 배치에 실패했어요. 조건을 완화해주세요');return;}
+ _seat.result=result;
+ _seat.step=3;
+ _seat.picked=null;
+ renderSeatStep3();
+}
+function renderSeatStep3(){
+ const wrap=document.getElementById('hrProgramContent');
+ if(!wrap||!_seat)return;
+ const gridHtml=_seatBuildGridHtml('result');
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_seat.step=2;renderSeatStep2();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">배치 결과</span>${_seatStepDots()}</div>
+ <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">학생 두 명을 순서대로 누르면 자리를 서로 바꿔요.</p>
+ <div id="seatPrintArea">
+ ${_seatBoardWrapHtml(gridHtml)}
+ </div>
+ <div class="seat-wizard-footer">
+ <button class="btn btn-secondary" onclick="seatGoStep3()">다시 배치</button>
+ <button class="btn btn-secondary" onclick="printSeatChart()">🖨 PDF로 저장</button>
+ <button class="btn btn-primary" onclick="saveSeatChart()">자리 저장</button>
+ </div>
+ `;
+}
+function seatResultCellClick(idx){
+ if(_seat.disabled.has(idx))return;
+ if(_seat.picked==null){
+ if(_seat.result[idx]!=null){_seat.picked=idx;renderSeatStep3();}
+ return;
+ }
+ if(_seat.picked===idx){_seat.picked=null;renderSeatStep3();return;}
+ const a=_seat.picked,b=idx;
+ const tmp=_seat.result[a];
+ if(_seat.result[b]!=null)_seat.result[a]=_seat.result[b];else delete _seat.result[a];
+ if(tmp!=null)_seat.result[b]=tmp;else delete _seat.result[b];
+ _seat.picked=null;
+ renderSeatStep3();
+}
+function saveSeatChart(){
+ if(!_seat||!_seat.result||!_seat.classId)return;
+ const seats=Object.keys(_seat.result).map(k=>{
+ const sid=_seat.result[k];
+ const st=_seat.students.find(s=>s.id===sid);
+ return{seatIndex:Number(k),studentId:sid,studentName:st?st.name:''};
+ });
+ const charts=DB.get('seatCharts');
+ charts[_seat.classId]={
+ rows:_seat.rows,cols:_seat.cols,pairMode:_seat.pairMode,viewMode:_seat.viewMode,
+ disabled:[..._seat.disabled],seats,savedAt:Date.now()
+ };
+ DB.set('seatCharts',charts);
+ showToast('💾 자리가 저장되었습니다');
+}
+function _printAreaFit(areaId,contentSelector){
+ const area=document.getElementById(areaId);
+ const content=area?area.querySelector(contentSelector):null;
+ if(!content){window.print();return;}
+ content.style.zoom='';
+ const rect=content.getBoundingClientRect();
+ const pxPerMm=96/25.4;
+ const availW=(297-24)*pxPerMm,availH=(210-24)*pxPerMm;
+ const scale=Math.min(availW/rect.width,availH/rect.height);
+ content.style.zoom=String(Math.max(0.2,Math.min(3,scale)));
+ setTimeout(()=>{
+ window.print();
+ setTimeout(()=>{content.style.zoom='';},300);
+ },50);
+}
+function printSeatChart(){_printAreaFit('seatPrintArea','.seat-board-wrap');}
+function viewSavedSeatChart(){
+ const cls=_seatMyClass();
+ if(!cls)return;
+ const saved=DB.get('seatCharts')[cls.id];
+ if(!saved){showToast('저장된 자리가 없어요');return;}
+ _seatResetState();
+ _seat.rows=saved.rows;_seat.cols=saved.cols;_seat.pairMode=saved.pairMode;_seat.viewMode=saved.viewMode;
+ _seat.disabled=new Set(saved.disabled||[]);
+ _seat.result={};
+ (saved.seats||[]).forEach(s=>{_seat.result[s.seatIndex]=s.studentId;});
+ _seat.step=3;_seat.picked=null;
+ const wrap=document.getElementById('hrProgramContent');
+ const gridHtml=_seatBuildGridHtml('result');
+ const savedDate=new Date(saved.savedAt).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openSeatProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">저장된 자리</span><span style="margin-left:auto;font-size:0.76rem;color:var(--text-secondary);">${savedDate} 저장</span></div>
+ <div id="seatPrintArea">
+ ${_seatBoardWrapHtml(gridHtml)}
+ </div>
+ <div class="seat-wizard-footer">
+ <button class="btn btn-secondary" onclick="printSeatChart()">🖨 PDF로 저장</button>
+ <button class="btn btn-primary" onclick="startSeatWizard()">새로 만들기</button>
+ </div>
+ `;
+}
+
+/* ══════════════════ 청소 당번 뽑기 ══════════════════ */
+function _cleanFmtDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+let _clean=null;
+function _cleanResetState(){
+ const cls=_seatMyClass();
+ const roster=cls?[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
+ const today=new Date();
+ const monthStart=new Date(today.getFullYear(),today.getMonth(),1);
+ const monthEnd=new Date(today.getFullYear(),today.getMonth()+1,0);
+ _clean={
+ step:1,
+ classId:cls?cls.id:null,
+ students:roster.map(s=>({id:s.id,number:s.number,name:s.name})),
+ startDate:_cleanFmtDate(monthStart),
+ endDate:_cleanFmtDate(monthEnd),
+ holidays:{},
+ excluded:[],
+ dayExcluded:{},
+ dailyCount:2,
+ boardDuty:false,
+ mode:'sequential',
+ result:null,
+ };
+}
+function openCleaningProgram(){
+ const cls=_seatMyClass();
+ const wrap=document.getElementById('hrProgramContent');
+ if(!cls){renderProgramTab();return;}
+ const saved=DB.get('cleaningCharts')[cls.id];
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">🧹 청소 당번 뽑기 — ${cls.grade}학년 ${cls.classNum}반</span></div>
+ <div class="seat-entry-center">
+ <div class="seat-entry-icon">🧹</div>
+ <div class="seat-entry-actions">
+ <button class="btn btn-primary" onclick="startCleaningWizard()">${saved?'새로 뽑기':'청소 당번 뽑기 시작'}</button>
+ ${saved?`<button class="btn btn-secondary" onclick="viewSavedCleaningChart()">이전 청소 보기</button>`:''}
+ </div>
+ </div>`;
+}
+function startCleaningWizard(){
+ if(!_seatMyClass())return;
+ _cleanResetState();
+ renderCleanStep1();
+}
+function _cleanStepDots(){
+ return `<div class="seat-wizard-steps">${[1,2,3].map(n=>`<span class="seat-wizard-step-dot${_clean.step===n?' active':''}"></span>`).join('')}</div>`;
+}
+function _cleanRosterHtml(){
+ return _clean.students.map(s=>`<div class="seat-roster-item"><span class="n">${s.number??''}</span><span>${escHtml(s.name)}</span></div>`).join('')||'<div style="font-size:0.8rem;color:var(--text-secondary);padding:8px 4px;">학생이 없어요</div>';
+}
+function _cleanWeekdaysInRange(){
+ const out=[];
+ const start=new Date(_clean.startDate+'T12:00:00');
+ const end=new Date(_clean.endDate+'T12:00:00');
+ const cur=new Date(start);
+ while(cur<=end){
+ const dow=cur.getDay();
+ if(dow>=1&&dow<=5)out.push(_cleanFmtDate(cur));
+ cur.setDate(cur.getDate()+1);
+ }
+ return out;
+}
+function _cleanBuildCalendarHtml(){
+ const start=new Date(_clean.startDate+'T12:00:00');
+ const end=new Date(_clean.endDate+'T12:00:00');
+ const startDow=start.getDay();
+ const mondayOffset=startDow===0?-6:1-startDow;
+ const weekMonday=new Date(start);weekMonday.setDate(weekMonday.getDate()+mondayOffset);
+ let html=`<div class="clean-cal-grid">`;
+ ['월','화','수','목','금'].forEach(l=>html+=`<div class="clean-cal-header">${l}</div>`);
+ const cur=new Date(weekMonday);
+ let guard=0;
+ while(cur<=end&&guard++<520){
+ for(let i=0;i<5;i++){
+ const d=new Date(cur);d.setDate(d.getDate()+i);
+ const ds=_cleanFmtDate(d);
+ const inRange=d>=start&&d<=end;
+ const holidayReason=_clean.holidays[ds];
+ html+=`<div class="clean-cal-day${!inRange?' out-of-range':''}${holidayReason?' holiday':''}" ${inRange?`onclick="_cleanDayClick('${ds}')"`:''}>
+ <div>${d.getMonth()+1}/${d.getDate()}</div>
+ ${holidayReason?`<div class="clean-cal-day-reason">🚫 ${escHtml(holidayReason)}</div>`:''}
+ </div>`;
+ }
+ cur.setDate(cur.getDate()+7);
+ }
+ html+='</div>';
+ return html;
+}
+function _cleanSetDate(key,val){
+ if(!val)return;
+ _clean[key]=val;
+ if(new Date(_clean.startDate)>new Date(_clean.endDate)){
+ if(key==='startDate')_clean.endDate=val;else _clean.startDate=val;
+ }
+ renderCleanStep1();
+}
+function _cleanDayClick(ds){
+ const cur=_clean.holidays[ds]||'';
+ const reason=prompt('이 날짜의 일정을 입력해주세요 (청소를 쉬는 날이 됩니다). 비우면 다시 청소일로 돌아가요.',cur);
+ if(reason===null)return;
+ if(reason.trim())_clean.holidays[ds]=reason.trim();
+ else delete _clean.holidays[ds];
+ renderCleanStep1();
+}
+function renderCleanStep1(){
+ const wrap=document.getElementById('hrProgramContent');
+ if(!wrap||!_clean)return;
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openCleaningProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">청소 기간 설정</span>${_cleanStepDots()}</div>
+ <div class="seat-layout">
+ <div class="seat-roster"><div class="seat-roster-title">우리 반 (${_clean.students.length}명)</div>${_cleanRosterHtml()}</div>
+ <div class="seat-editor">
+ <div class="clean-cal-controls">
+ <input type="date" class="clean-date-input" value="${_clean.startDate}" onchange="_cleanSetDate('startDate',this.value)">
+ <span style="color:var(--text-secondary);">~</span>
+ <input type="date" class="clean-date-input" value="${_clean.endDate}" onchange="_cleanSetDate('endDate',this.value)">
+ </div>
+ <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:12px;">날짜를 클릭하면 그 날의 일정(청소를 쉬는 날)을 적을 수 있어요.</p>
+ ${_cleanBuildCalendarHtml()}
+ </div>
+ </div>
+ <div class="seat-wizard-footer"><button class="btn btn-primary" onclick="cleanGoStep2()">다음 →</button></div>
+ `;
+}
+function cleanGoStep2(){
+ if(!_clean.startDate||!_clean.endDate){showToast('⚠️ 기간을 설정해주세요');return;}
+ if(new Date(_clean.startDate)>new Date(_clean.endDate)){showToast('⚠️ 시작일이 종료일보다 늦어요');return;}
+ _clean.step=2;
+ renderCleanStep2();
+}
+function renderCleanStep2(){
+ const wrap=document.getElementById('hrProgramContent');
+ if(!wrap||!_clean)return;
+ const excludedCnt=_clean.excluded.length;
+ const dayExcludedCnt=Object.values(_clean.dayExcluded).filter(a=>a&&a.length).length;
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_clean.step=1;renderCleanStep1();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">배정 설정</span>${_cleanStepDots()}</div>
+ <div class="seat-settings-grid">
+ <button class="seat-setting-card" onclick="openCleanSetting('excluded')"><div class="seat-setting-title">🚫 청소 제외</div><div class="seat-setting-desc">이 기간 청소를 아예 안 하는 학생</div>${excludedCnt?`<span class="seat-setting-badge">${excludedCnt}명 지정됨</span>`:''}</button>
+ <button class="seat-setting-card" onclick="openCleanSetting('dayExcluded')"><div class="seat-setting-title">📅 요일 제외</div><div class="seat-setting-desc">특정 요일에 청소를 안 하는 학생</div>${dayExcludedCnt?`<span class="seat-setting-badge">${dayExcludedCnt}명 지정됨</span>`:''}</button>
+ <div class="seat-setting-card" style="cursor:default;">
+ <div class="seat-setting-title">👥 일 청소 인원</div>
+ <div class="seat-rule-row" style="align-items:center;">
+ <button type="button" class="seat-toggle-btn" style="flex:0 0 auto;" onclick="_cleanChangeDaily(-1)">−</button>
+ <span style="flex:1;text-align:center;font-weight:800;font-size:1.05rem;">${_clean.dailyCount}명</span>
+ <button type="button" class="seat-toggle-btn" style="flex:0 0 auto;" onclick="_cleanChangeDaily(1)">+</button>
+ </div>
+ </div>
+ <div class="seat-setting-card" style="cursor:default;">
+ <div class="seat-setting-title">🖍 칠판 당번 만들기</div>
+ <div class="seat-rule-row">
+ <button type="button" class="seat-toggle-btn${!_clean.boardDuty?' active':''}" onclick="_clean.boardDuty=false;renderCleanStep2();">안 함</button>
+ <button type="button" class="seat-toggle-btn${_clean.boardDuty?' active':''}" onclick="_clean.boardDuty=true;renderCleanStep2();">만들기</button>
+ </div>
+ </div>
+ <div class="seat-setting-card" style="cursor:default;">
+ <div class="seat-setting-title">🎲 배정 방식</div>
+ <div class="seat-rule-row">
+ <button type="button" class="seat-toggle-btn${_clean.mode==='sequential'?' active':''}" onclick="_clean.mode='sequential';renderCleanStep2();">번호순</button>
+ <button type="button" class="seat-toggle-btn${_clean.mode==='random'?' active':''}" onclick="_clean.mode='random';renderCleanStep2();">랜덤 뽑기</button>
+ </div>
+ </div>
+ </div>
+ <div class="seat-wizard-footer"><button class="btn btn-primary" onclick="cleanGoStep3()">청소 당번 뽑기 →</button></div>
+ `;
+}
+function _cleanChangeDaily(delta){
+ _clean.dailyCount=Math.max(1,Math.min(_clean.students.length||1,_clean.dailyCount+delta));
+ renderCleanStep2();
+}
+let _cleanModalKind=null,_cleanDayExcludedPicked=null;
+function openCleanSetting(kind){
+ _cleanModalKind=kind;
+ _cleanDayExcludedPicked=null;
+ _modalConfirmCallback=renderCleanStep2;
+ document.getElementById('seatModalTitle').textContent=kind==='excluded'?'🚫 청소 제외':'📅 요일 제외';
+ _renderCleanModalBody();
+ openModal('seatModal');
+}
+function _renderCleanModalBody(){
+ const body=document.getElementById('seatModalBody');
+ if(!body)return;
+ if(_cleanModalKind==='excluded'){
+ body.innerHTML=`<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">이 기간 동안 청소를 하지 않을 학생을 선택하세요.</p>
+ <div class="seat-pick-list">${_clean.students.map(s=>`<button type="button" class="seat-pick-chip${_clean.excluded.includes(s.id)?' on':''}" onclick="_cleanToggleExcluded(${s.id})">${s.number?s.number+'번 ':''}${escHtml(s.name)}</button>`).join('')}</div>`;
+ }else if(_cleanModalKind==='dayExcluded'){
+ const dayLabels=['일','월','화','수','목','금','토'];
+ body.innerHTML=`<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">학생을 먼저 선택하고, 청소를 하지 않을 요일을 골라주세요.</p>
+ <div class="seat-pick-list" style="margin-bottom:14px;">${_clean.students.map(s=>`<button type="button" class="seat-pick-chip${_cleanDayExcludedPicked===s.id?' on':''}" onclick="_cleanPickDayExcludedStudent(${s.id})">${s.number?s.number+'번 ':''}${escHtml(s.name)}${(_clean.dayExcluded[s.id]||[]).length?' 📅':''}</button>`).join('')}</div>
+ ${_cleanDayExcludedPicked!=null?`<div class="seat-toggle-group" style="flex-wrap:wrap;">${[1,2,3,4,5].map(d=>`<button type="button" class="seat-toggle-btn${(_clean.dayExcluded[_cleanDayExcludedPicked]||[]).includes(d)?' active':''}" onclick="_cleanToggleDay(${d})">${dayLabels[d]}</button>`).join('')}</div>`:''}`;
+ }
+}
+function _cleanToggleExcluded(id){
+ const idx=_clean.excluded.indexOf(id);
+ if(idx>=0)_clean.excluded.splice(idx,1);else _clean.excluded.push(id);
+ _renderCleanModalBody();
+}
+function _cleanPickDayExcludedStudent(id){_cleanDayExcludedPicked=_cleanDayExcludedPicked===id?null:id;_renderCleanModalBody();}
+function _cleanToggleDay(d){
+ if(_cleanDayExcludedPicked==null)return;
+ if(!_clean.dayExcluded[_cleanDayExcludedPicked])_clean.dayExcluded[_cleanDayExcludedPicked]=[];
+ const arr=_clean.dayExcluded[_cleanDayExcludedPicked];
+ const idx=arr.indexOf(d);
+ if(idx>=0)arr.splice(idx,1);else arr.push(d);
+ _renderCleanModalBody();
+}
+function _cleanRunAssignment(){
+ const schoolDays=_cleanWeekdaysInRange().filter(ds=>!_clean.holidays[ds]);
+ const students=_clean.students;
+ const N=_clean.dailyCount;
+ const results=[];
+ if(!students.length)return results;
+ if(_clean.mode==='sequential'){
+ let ptr=0;
+ schoolDays.forEach(ds=>{
+ const dow=new Date(ds+'T12:00:00').getDay();
+ const cleaners=[];
+ let scan=ptr,tries=0;
+ while(cleaners.length<N&&tries<students.length*2){
+ const cand=students[scan%students.length];
+ const eligible=!_clean.excluded.includes(cand.id)&&!(_clean.dayExcluded[cand.id]||[]).includes(dow);
+ if(eligible&&!cleaners.some(c=>c.id===cand.id)){
+ cleaners.push(cand);
+ ptr=(scan+1)%students.length;
+ }
+ scan++;
+ tries++;
+ }
+ const board=_clean.boardDuty&&cleaners.length?cleaners[Math.floor(Math.random()*cleaners.length)].id:null;
+ results.push({date:ds,dow,cleaners:cleaners.map(c=>c.id),board});
+ });
+ }else{
+ const dutyCount={};
+ students.forEach(s=>dutyCount[s.id]=0);
+ schoolDays.forEach(ds=>{
+ const dow=new Date(ds+'T12:00:00').getDay();
+ const eligible=students.filter(s=>!_clean.excluded.includes(s.id)&&!(_clean.dayExcluded[s.id]||[]).includes(dow));
+ const shuffled=_seatShuffle(eligible);
+ shuffled.sort((a,b)=>dutyCount[a.id]-dutyCount[b.id]);
+ const cleaners=shuffled.slice(0,N);
+ cleaners.forEach(c=>dutyCount[c.id]++);
+ const board=_clean.boardDuty&&cleaners.length?cleaners[Math.floor(Math.random()*cleaners.length)].id:null;
+ results.push({date:ds,dow,cleaners:cleaners.map(c=>c.id),board});
+ });
+ }
+ return results;
+}
+function cleanGoStep3(){
+ if(!_clean||!_clean.classId)return;
+ _clean.result=_cleanRunAssignment();
+ _clean.step=3;
+ renderCleanStep3();
+}
+function _cleanResultCalendarHtml(students,result,holidays,startDateStr,endDateStr){
+ if(!startDateStr||!endDateStr)return'<div class="ank-thread-empty">기간 내 청소일이 없어요</div>';
+ const start=new Date(startDateStr+'T12:00:00');
+ const end=new Date(endDateStr+'T12:00:00');
+ const startDow=start.getDay();
+ const mondayOffset=startDow===0?-6:1-startDow;
+ const weekMonday=new Date(start);weekMonday.setDate(weekMonday.getDate()+mondayOffset);
+ const resultMap={};
+ (result||[]).forEach(r=>{resultMap[r.date]=r;});
+ let html=`<div class="clean-cal-grid">`;
+ ['월','화','수','목','금'].forEach(l=>html+=`<div class="clean-cal-header">${l}</div>`);
+ const cur=new Date(weekMonday);
+ let guard=0;
+ while(cur<=end&&guard++<520){
+ for(let i=0;i<5;i++){
+ const d=new Date(cur);d.setDate(d.getDate()+i);
+ const ds=_cleanFmtDate(d);
+ const inRange=d>=start&&d<=end;
+ const holidayReason=holidays&&holidays[ds];
+ const r=resultMap[ds];
+ let bodyHtml='';
+ if(!inRange){
+ /* keep empty */
+ }else if(holidayReason){
+ bodyHtml=`<div class="clean-cal-day-reason">🚫 ${escHtml(holidayReason)}</div>`;
+ }else{
+ const chips=(r?.cleaners||[]).map(id=>{
+ const st=students.find(s=>s.id===id);
+ const isBoard=r.board===id;
+ return `<span class="clean-result-chip small${isBoard?' board':''}">${st?escHtml(st.name):'?'}${isBoard?' 🖍':''}</span>`;
+ }).join('');
+ bodyHtml=`<div class="clean-result-cal-names">${chips||'<span class="clean-result-cal-empty">배정 없음</span>'}</div>`;
+ }
+ html+=`<div class="clean-cal-day clean-result-cal-day${!inRange?' out-of-range':''}${holidayReason?' holiday':''}">
+ <div class="clean-result-cal-date">${d.getMonth()+1}/${d.getDate()}</div>
+ ${bodyHtml}
+ </div>`;
+ }
+ cur.setDate(cur.getDate()+7);
+ }
+ html+='</div>';
+ return html;
+}
+function renderCleanStep3(){
+ const wrap=document.getElementById('hrProgramContent');
+ if(!wrap||!_clean)return;
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="_clean.step=2;renderCleanStep2();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">청소 당번 결과</span>${_cleanStepDots()}</div>
+ <div id="cleanPrintArea">
+ ${_cleanResultCalendarHtml(_clean.students,_clean.result,_clean.holidays,_clean.startDate,_clean.endDate)}
+ </div>
+ <div class="seat-wizard-footer">
+ <button class="btn btn-secondary" onclick="cleanGoStep3()">다시 뽑기</button>
+ <button class="btn btn-secondary" onclick="printCleaningChart()">🖨 PDF로 저장</button>
+ <button class="btn btn-primary" onclick="saveCleaningChart()">저장</button>
+ </div>
+ `;
+}
+function saveCleaningChart(){
+ if(!_clean||!_clean.result||!_clean.classId)return;
+ const charts=DB.get('cleaningCharts');
+ charts[_clean.classId]={
+ startDate:_clean.startDate,endDate:_clean.endDate,dailyCount:_clean.dailyCount,
+ boardDuty:_clean.boardDuty,mode:_clean.mode,holidays:_clean.holidays,
+ students:_clean.students,result:_clean.result,savedAt:Date.now()
+ };
+ DB.set('cleaningCharts',charts);
+ showToast('💾 청소 당번이 저장되었습니다');
+}
+function printCleaningChart(){_printAreaFit('cleanPrintArea','.clean-cal-grid');}
+function viewSavedCleaningChart(){
+ const cls=_seatMyClass();
+ if(!cls)return;
+ const saved=DB.get('cleaningCharts')[cls.id];
+ if(!saved){showToast('저장된 청소 당번이 없어요');return;}
+ const wrap=document.getElementById('hrProgramContent');
+ const savedDate=new Date(saved.savedAt).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="openCleaningProgram()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">저장된 청소 당번</span><span style="margin-left:auto;font-size:0.76rem;color:var(--text-secondary);">${savedDate} 저장</span></div>
+ <div id="cleanPrintArea">
+ ${_cleanResultCalendarHtml(saved.students||[],saved.result,saved.holidays,saved.startDate,saved.endDate)}
+ </div>
+ <div class="seat-wizard-footer">
+ <button class="btn btn-secondary" onclick="printCleaningChart()">🖨 PDF로 저장</button>
+ <button class="btn btn-primary" onclick="startCleaningWizard()">새로 만들기</button>
+ </div>
+ `;
+}
+
 /* ── 학생관리 ── */
 function renderStudentsSection(){const active=document.querySelector('.student-tab.active');if(!active)return;({classSection:renderClasses,evalSection:renderEvalList}[active.id])?.();}
 let dragClassCardId=null;
@@ -4131,9 +5043,11 @@ let _noticesDoneOpen=false;
 function showHrTab(tabId,btn){
  document.getElementById('hrCalendarTab').style.display=tabId==='hrCalendarTab'?'block':'none';
  document.getElementById('hrNoticeTab').style.display=tabId==='hrNoticeTab'?'block':'none';
+ document.getElementById('hrProgramTab').style.display=tabId==='hrProgramTab'?'block':'none';
  document.querySelectorAll('#homeroom .sub-nav-btn').forEach(b=>b.classList.remove('active'));
  if(btn)btn.classList.add('active');
  if(tabId==='hrNoticeTab')renderNoticeTab();
+ if(tabId==='hrProgramTab')renderProgramTab();
  _activeHrTab=tabId;
  updateHomeroomFab();
 }
@@ -5557,6 +6471,12 @@ function updateHomeroomFab(){
  const main=document.getElementById('tabFabMain');
  const items=document.getElementById('tabFabItems');
  if(!main||!items)return;
+ /* 프로그램(자리 바꾸기 · 청소 당번 뽑기) 탭에서는 마법사 하단 우측의
+ "다음"류 버튼과 이 FAB이 겹쳐서 클릭을 가로채는 문제가 있어, 이 탭에서는
+ 아예 숨긴다. */
+ const wrap=document.getElementById('tabFabWrap');
+ if(_activeHrTab==='hrProgramTab'){if(wrap)wrap.style.display='none';closeTabFab();return;}
+ if(wrap)wrap.style.display='flex';
  main.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
  items.innerHTML=`<div class="tab-fab-item"><button onclick="openHrClassSetting();closeTabFab()">담임 학급 설정</button></div>`;
 }
@@ -5727,7 +6647,7 @@ const SUPA_URL='https://dfykbnlfekeqctjgkcwv.supabase.co';
 const SUPA_KEY='sb_publishable_RtJ1-wVBWkUuBGi8-71mAQ_tmX6QiGb';
 const SUPA_USER='kosick2';
 const SUPA_HEADERS={apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json'};
-const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords','favBarIds','sgibuCategories','sgibuAchievements','sgibuClassLimits','sgibuDone'];
+const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords','favBarIds','sgibuCategories','sgibuAchievements','sgibuClassLimits','sgibuDone','seatCharts','cleaningCharts'];
 const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','homeroomMyClassId','pinnedMobileTabs'];
 let _isSaving=false;
 let _dbReady=false;
@@ -5735,7 +6655,7 @@ let _saveToastTimer=null;
 function syncAll(isManual=false){
  if(!_dbReady){console.warn(' 안전장치: 서버 미로드 상태에서 저장 차단');showToast(' 데이터 로딩 중... 잠시 후 자동 저장됩니다');return;}
 const p={};
-DK.forEach(k=>{p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone'?'{}':'[]'));if((k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone')&&Array.isArray(p[k]))p[k]={};});
+DK.forEach(k=>{p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone'||k==='seatCharts'||k==='cleaningCharts'?'{}':'[]'));if((k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone'||k==='seatCharts'||k==='cleaningCharts')&&Array.isArray(p[k]))p[k]={};});
 const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
  const _hasSettings=SK.some(k=>localStorage.getItem(k)&&localStorage.getItem(k)!=='');
  if(!_hasData&&!_hasSettings){console.warn(' 안전장치: 로컬이 비어있어 서버 덮어쓰기 차단');showToast('⚠ 데이터가 비어있어 저장이 차단되었습니다');return;}
@@ -5748,7 +6668,7 @@ p._savedAt=Date.now();
 }
 window._syncSettings=syncAll;
 function applyRemoteData(data){
-DK.forEach(k=>{if(data[k]!==undefined){let _v=data[k];if((k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone')&&Array.isArray(_v))_v={};localStorage.setItem(k,JSON.stringify(_v));}});
+DK.forEach(k=>{if(data[k]!==undefined){let _v=data[k];if((k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone'||k==='seatCharts'||k==='cleaningCharts')&&Array.isArray(_v))_v={};localStorage.setItem(k,JSON.stringify(_v));}});
  SK.forEach(k=>{if(data[k]!==undefined&&data[k]!=='')localStorage.setItem(k,data[k]);});
  localStorage.setItem('_savedAt',Number(data._savedAt||0));
  initHeaderTitle();initColors();initPinnedTabs();
