@@ -188,9 +188,8 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFo
  .home-class-card{display:none !important;}
  .home-notice-att-web{display:none !important;}
  .m-hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
- .m-hero-sub{font-size:0.95rem;color:var(--text);font-weight:700;}
- .m-hero-cal-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
- .m-hero-date{font-size:0.76rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;}
+ .m-hero-greeting{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;}
+ .m-hero-sub{font-size:0.82rem;color:var(--text-secondary);font-weight:500;margin-top:4px;}
  .m-hero-cal-btn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;cursor:pointer;position:relative;}
  .m-hero-cal-badges{position:absolute;top:-5px;right:-5px;display:flex;}
  .m-hero-cal-badge{min-width:16px;height:16px;padding:0 3px;border-radius:8px;color:#fff;font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--background);box-sizing:content-box;}
@@ -317,9 +316,15 @@ textarea{resize:vertical;min-height:80px;}
 .ank-thread{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;}
 .ank-thread-header{font-weight:800;font-size:1rem;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 .ank-thread-empty{color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:40px 20px;}
-.ank-bubble{background:var(--surface);border-radius:14px;padding:10px 14px;max-width:80%;align-self:flex-start;box-shadow:var(--shadow);}
+.ank-bubble{position:relative;background:var(--surface);border-radius:14px;padding:10px 14px;max-width:80%;align-self:flex-start;box-shadow:var(--shadow);}
 .ank-bubble-date{font-size:0.7rem;color:var(--text-secondary);font-weight:600;margin-bottom:4px;}
 .ank-bubble-content{font-size:0.88rem;color:var(--text);line-height:1.55;white-space:pre-wrap;}
+.ank-bubble-actions{position:absolute;top:-10px;right:-8px;display:flex;gap:4px;}
+.ank-bubble-action-btn{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.18);padding:0;transition:background 0.15s,color 0.15s;}
+.ank-bubble-action-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.ank-bubble-action-btn.danger:hover{background:#EF4444;border-color:#EF4444;}
+.ank-editing-banner{display:none;align-items:center;justify-content:space-between;padding:6px 12px;margin-bottom:8px;border-radius:10px;background:var(--surface2);font-size:0.78rem;font-weight:700;color:var(--text-secondary);}
+.ank-editing-banner button{background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.85rem;padding:2px 4px;}
 .ank-composer-wrap{position:relative;padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;}
 .ank-mention-popup{display:none;position:absolute;left:16px;right:16px;bottom:100%;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:8px;flex-wrap:wrap;gap:6px;z-index:20;}
 .ank-mention-opt{padding:7px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s;}
@@ -672,12 +677,10 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="m-hero">
  <div class="m-hero-top">
  <div>
+ <div class="m-hero-greeting">안녕하세요, 선생님 👋</div>
  <div class="m-hero-sub" id="mHeroSub"></div>
  </div>
- <div class="m-hero-cal-wrap">
- <span class="m-hero-date" id="mHeroDate"></span>
  <button class="m-hero-cal-btn" onclick="openCalendarModal()" title="캘린더"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><div class="m-hero-cal-badges" id="mHeroCalBadges"></div></button>
- </div>
  </div>
  <div class="m-hero-card" id="mHeroCard" style="display:none;">
  <button class="m-hero-card-arrow" onclick="showSection('homeroom',null)" title="담임"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
@@ -824,6 +827,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="ank-thread" id="ankThread"></div>
  <div class="ank-composer-wrap">
  <div class="ank-mention-popup" id="ankMentionPopup"></div>
+ <div class="ank-editing-banner" id="ankEditingBanner"><span>기록 수정 중</span><button type="button" onclick="cancelAnkEdit()">✕</button></div>
  <div class="ank-composer">
  <div id="ankComposerInput" class="ank-composer-input" contenteditable="true" data-placeholder="@이름으로 학생을 지정하고 기록을 입력하세요..." oninput="handleAnkComposerInput()" onkeydown="handleAnkComposerKeydown(event)"></div>
  <button class="ank-send-btn" onclick="submitAnkMessage()" title="보내기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4z"></path></svg></button>
@@ -2100,9 +2104,7 @@ function buildMobileHero(){
  if(!sub)return;
  const d=new Date();
  const days=['일','월','화','수','목','금','토'];
- const dateEl=document.getElementById('mHeroDate');
- if(dateEl)dateEl.textContent=`${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
- let subText='';
+ let subText=`${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
  updateHeroCalBadges();
  const badgesEl=document.getElementById('mHeroBadges');
  const cardEl=document.getElementById('mHeroCard');
@@ -2119,7 +2121,7 @@ function buildMobileHero(){
  if(savedClassId){
  const cls=DB.get('classes').find(c=>c.id===Number(savedClassId));
  if(cls){
- subText+=`${cls.grade}학년 ${cls.classNum}반 담임`;
+ subText+=` · ${cls.grade}학년 ${cls.classNum}반 담임`;
  badges+=`<span class="m-hero-badge" onclick="heroGoAttendance()" style="cursor:pointer;">오늘 출결 ${_attCnt0}</span>`;
  badges+=`<span class="m-hero-badge" onclick="heroGoNotice()" style="cursor:pointer;">오늘의 안내사항 ${_noticeCnt0}</span>`;
  const _counselTotal0=DB.get('counselings').length;
@@ -2701,6 +2703,7 @@ let _ankExpandedClassId=null;
 let _ankSelectedClassId=null;
 let _ankSelectedStudentId=null;
 let _ankMentionMatch=null; /* {start,end,query}: 입력창에서 현재 편집 중인 @멘션 구간 */
+let _ankEditingId=null; /* 현재 수정 중인 기록의 id(없으면 null) */
 
 function _ankAllStudents(){
  const classes=DB.get('classes');
@@ -2735,6 +2738,8 @@ function _ankSetActiveStudent(classId,studentId){
  _ankSelectedClassId=classId;
  _ankSelectedStudentId=studentId;
  _ankExpandedClassId=classId;
+ /* 다른 학생으로 넘어가면 진행 중이던 수정은 취소한다(엉뚱한 기록에 덮어써지는 것 방지) */
+ if(_ankEditingId!=null)cancelAnkEdit();
  renderAnecdotalSidebar();
  renderAnkThread();
 }
@@ -2793,7 +2798,7 @@ function renderAnkThread(){
  if(c.studentId!=null&&c.classId!=null)return c.studentId===student.id&&c.classId===cls.id;
  return c.studentName===student.name;
  }).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)||(a.date||'').localeCompare(b.date||''));
- const bubbles=entries.length?entries.map(e=>`<div class="ank-bubble"><div class="ank-bubble-date">${e.date}</div><div class="ank-bubble-content">${escHtml(e.content).replace(/\n/g,'<br>')}</div></div>`).join(''):'<div class="ank-thread-empty">아직 기록이 없어요. 아래에 첫 기록을 남겨보세요.</div>';
+ const bubbles=entries.length?entries.map(e=>`<div class="ank-bubble"><div class="ank-bubble-actions"><button type="button" class="ank-bubble-action-btn" onclick="editAnkEntry(${e.id})" title="수정"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button type="button" class="ank-bubble-action-btn danger" onclick="deleteAnkEntry(${e.id})" title="삭제"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg></button></div><div class="ank-bubble-date">${e.date}</div><div class="ank-bubble-content">${escHtml(e.content).replace(/\n/g,'<br>')}</div></div>`).join(''):'<div class="ank-thread-empty">아직 기록이 없어요. 아래에 첫 기록을 남겨보세요.</div>';
  wrap.innerHTML=`<div class="ank-thread-header">${escHtml(String(cls.grade))}학년 ${escHtml(String(cls.classNum))}반 ${student.number?student.number+'번 ':''}${escHtml(student.name)}</div>${bubbles}`;
  wrap.scrollTop=wrap.scrollHeight;
 }
@@ -2935,14 +2940,52 @@ function submitAnkMessage(){
  if(!cls||!student)return;
  if(content){
  const items=DB.get('counselings');
+ if(_ankEditingId!=null){
+ const idx=items.findIndex(c=>c.id===_ankEditingId);
+ if(idx!==-1)items[idx]={...items[idx],content};
+ }else{
  items.push({id:Date.now(),classId:targetClassId,studentId:targetStudentId,studentName:student.name,date:_getLocalTodayStr(),type:'cumulative',content,createdAt:Date.now()});
+ }
  DB.set('counselings',items);
  }
  inp.innerHTML='';
  _ankMentionMatch=null;
+ _ankEditingId=null;
+ const banner=document.getElementById('ankEditingBanner');if(banner)banner.style.display='none';
  _hideAnkMentionPopup();
  _ankSetActiveStudent(targetClassId,targetStudentId);
  inp.focus();
+}
+function editAnkEntry(id){
+ const entry=DB.get('counselings').find(c=>c.id===id);
+ if(!entry)return;
+ _ankEditingId=id;
+ const inp=document.getElementById('ankComposerInput');
+ inp.textContent=entry.content;
+ const banner=document.getElementById('ankEditingBanner');
+ if(banner)banner.style.display='flex';
+ inp.focus();
+ const range=document.createRange();
+ range.selectNodeContents(inp);
+ range.collapse(false);
+ const sel=window.getSelection();
+ sel.removeAllRanges();
+ sel.addRange(range);
+}
+function cancelAnkEdit(){
+ _ankEditingId=null;
+ const inp=document.getElementById('ankComposerInput');
+ if(inp)inp.innerHTML='';
+ const banner=document.getElementById('ankEditingBanner');
+ if(banner)banner.style.display='none';
+}
+function deleteAnkEntry(id){
+ if(!confirm('이 기록을 삭제할까요?'))return;
+ DB.set('counselings',DB.get('counselings').filter(c=>c.id!==id));
+ if(_ankEditingId===id)cancelAnkEdit();
+ renderAnkThread();
+ renderAnecdotalSidebar();
+ showToast('삭제되었습니다');
 }
 
 /* ── 학생관리 ── */
