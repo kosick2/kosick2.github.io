@@ -1428,6 +1428,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <button class="fab-save" id="saveBtn" onclick="manualSave()" title="저장"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg></button>
 <button class="ank-picker-btn" id="ankPickerBtn" onclick="openAnkStudentPicker()" title="학생 선택"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-4 9 4-9 4-9-4z"></path><path d="M7 11.5V15c0 1.7 2.2 3 5 3s5-1.3 5-3v-3.5"></path></svg></button>
 <div class="toast-container"><div class="toast" id="toast1"></div><div class="toast" id="toast2"></div></div>
+<div class="ank-mention-popup" id="globalMentionPopup"></div>
 <script>
 /* ── 유틸 ── */
 function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -2508,7 +2509,7 @@ const cs=isCompleted?`background:${_borderColor};border-color:${_borderColor};`:
 const dragAttrs=!isCompleted?`ondragstart="memoItemDragStart(event,${item.id})" ondragover="memoItemDragOver(event,${item.id},this)" ondragleave="this.classList.remove('drag-over-memo')" ondrop="memoItemDrop(event,${item.id})" ondragend="this.removeAttribute('draggable')"`:'' ; return `<div class="memo-item" id="memoItem_${item.id}" ${dragAttrs}>
 ${!isCompleted?`<div class="memo-drag-handle" title="드래그로 순서 변경" onmousedown="this.closest('.memo-item').setAttribute('draggable','true')" ontouchstart="this.closest('.memo-item').setAttribute('draggable','true')">⠿</div>`:'<div style="width:10px;flex-shrink:0;"></div>'} <button class="memo-check-btn" style="${cs}" onclick="toggleMemoItem(${item.id})">${isCompleted?'✓':''}</button>
  <div class="memo-item-body">
- <div class="${tc}" contenteditable="${ed}" spellcheck="false" data-text-id="${item.id}" data-placeholder="항목..." onkeydown="handleMemoTextKeydown(event,${item.id},this)" style="color:${isCompleted?_tcDone:_tcNormal};"></div>
+ <div class="${tc}" contenteditable="${ed}" spellcheck="false" data-text-id="${item.id}" data-placeholder="항목... (@이름으로 학생 지정)" onkeydown="handleMemoTextKeydown(event,${item.id},this)" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),_ankAllStudents)" style="color:${isCompleted?_tcDone:_tcNormal};"></div>
  ${!isCompleted?`${getDeadlineBadgeHtml(item)}<div id="dlWrap_${item.id}" style="display:none;margin-top:4px;"><input type="date" value="${item.deadline||''}" style="font-size:0.75rem;padding:3px 8px;width:160px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;" onchange="updateMemoDeadline(${item.id},this.value)"></div>`:''}
  <div class="memo-item-detail" contenteditable="${ed}" spellcheck="false" data-id="${item.id}" data-placeholder="세부 사항..." onkeydown="handleDetailKeydown(event,${item.id},this)" style="color:${_tcDetail};"></div>
  </div>
@@ -2593,8 +2594,11 @@ function selectMemoTab(key){
  }
  renderMemoBody();
 }
+let _memoStudentFilter=null;
+function setMemoStudentFilter(studentId){_memoStudentFilter=studentId?Number(studentId):null;renderMemoSection();}
 function renderMemoBody(){
- const lists=DB.get('memoLists'),items=DB.get('memoItems');
+ const lists=DB.get('memoLists'),allMemoItems=DB.get('memoItems');
+ const items=_memoStudentFilter?allMemoItems.filter(i=>(i.studentIds||[]).includes(_memoStudentFilter)):allMemoItems;
 const pItems=items.filter(i=>i.priority&&!i.completed);
  const todayP=new Date();todayP.setHours(0,0,0,0);
  const dlItems=items.filter(i=>!i.priority&&!i.completed&&i.deadline).sort((a,b)=>a.deadline.localeCompare(b.deadline));
@@ -2678,9 +2682,18 @@ ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).joi
  </div>`;
  }
  }
+ const taggedMap=new Map();
+ allMemoItems.forEach(i=>{(i.studentIds||[]).forEach((sid,idx)=>{if(!taggedMap.has(sid))taggedMap.set(sid,(i.studentNames||[])[idx]);});});
+ let filterHtml='';
+ if(taggedMap.size){
+ filterHtml=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+ <button type="button" class="seat-pick-chip${_memoStudentFilter?'':' on'}" onclick="setMemoStudentFilter(null)">전체</button>
+ ${[...taggedMap.entries()].map(([sid,name])=>`<button type="button" class="seat-pick-chip${_memoStudentFilter===sid?' on':''}" onclick="setMemoStudentFilter(${sid})">${escHtml(name||'?')}</button>`).join('')}
+ </div>`;
+ }
  const bodyEl=document.getElementById('memoBody');
  if(!bodyEl)return;
- bodyEl.innerHTML=pSection+body;
+ bodyEl.innerHTML=filterHtml+pSection+body;
  document.querySelectorAll('[data-text-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.textId));if(f)el.innerHTML=f.text||'';});
  
  updateNavBadges();document.querySelectorAll('[data-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.id));const d=f?.detail||'';el.innerHTML=(d&&d.trim()!==''&&d!=='<br>')?d:'';});
@@ -2704,7 +2717,17 @@ function toggleMemoItem(id){
  showToast(item.completed?' 완료!':' 목록으로 돌아왔습니다');
 }
 let _memoToastTimer=null;
-function updateMemoText(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.text=html;DB.set('memoItems',items);}
+function updateMemoText(id,html){
+ const items=DB.get('memoItems'),item=items.find(i=>i.id===id);
+ if(item){
+ item.text=html;
+ const tmp=document.createElement('div');tmp.innerHTML=html;
+ const mentions=_extractMentionedStudents(tmp);
+ item.studentIds=mentions.map(m=>m.studentId);
+ item.studentNames=mentions.map(m=>m.name);
+ }
+ DB.set('memoItems',items);
+}
 function updateMemoDetail(id,html){const items=DB.get('memoItems'),item=items.find(i=>i.id===id);if(item)item.detail=html;DB.set('memoItems',items);}
 function deleteMemoItem(id){
  if(!confirm('이 항목을 삭제할까요?'))return;
@@ -2851,6 +2874,93 @@ function _ankAllStudents(){
  });
  });
  return list;
+}
+/* ── 범용 @멘션(할 일 / 담임 안내사항에서 재사용) ── */
+let _mentionState=null;
+function _mentionGetCaretContext(){
+ const sel=window.getSelection();
+ if(!sel||!sel.rangeCount)return null;
+ const range=sel.getRangeAt(0);
+ if(!range.collapsed)return null;
+ const node=range.startContainer;
+ if(node.nodeType!==3)return null;
+ return{node,offset:range.startOffset,text:node.textContent};
+}
+function handleMentionInput(inputEl,popupEl,studentsFn){
+ const ctx=_mentionGetCaretContext();
+ if(!ctx){_mentionState=null;popupEl.style.display='none';popupEl.innerHTML='';return;}
+ const{node,offset,text}=ctx;
+ let i=offset-1;
+ while(i>=0&&text[i]!==' '&&text[i]!=='\n'&&text[i]!=='@')i--;
+ if(i>=0&&text[i]==='@'){
+ const query=text.slice(i+1,offset);
+ _mentionState={inputEl,popupEl,node,start:i,end:offset,query};
+ _showMentionPopup(inputEl,popupEl,query,studentsFn);
+ }else{
+ _mentionState=null;
+ popupEl.style.display='none';popupEl.innerHTML='';
+ }
+}
+function _showMentionPopup(inputEl,popupEl,query,studentsFn){
+ if(!query){popupEl.style.display='none';popupEl.innerHTML='';return;}
+ const matches=studentsFn().filter(s=>s.name.includes(query)).slice(0,8);
+ if(!matches.length){popupEl.style.display='none';popupEl.innerHTML='';return;}
+ const r=inputEl.getBoundingClientRect();
+ popupEl.style.position='fixed';
+ popupEl.style.left=Math.round(r.left)+'px';
+ popupEl.style.top=Math.round(r.bottom+4)+'px';
+ popupEl.style.width=Math.round(Math.max(200,r.width))+'px';
+ popupEl.style.right='auto';popupEl.style.bottom='auto';popupEl.style.marginBottom='0';popupEl.style.zIndex='1300';
+ popupEl.innerHTML=matches.map(s=>`<button type="button" class="ank-mention-opt" onclick='pickMention(${s.classId},${s.studentId},${JSON.stringify(s.name)})'>${s.grade?escHtml(String(s.grade))+'학년 '+escHtml(String(s.classNum))+'반 ':''}${escHtml(s.name)}</button>`).join('');
+ popupEl.style.display='flex';
+}
+function pickMention(classId,studentId,name){
+ if(!_mentionState)return;
+ const{inputEl,popupEl,node,start,end}=_mentionState;
+ const fullText=node.textContent;
+ const beforeText=fullText.slice(0,start);
+ const afterText=fullText.slice(end);
+ const chip=document.createElement('span');
+ chip.className='ank-inline-chip';
+ chip.contentEditable='false';
+ chip.dataset.classId=classId;
+ chip.dataset.studentId=studentId;
+ chip.dataset.name=name;
+ chip.innerHTML=`${escHtml(name)}<button type="button" onclick="removeMentionChip(event,this)" title="지우기">✕</button>`;
+ const parent=node.parentNode;
+ const afterNode=document.createTextNode(' '+afterText);
+ parent.insertBefore(afterNode,node.nextSibling);
+ parent.insertBefore(chip,afterNode);
+ node.textContent=beforeText;
+ const range=document.createRange();
+ range.setStart(afterNode,1);
+ range.collapse(true);
+ const sel=window.getSelection();
+ sel.removeAllRanges();
+ sel.addRange(range);
+ inputEl.focus();
+ inputEl.dispatchEvent(new Event('input',{bubbles:true}));
+ _mentionState=null;
+ popupEl.style.display='none';popupEl.innerHTML='';
+}
+function removeMentionChip(e,btn){
+ e.stopPropagation();
+ const chip=btn.closest('.ank-inline-chip');
+ const inputEl=chip&&chip.closest('[contenteditable]');
+ if(chip)chip.remove();
+ if(inputEl)inputEl.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function _extractMentionedStudents(container){
+ const chips=[...container.querySelectorAll('.ank-inline-chip')];
+ const seen=new Set();
+ const out=[];
+ chips.forEach(c=>{
+ const sid=Number(c.dataset.studentId);
+ if(seen.has(sid))return;
+ seen.add(sid);
+ out.push({classId:Number(c.dataset.classId),studentId:sid,name:c.dataset.name});
+ });
+ return out;
 }
 function _ankCountForStudent(classId,studentId,name){
  return DB.get('counselings').filter(c=>{
@@ -5280,7 +5390,8 @@ const isToday=noticeSelectedDate===_getLocalTodayStr();
  const _buildNoticeItemHtml=(n)=>{
  const displayText=n.content||n.title||'(내용 없음)';
  const _isHtml=/<[a-z][\s\S]*>/i.test(displayText);
- const studentBadge=n.studentName?`<span style="display:inline-flex;align-items:center;font-size:0.72rem;background:rgba(129,140,248,0.2);color:var(--primary-light);border:1px solid rgba(129,140,248,0.3);border-radius:20px;padding:2px 8px;margin-bottom:5px;"> ${escHtml(n.studentName)}</span><br>`:'';
+ const _noticeNames=n.studentNames&&n.studentNames.length?n.studentNames:(n.studentName?[n.studentName]:[]);
+ const studentBadge=_noticeNames.length?_noticeNames.map(nm=>`<span style="display:inline-flex;align-items:center;font-size:0.72rem;background:rgba(129,140,248,0.2);color:var(--primary-light);border:1px solid rgba(129,140,248,0.3);border-radius:20px;padding:2px 8px;margin-right:4px;margin-bottom:5px;"> ${escHtml(nm)}</span>`).join('')+'<br>':'';
  const carryBadge=n.carriedOverFrom?`<span style="display:inline-flex;align-items:center;font-size:0.7rem;background:rgba(252,211,77,0.15);color:#D97706;border:1px solid rgba(252,211,77,0.3);border-radius:20px;padding:1px 7px;margin-bottom:5px;">이전 날에서 넘어옴</span><br>`:'';
  return `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface);border-radius:10px;border-left:4px solid ${n.done?'var(--border)':'#EF4444'};margin-bottom:8px;transition:all 0.2s;${n.done?'opacity:0.55;':''}">
  <button onclick="toggleNoticeDone(${n.id})" style="width:22px;height:22px;border-radius:50%;border:2px solid ${n.done?'#10B981':'var(--primary)'};background:${n.done?'#10B981':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:white;flex-shrink:0;margin-top:2px;transition:all 0.2s;">${n.done?'✓':''}</button>
@@ -5306,18 +5417,10 @@ const isToday=noticeSelectedDate===_getLocalTodayStr();
  }else{
  html+=`<div class="empty-state" style="padding:24px 0;"><div class="empty-icon"></div><p>이 날 안내사항이 없어요</p></div>`;
  }
- let studentSelectHtml='';
- if(hrSelectedClassId){
- const cls=DB.get('classes').find(c=>c.id===hrSelectedClassId);
- if(cls&&cls.students.length){
- const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
- studentSelectHtml=`<div class="form-group" style="margin-bottom:8px;"><label class="form-label">학생 선택 <span style="font-size:0.75rem;color:var(--text-secondary);">(특정 학생에게 전달할 내용이 있을 때)</span></label><select id="noticeStudentSelect" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:0.9rem;width:100%;font-family:inherit;"><option value="">전체 (학생 미지정)</option>${sorted.map(s=>`<option value="${s.id}">${s.number?s.number+'번 ':''}${escHtml(s.name)}</option>`).join('')}</select></div>`;
- }
- }
  html+=`<div class="card" style="margin-top:16px;margin-bottom:0;">
  <div class="card-title" style="display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg><span>안내사항 추가</span></div>
- ${studentSelectHtml}
- <div class="form-group" style="margin-bottom:10px;"><div id="noticeContent" contenteditable="true" spellcheck="false" data-placeholder="안내사항 내용을 입력하세요..." style="min-height:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;line-height:1.6;word-break:break-word;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor=''" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addNotice();}"></div></div>
+ <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px;">@이름으로 특정 학생을 여러 명 지정할 수 있어요.</p>
+ <div class="form-group" style="margin-bottom:10px;"><div id="noticeContent" contenteditable="true" spellcheck="false" data-placeholder="안내사항 내용을 입력하세요... (@이름으로 학생 지정)" style="min-height:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;line-height:1.6;word-break:break-word;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor=''" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),()=>_ankAllStudents().filter(s=>s.classId===hrSelectedClassId))" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addNotice();}"></div></div>
  <button class="btn btn-primary" style="width:100%;" onclick="addNotice()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg><span>추가하기</span></span></button>
  <p style="font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-top:6px;">Ctrl+Enter로 빠르게 추가</p>
  </div>`;
@@ -5329,14 +5432,8 @@ function addNotice(){
  const content=_ne.tagName==='TEXTAREA'?_ne.value.trim():_ne.innerHTML.trim();
  if(!content||content==='<br>'||!_ne.textContent.trim()){showToast(' 내용을 입력해주세요');return;}
  const notices=DB.get('dailyNotices');
- let studentId=null,studentName=null;
- const studentSel=document.getElementById('noticeStudentSelect');
- if(studentSel&&studentSel.value){
- studentId=Number(studentSel.value);
- const cls=DB.get('classes').find(c=>c.id===hrSelectedClassId);
- if(cls){const stud=cls.students.find(s=>s.id===studentId);if(stud)studentName=stud.name;}
- }
- notices.push({id:Date.now(),date:noticeSelectedDate,content,done:false,studentId,studentName});
+ const mentions=_extractMentionedStudents(_ne);
+ notices.push({id:Date.now(),date:noticeSelectedDate,content,done:false,studentIds:mentions.map(m=>m.studentId),studentNames:mentions.map(m=>m.name)});
  DB.set('dailyNotices',notices);
  renderNoticeTab();
  showToast(' 안내사항이 추가되었습니다');
