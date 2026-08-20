@@ -1710,11 +1710,19 @@ _applyThemeCSSVars('#F5F1E6');
 function updateTitlePreview(){const e=document.getElementById('titleEmoji').value||'',n=document.getElementById('titleName').value||'Kosick',p=document.getElementById('colorPrimary').value,s=document.getElementById('colorSecondary').value;document.getElementById('titlePreviewEmoji').textContent=e;const el=document.getElementById('titlePreviewText');el.textContent=n;el.style.color='';el.style.webkitTextStroke='';el.style.paintOrder='';document.getElementById('colorPrimaryHex').textContent=p;document.getElementById('colorSecondaryHex').textContent=s;}
 function openTitleEditor(){document.getElementById('titleEmoji').value=localStorage.getItem('titleEmoji')||'';document.getElementById('titleName').value=localStorage.getItem('titleName')||'Kosick';document.getElementById('colorPrimary').value=localStorage.getItem('colorPrimary')||'#818CF8';document.getElementById('colorSecondary').value=localStorage.getItem('colorSecondary')||'#10B981';updateTitlePreview();['titleEmoji','titleName','colorPrimary','colorSecondary'].forEach(id=>document.getElementById(id).oninput=updateTitlePreview);openModal('titleEditorModal');}
 function saveTitle(){const e=document.getElementById('titleEmoji').value.trim()||'',n=document.getElementById('titleName').value.trim()||'Kosick',p=document.getElementById('colorPrimary').value,s=document.getElementById('colorSecondary').value;localStorage.setItem('titleEmoji',e);localStorage.setItem('titleName',n);localStorage.setItem('colorPrimary',p);localStorage.setItem('colorSecondary',s);initHeaderTitle();initColors();if(window._syncSettings)window._syncSettings();closeModal('titleEditorModal');showToast(' 저장되었습니다');}
-function _saveBtnIconHtml(size){return `<svg width="2" height="2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg>`;}
+function _saveBtnIconHtml(size){return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg>`;}
 function manualSave(){
  const saveBtnEl=document.getElementById('saveBtn');
  const heroBtnEl=document.getElementById('mHeroSaveBtn');
+ const restoreSaveBtns=()=>{
+ if(saveBtnEl){saveBtnEl.innerHTML=_saveBtnIconHtml(22);saveBtnEl.disabled=false;saveBtnEl.style.opacity='';}
+ if(heroBtnEl){heroBtnEl.innerHTML=_saveBtnIconHtml(16);heroBtnEl.disabled=false;heroBtnEl.style.opacity='';}
+ };
  [saveBtnEl,heroBtnEl].filter(Boolean).forEach(b=>{b.innerHTML='<span style="font-size:20px;">···</span>';b.disabled=true;b.style.opacity='0.7';});
+ /* 아래 준비 단계(①~③) 중 하나라도 예외를 던지면 저장 버튼이 "···" 상태로 영원히
+ 멈춰서 아이콘이 사라진 것처럼 보이는 문제가 있었다 — try/catch로 감싸서 무슨 일이
+ 있어도 버튼은 반드시 원래 아이콘으로 되돌아오게 한다. */
+ try{
  /* ① contenteditable 중 저장 안 된 내용 먼저 강제 flush */
  document.querySelectorAll('[contenteditable="true"]').forEach(el=>{
  if(!_dirtyEls.has(el))return;
@@ -1738,20 +1746,24 @@ function manualSave(){
  records[classId][studentId][_sgibuCurrentCategory]=el.value;
  DB.set('sgibuRecords',records);
  });
+ }catch(e){
+ console.error('저장 준비 중 오류:',e);
+ restoreSaveBtns();
+ showToast('⚠️ 저장 중 문제가 발생했어요. 다시 시도해주세요');
+ return;
+ }
  /* ④ 전체 localStorage → Supabase 동기화 */
  if(window._manualSave){
  if(window._cancelDebounce)window._cancelDebounce();
  setTimeout(()=>{
- window._manualSave();
+ try{window._manualSave();}catch(e){console.error('동기화 중 오류:',e);}
  setTimeout(()=>{
- if(saveBtnEl){saveBtnEl.innerHTML=_saveBtnIconHtml(22);saveBtnEl.disabled=false;saveBtnEl.style.opacity='';}
- if(heroBtnEl){heroBtnEl.innerHTML=_saveBtnIconHtml(16);heroBtnEl.disabled=false;heroBtnEl.style.opacity='';}
+ restoreSaveBtns();
  showToast(' 수동 저장 완료!');
  },1500);
  },150);
  }else{
- if(saveBtnEl){saveBtnEl.innerHTML=_saveBtnIconHtml(22);saveBtnEl.disabled=false;}
- if(heroBtnEl){heroBtnEl.innerHTML=_saveBtnIconHtml(16);heroBtnEl.disabled=false;}
+ restoreSaveBtns();
  showToast(' 저장 모듈 초기화 중입니다. 잠시 후 다시 시도해주세요.');
  }
 }
