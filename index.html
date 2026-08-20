@@ -344,8 +344,10 @@ textarea{resize:vertical;min-height:80px;}
 .settings-pin-icon{display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;}
 @media(max-width:768px){
  .ank-layout{position:fixed;top:calc(58px + env(safe-area-inset-top) + 12px);left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));height:auto;flex-direction:column;transition:bottom 0.15s;z-index:130;}
- .ank-sidebar{width:100%;max-height:140px;flex-shrink:0;}
+ .ank-sidebar{display:none;}
  .ank-main{flex:1;min-height:0;}
+ .ank-picker-btn{top:calc(env(safe-area-inset-top) + 9px);right:calc(10px + env(safe-area-inset-right));width:40px;height:40px;background:var(--surface);color:var(--primary);border:1px solid var(--border);}
+ .ank-picker-btn svg{width:16px;height:16px;}
 }
 /* ── 시간표 ── */
 .timetable{overflow-x:auto;}
@@ -380,6 +382,8 @@ textarea{resize:vertical;min-height:80px;}
 .fab-save{position:fixed;bottom:24px;left:20px;width:58px;height:58px;border-radius:50%;background:rgba(15,23,42,0.5);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15);cursor:pointer;transition:all 0.25s;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);z-index:500;transition:all 0.2s;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0.5;}
 .fab-save:hover{background:rgba(79,70,229,0.7);transform:scale(1.1);opacity:1;}
 .fab-save:active{transform:scale(0.93);}
+.ank-picker-btn{display:none;position:fixed;z-index:150;border-radius:50%;cursor:pointer;align-items:center;justify-content:center;padding:0;}
+.ank-picker-btn:hover{background:var(--surface2);}
 @media(max-width:768px){
  /* 하단 알약형 탭바와 겹치지 않도록, 저장 버튼과 탭 전용 FAB을 상단 헤더의
  우상단으로 옮기고 홈 캘린더 버튼과 같은 원형 스타일로 맞춘다. */
@@ -936,7 +940,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="ank-mention-popup" id="ankMentionPopup"></div>
  <div class="ank-editing-banner" id="ankEditingBanner"><span>기록 수정 중</span><button type="button" onclick="cancelAnkEdit()">✕</button></div>
  <div class="ank-composer">
- <div id="ankComposerInput" class="ank-composer-input" contenteditable="true" data-placeholder="@이름으로 학생을 지정하고 기록을 입력하세요..." oninput="handleAnkComposerInput()" onkeydown="handleAnkComposerKeydown(event)"></div>
+ <div id="ankComposerInput" class="ank-composer-input" contenteditable="true" data-placeholder="기록을 입력하세요..." oninput="handleAnkComposerInput()" onkeydown="handleAnkComposerKeydown(event)"></div>
  <button class="ank-send-btn" onclick="submitAnkMessage()" title="보내기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4z"></path></svg></button>
  </div>
  </div>
@@ -1138,6 +1142,14 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="modal-title" id="seatModalTitle"></div>
  <div id="seatModalBody"></div>
  <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('seatModal');if(_modalConfirmCallback)_modalConfirmCallback();">확인</button></div>
+ </div>
+</div>
+<!-- 모달: 누가기록 학생 선택 -->
+<div class="modal-overlay" id="ankPickerModal">
+ <div class="modal" style="width:fit-content;min-width:240px;max-width:92vw;">
+ <div class="modal-title">학생 선택</div>
+ <div id="ankPickerClasses" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+ <div id="ankPickerStudents" style="display:flex;flex-wrap:wrap;gap:8px;max-height:0;margin-top:0;overflow:hidden;transition:max-height 0.3s ease,margin-top 0.3s ease;"></div>
  </div>
 </div>
 <!-- 모달: 학급 추가 -->
@@ -1409,7 +1421,8 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="tab-fab-items" id="tabFabItems"></div>
  <button class="tab-fab-main" id="tabFabMain" onclick="toggleTabFab()">+</button>
 </div>
-<button class="fab-save" id="saveBtn" onclick="manualSave()" title="저장" style="display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg></button>
+<button class="fab-save" id="saveBtn" onclick="manualSave()" title="저장"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg></button>
+<button class="ank-picker-btn" id="ankPickerBtn" onclick="openAnkStudentPicker()" title="학생 선택"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-4 9 4-9 4-9-4z"></path><path d="M7 11.5V15c0 1.7 2.2 3 5 3s5-1.3 5-3v-3.5"></path></svg></button>
 <div class="toast-container"><div class="toast" id="toast1"></div><div class="toast" id="toast2"></div></div>
 <script>
 /* ── 유틸 ── */
@@ -2905,12 +2918,42 @@ function selectAnkStudent(classId,studentId){
  const inp=document.getElementById('ankComposerInput');
  if(inp)inp.focus();
 }
+function openAnkStudentPicker(){
+ const classesWrap=document.getElementById('ankPickerClasses');
+ const studentsWrap=document.getElementById('ankPickerStudents');
+ if(!classesWrap||!studentsWrap)return;
+ const classes=[...DB.get('classes')].sort((a,b)=>{
+ const ga=parseInt(a.grade)||0,gb=parseInt(b.grade)||0;
+ if(ga!==gb)return ga-gb;
+ return (parseInt(a.classNum)||0)-(parseInt(b.classNum)||0);
+ });
+ classesWrap.innerHTML=classes.length?classes.map(c=>`<button type="button" class="seat-pick-chip" onclick="_ankPickerShowStudents(${c.id})">${escHtml(String(c.grade))}학년 ${escHtml(String(c.classNum))}반</button>`).join(''):'<div class="ank-empty-note">등록된 학급이 없어요</div>';
+ studentsWrap.innerHTML='';
+ studentsWrap.style.maxHeight='0';
+ studentsWrap.style.marginTop='0';
+ openModal('ankPickerModal');
+}
+function _ankPickerShowStudents(classId){
+ const studentsWrap=document.getElementById('ankPickerStudents');
+ if(!studentsWrap)return;
+ const cls=DB.get('classes').find(c=>c.id===classId);
+ const students=cls?[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
+ studentsWrap.innerHTML=students.length?students.map(s=>`<button type="button" class="seat-pick-chip" onclick="_ankPickerSelectStudent(${classId},${s.id})">${s.number?s.number+'번 ':''}${escHtml(s.name)}</button>`).join(''):'<div class="ank-empty-note">학생이 없어요</div>';
+ studentsWrap.style.marginTop='12px';
+ requestAnimationFrame(()=>{
+ studentsWrap.style.maxHeight=studentsWrap.scrollHeight+'px';
+ });
+}
+function _ankPickerSelectStudent(classId,studentId){
+ closeModal('ankPickerModal');
+ selectAnkStudent(classId,studentId);
+}
 function renderAnkThread(){
  const wrap=document.getElementById('ankThread');
  if(!wrap)return;
  const cur=_ankCurrentStudent();
  if(!cur){
- wrap.innerHTML=`<div class="ank-thread-empty">왼쪽에서 학생을 선택하거나, 아래 입력창에 <b>@이름</b>을 입력해 학생을 지정해보세요.</div>`;
+ wrap.innerHTML=`<div class="ank-thread-empty">학생을 선택하고 기록을 남겨보세요.</div>`;
  return;
  }
  const{cls,student}=cur;
@@ -3052,7 +3095,7 @@ function submitAnkMessage(){
  const targetClassId=mentionClassId!=null?mentionClassId:_ankSelectedClassId;
  const targetStudentId=mentionStudentId!=null?mentionStudentId:_ankSelectedStudentId;
  if(targetClassId==null||targetStudentId==null){
- showToast('⚠️ 먼저 학생을 선택하거나 @이름으로 지정해주세요');
+ showToast('⚠️ 먼저 학생을 선택해주세요');
  return;
  }
  const cls=DB.get('classes').find(c=>c.id===targetClassId);
@@ -6572,6 +6615,14 @@ function _setMobileFabCombo(combo){
 function updateTabFab(sectionId){
  const wrap=document.getElementById('tabFabWrap');
  if(!wrap)return;
+ const pickerBtn=document.getElementById('ankPickerBtn');
+ if(sectionId==='anecdotal'){
+ wrap.style.display='none';closeTabFab();
+ if(pickerBtn)pickerBtn.style.display=window.innerWidth<=768?'flex':'none';
+ _setMobileFabCombo(true);
+ return;
+ }
+ if(pickerBtn)pickerBtn.style.display='none';
  const fabSections=['homeroom','students','bookmarks','memos','notepad'];
  _setMobileFabCombo(fabSections.includes(sectionId));
  if(!fabSections.includes(sectionId)){wrap.style.display='none';closeTabFab();return;}
