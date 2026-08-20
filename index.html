@@ -259,8 +259,9 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFo
 .star-btn{background:none;border:none;cursor:pointer;font-size:0.95rem;padding:0;flex-shrink:0;line-height:1;opacity:0.5;transition:opacity 0.2s;width:28px;height:28px;display:flex;align-items:center;justify-content:center;}
 .star-btn:hover,.star-btn.on{opacity:1;}
 .memo-add-row{display:flex;align-items:center;gap:10px;padding:10px 0 0;margin-top:auto;border-top:1px solid var(--border);}
-.memo-add-input{background:transparent;border:none;font-size:0.92rem;color:var(--text-secondary);width:100%;padding:0;font-family:inherit;outline:none;}
+.memo-add-input{background:transparent;border:none;font-size:0.92rem;color:var(--text-secondary);width:100%;padding:0;font-family:inherit;outline:none;white-space:pre-wrap;word-break:break-word;cursor:text;min-height:1.3em;}
 .memo-add-input:focus{color:var(--text);}
+.memo-add-input:empty::before{content:attr(data-placeholder);color:var(--text-secondary);opacity:0.7;pointer-events:none;}
 .color-picker-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
 .color-option{width:34px;height:34px;border-radius:50%;cursor:pointer;transition:all 0.2s;border:3px solid transparent;}
 .color-option:hover{transform:scale(1.1);}
@@ -2509,7 +2510,7 @@ const cs=isCompleted?`background:${_borderColor};border-color:${_borderColor};`:
 const dragAttrs=!isCompleted?`ondragstart="memoItemDragStart(event,${item.id})" ondragover="memoItemDragOver(event,${item.id},this)" ondragleave="this.classList.remove('drag-over-memo')" ondrop="memoItemDrop(event,${item.id})" ondragend="this.removeAttribute('draggable')"`:'' ; return `<div class="memo-item" id="memoItem_${item.id}" ${dragAttrs}>
 ${!isCompleted?`<div class="memo-drag-handle" title="드래그로 순서 변경" onmousedown="this.closest('.memo-item').setAttribute('draggable','true')" ontouchstart="this.closest('.memo-item').setAttribute('draggable','true')">⠿</div>`:'<div style="width:10px;flex-shrink:0;"></div>'} <button class="memo-check-btn" style="${cs}" onclick="toggleMemoItem(${item.id})">${isCompleted?'✓':''}</button>
  <div class="memo-item-body">
- <div class="${tc}" contenteditable="${ed}" spellcheck="false" data-text-id="${item.id}" data-placeholder="항목... (@이름으로 학생 지정)" onkeydown="handleMemoTextKeydown(event,${item.id},this)" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),_ankAllStudents)" style="color:${isCompleted?_tcDone:_tcNormal};"></div>
+ <div class="${tc}" contenteditable="${ed}" spellcheck="false" data-text-id="${item.id}" data-placeholder="항목... (@이름으로 학생 지정)" onkeydown="handleMentionKeydown(event,_ankAllStudents);handleMemoTextKeydown(event,${item.id},this)" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),_ankAllStudents)" style="color:${isCompleted?_tcDone:_tcNormal};"></div>
  ${!isCompleted?`${getDeadlineBadgeHtml(item)}<div id="dlWrap_${item.id}" style="display:none;margin-top:4px;"><input type="date" value="${item.deadline||''}" style="font-size:0.75rem;padding:3px 8px;width:160px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;" onchange="updateMemoDeadline(${item.id},this.value)"></div>`:''}
  <div class="memo-item-detail" contenteditable="${ed}" spellcheck="false" data-id="${item.id}" data-placeholder="세부 사항..." onkeydown="handleDetailKeydown(event,${item.id},this)" style="color:${_tcDetail};"></div>
  </div>
@@ -2639,7 +2640,7 @@ ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).joi
  </div>
  <div class="memo-add-row" style="border-top:1px solid ${list.fillStyle==='fill'?_getContrastColor(list.color)+'33':'var(--border)'};">
  <div style="width:22px;height:22px;border-radius:50%;border:2px dashed ${list.fillStyle==='fill'?_getContrastColor(list.color):list.color};flex-shrink:0;display:flex;align-items:center;justify-content:center;color:${list.fillStyle==='fill'?_getContrastColor(list.color):list.color};font-size:0.9rem;font-weight:700;">+</div>
- <input class="memo-add-input" spellcheck="false" id="newMemoItemInput_${list.id}" placeholder="새 항목 추가..." style="color:${_ctcs};" onkeydown="if(event.key==='Enter')addMemoItemToList(${list.id},this)" onblur="addMemoItemToList(${list.id},this)">
+ <div class="memo-add-input" contenteditable="true" spellcheck="false" id="newMemoItemInput_${list.id}" data-placeholder="새 항목 추가... (@이름으로 학생 지정)" style="color:${_ctcs};" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),_ankAllStudents)" onkeydown="handleMentionKeydown(event,_ankAllStudents);if(event.key==='Enter'){event.preventDefault();addMemoItemToList(${list.id},this);}" onblur="addMemoItemToList(${list.id},this)"></div>
  </div>
  </div>`;
  }).join('');
@@ -2677,7 +2678,7 @@ ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).joi
  </div>
  <div class="memo-add-row" style="border-top:1px solid ${list.fillStyle==='fill'?_getContrastColor(list.color)+'33':'var(--border)'};">
  <div style="width:22px;height:22px;border-radius:50%;border:2px dashed ${list.fillStyle==='fill'?_getContrastColor(list.color):list.color};flex-shrink:0;display:flex;align-items:center;justify-content:center;color:${list.fillStyle==='fill'?_getContrastColor(list.color):list.color};font-size:0.9rem;font-weight:700;">+</div>
- <input class="memo-add-input" spellcheck="false" id="newMemoItemInput_${list.id}" placeholder="새 항목 추가..." style="color:${_ctcs};" onkeydown="if(event.key==='Enter')addMemoItemToList(${list.id},this)" onblur="addMemoItemToList(${list.id},this)">
+ <div class="memo-add-input" contenteditable="true" spellcheck="false" id="newMemoItemInput_${list.id}" data-placeholder="새 항목 추가... (@이름으로 학생 지정)" style="color:${_ctcs};" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),_ankAllStudents)" onkeydown="handleMentionKeydown(event,_ankAllStudents);if(event.key==='Enter'){event.preventDefault();addMemoItemToList(${list.id},this);}" onblur="addMemoItemToList(${list.id},this)"></div>
  </div>
  </div>`;
  }
@@ -2703,7 +2704,19 @@ function renderMemoSection(){
  buildMemoSubNav(lists);
  renderMemoBody();
 }
-function addMemoItemToList(listId,inputEl){const text=inputEl.value.trim();if(!text)return;inputEl.value='';const items=DB.get('memoItems');items.push({id:Date.now(),listId,text,detail:'',completed:false,priority:false,deadline:''});DB.set('memoItems',items);updateNavBadges();renderMemoSection();showToast(' 항목이 추가되었습니다');setTimeout(()=>{const el=document.getElementById(`newMemoItemInput_${listId}`);if(el)el.focus();},30);}
+function addMemoItemToList(listId,inputEl){
+ if(!inputEl.textContent.trim())return;
+ const html=inputEl.innerHTML;
+ const mentions=_extractMentionedStudents(inputEl);
+ inputEl.innerHTML='';
+ const items=DB.get('memoItems');
+ items.push({id:Date.now(),listId,text:html,detail:'',completed:false,priority:false,deadline:'',studentIds:mentions.map(m=>m.studentId),studentNames:mentions.map(m=>m.name)});
+ DB.set('memoItems',items);
+ updateNavBadges();
+ renderMemoSection();
+ showToast(' 항목이 추가되었습니다');
+ setTimeout(()=>{const el=document.getElementById(`newMemoItemInput_${listId}`);if(el)el.focus();},30);
+}
 function homeMemoItemClick(id){toggleMemoItem(id);if(document.getElementById('home').classList.contains('active'))updateHome();}
 function toggleMemoItem(id){
  const items=DB.get('memoItems'),item=items.find(i=>i.id===id);
@@ -2908,10 +2921,11 @@ function _showMentionPopup(inputEl,popupEl,query,studentsFn){
  const r=inputEl.getBoundingClientRect();
  popupEl.style.position='fixed';
  popupEl.style.left=Math.round(r.left)+'px';
- popupEl.style.top=Math.round(r.bottom+4)+'px';
+ popupEl.style.top='auto';
+ popupEl.style.bottom=Math.round(window.innerHeight-r.top+4)+'px';
  popupEl.style.width=Math.round(Math.max(200,r.width))+'px';
- popupEl.style.right='auto';popupEl.style.bottom='auto';popupEl.style.marginBottom='0';popupEl.style.zIndex='1300';
- popupEl.innerHTML=matches.map(s=>`<button type="button" class="ank-mention-opt" onclick='pickMention(${s.classId},${s.studentId},${JSON.stringify(s.name)})'>${s.grade?escHtml(String(s.grade))+'학년 '+escHtml(String(s.classNum))+'반 ':''}${escHtml(s.name)}</button>`).join('');
+ popupEl.style.right='auto';popupEl.style.marginBottom='0';popupEl.style.zIndex='1300';
+ popupEl.innerHTML=matches.map(s=>`<button type="button" class="ank-mention-opt" onmousedown="event.preventDefault()" onclick='pickMention(${s.classId},${s.studentId},${JSON.stringify(s.name)})'>${s.grade?escHtml(String(s.grade))+'학년 '+escHtml(String(s.classNum))+'반 ':''}${escHtml(s.name)}</button>`).join('');
  popupEl.style.display='flex';
 }
 function pickMention(classId,studentId,name){
@@ -2942,6 +2956,18 @@ function pickMention(classId,studentId,name){
  inputEl.dispatchEvent(new Event('input',{bubbles:true}));
  _mentionState=null;
  popupEl.style.display='none';popupEl.innerHTML='';
+}
+/* 스페이스바를 누른 순간 "@이름"과 정확히 일치하는 학생이 한 명뿐이면 팝업에서
+ 직접 고르지 않아도 곧바로 칩으로 확정한다(동명이인이면 목록에서 골라야 함). */
+function handleMentionKeydown(e,studentsFn){
+ if(e.key!==' ')return;
+ if(!(_mentionState&&_mentionState.query))return;
+ const query=_mentionState.query;
+ const matches=studentsFn().filter(s=>s.name===query);
+ if(matches.length===1){
+ e.preventDefault();
+ pickMention(matches[0].classId,matches[0].studentId,matches[0].name);
+ }
 }
 function removeMentionChip(e,btn){
  e.stopPropagation();
@@ -5420,7 +5446,7 @@ const isToday=noticeSelectedDate===_getLocalTodayStr();
  html+=`<div class="card" style="margin-top:16px;margin-bottom:0;">
  <div class="card-title" style="display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg><span>안내사항 추가</span></div>
  <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px;">@이름으로 특정 학생을 여러 명 지정할 수 있어요.</p>
- <div class="form-group" style="margin-bottom:10px;"><div id="noticeContent" contenteditable="true" spellcheck="false" data-placeholder="안내사항 내용을 입력하세요... (@이름으로 학생 지정)" style="min-height:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;line-height:1.6;word-break:break-word;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor=''" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),()=>_ankAllStudents().filter(s=>s.classId===hrSelectedClassId))" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addNotice();}"></div></div>
+ <div class="form-group" style="margin-bottom:10px;"><div id="noticeContent" contenteditable="true" spellcheck="false" data-placeholder="안내사항 내용을 입력하세요... (@이름으로 학생 지정)" style="min-height:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;line-height:1.6;word-break:break-word;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor=''" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),()=>_ankAllStudents().filter(s=>s.classId===hrSelectedClassId))" onkeydown="handleMentionKeydown(event,()=>_ankAllStudents().filter(s=>s.classId===hrSelectedClassId));if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addNotice();}"></div></div>
  <button class="btn btn-primary" style="width:100%;" onclick="addNotice()"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg><span>추가하기</span></span></button>
  <p style="font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-top:6px;">Ctrl+Enter로 빠르게 추가</p>
  </div>`;
