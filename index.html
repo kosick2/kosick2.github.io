@@ -39,8 +39,8 @@ body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:4p
 .tt-widget-chip.current{transform:scale(1.16);box-shadow:0 0 0 2px #fff,0 4px 12px rgba(0,0,0,0.35);}
 .tt-widget-empty{font-size:0.74rem;font-weight:700;color:var(--text-secondary);background:rgba(255,255,255,0.7);padding:6px 10px;border-radius:10px;}
 .tt-widget-menu-wrap{position:relative;flex-shrink:0;display:flex;}
-.tt-widget-menu-btn{background:var(--surface);padding:5px;cursor:pointer;-webkit-app-region:no-drag;}
-.tt-widget-menu-btn img{width:100%;height:100%;object-fit:contain;display:block;}
+.tt-widget-menu-btn{background:var(--surface);padding:0;cursor:pointer;-webkit-app-region:no-drag;overflow:hidden;}
+.tt-widget-menu-btn img{width:100%;height:100%;object-fit:cover;display:block;}
 .tt-widget-menu-popup{position:absolute;bottom:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.28);padding:6px;display:none;flex-direction:column;gap:2px;min-width:132px;-webkit-app-region:no-drag;z-index:10;}
 .tt-widget-menu-popup.show{display:flex;}
 .tt-widget-menu-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;border:none;background:none;color:var(--text);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left;font-family:inherit;}
