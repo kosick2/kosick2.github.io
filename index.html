@@ -33,7 +33,8 @@ body.widget-mode > :not(#timetableWidget){display:none !important;}
 body.widget-mode{background:transparent;}
 body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:4px;align-items:center;justify-content:center;}
 .tt-widget-container{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;-webkit-app-region:drag;}
-.tt-widget-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;}
+.tt-widget-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;}
+body.tt-locked .tt-widget-container{-webkit-app-region:no-drag;}
 .tt-widget-chip{flex-shrink:0;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;text-align:center;line-height:1.1;box-shadow:0 2px 6px rgba(0,0,0,0.2);padding:2px;}
 .tt-widget-chip.free{background:var(--surface2);color:var(--text-secondary);box-shadow:none;}
 .tt-widget-chip.current{transform:scale(1.16);box-shadow:0 0 0 2px #fff,0 4px 12px rgba(0,0,0,0.35);}
@@ -2472,7 +2473,7 @@ const TT_WIDGET_SECTIONS=[
 ];
 function _ttWidgetMenuHtml(){
  return `<div class="tt-widget-menu-wrap">
- <div class="tt-widget-chip tt-widget-menu-btn" onclick="_ttWidgetToggleMenu(event)"><img src="logo.png" alt=""></div>
+ <div class="tt-widget-chip tt-widget-menu-btn" onclick="_ttWidgetMenuBtnClick(event)"><img src="logo.png" alt=""></div>
  <div class="tt-widget-menu-popup" id="ttWidgetMenuPopup">${TT_WIDGET_SECTIONS.map(s=>`<button class="tt-widget-menu-item" onclick="_ttWidgetGoto('${s.id}')"><span>${s.emoji}</span><span>${s.label}</span></button>`).join('')}</div>
  </div>`;
 }
@@ -2492,10 +2493,11 @@ function renderTimetableWidget(){
  return `<div class="${cls}"${style}>${label}</div>`;
  }).join('');
  }
- el.innerHTML=`<div class="tt-widget-container"><div class="tt-widget-row">${bodyHtml}${_ttWidgetMenuHtml()}</div></div>`;
+ el.innerHTML=`<div class="tt-widget-container"><div class="tt-widget-row">${_ttWidgetMenuHtml()}${bodyHtml}</div></div>`;
 }
-function _ttWidgetToggleMenu(e){
+function _ttWidgetMenuBtnClick(e){
  if(e)e.stopPropagation();
+ if(window.kosickWidget&&window.kosickWidget.openMenu){window.kosickWidget.openMenu();return;}
  const p=document.getElementById('ttWidgetMenuPopup');
  if(p)p.classList.toggle('show');
 }
@@ -2509,7 +2511,7 @@ function initTimetableWidgetMode(){
  document.documentElement.style.background='transparent';
  renderTimetableWidget();
  window.addEventListener('storage',e=>{if(e.key==='timetable')renderTimetableWidget();});
- setInterval(renderTimetableWidget,60000);
+ setInterval(renderTimetableWidget,3000);
  document.addEventListener('click',(e)=>{
  const popup=document.getElementById('ttWidgetMenuPopup');
  if(popup&&popup.classList.contains('show')&&!e.target.closest('.tt-widget-menu-wrap'))popup.classList.remove('show');
