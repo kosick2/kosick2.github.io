@@ -31,12 +31,20 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFo
  재사용). */
 body.widget-mode > :not(#timetableWidget){display:none !important;}
 body.widget-mode{background:transparent;}
-body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:4px;-webkit-app-region:drag;align-items:center;justify-content:center;}
+body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:4px;align-items:center;justify-content:center;}
+.tt-widget-container{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;-webkit-app-region:drag;}
 .tt-widget-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;}
 .tt-widget-chip{flex-shrink:0;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;text-align:center;line-height:1.1;box-shadow:0 2px 6px rgba(0,0,0,0.2);padding:2px;}
 .tt-widget-chip.free{background:var(--surface2);color:var(--text-secondary);box-shadow:none;}
 .tt-widget-chip.current{transform:scale(1.16);box-shadow:0 0 0 2px #fff,0 4px 12px rgba(0,0,0,0.35);}
 .tt-widget-empty{font-size:0.74rem;font-weight:700;color:var(--text-secondary);background:rgba(255,255,255,0.7);padding:6px 10px;border-radius:10px;}
+.tt-widget-menu-wrap{position:relative;flex-shrink:0;display:flex;}
+.tt-widget-menu-btn{background:var(--surface);padding:5px;cursor:pointer;-webkit-app-region:no-drag;}
+.tt-widget-menu-btn img{width:100%;height:100%;object-fit:contain;display:block;}
+.tt-widget-menu-popup{position:absolute;bottom:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.28);padding:6px;display:none;flex-direction:column;gap:2px;min-width:132px;-webkit-app-region:no-drag;z-index:10;}
+.tt-widget-menu-popup.show{display:flex;}
+.tt-widget-menu-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;border:none;background:none;color:var(--text);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left;font-family:inherit;}
+.tt-widget-menu-item:hover{background:var(--surface2);}
 /* ═══ 좌측 사이드바 내비게이션 (데스크톱) ═══ */
 .app-sidebar{position:fixed;top:16px;left:16px;bottom:16px;width:188px;background:var(--primary);border-radius:28px;box-shadow:0 16px 40px rgba(31,107,91,0.28);display:flex;flex-direction:column;z-index:150;padding:22px 10px;}
 .sidebar-brand{display:flex;align-items:center;gap:10px;padding:4px 10px 22px;flex-shrink:0;}
@@ -2442,29 +2450,59 @@ function _ttWidgetToday(){
  const todayDi=now.getDay()-1;
  if(todayDi<0||todayDi>4)return{periods:[],currentPeriod:null,noSchoolToday:true};
  const periods=[];
- for(let p=1;p<=8;p++){const cell=tt[`${todayDi}_${p}`];if(cell&&cell.name&&!cell.isNoClass)periods.push({p,cell});}
- const PERIOD_START_HOUR={1:9,2:10,3:11,4:12,5:14,6:15,7:16,8:17};
+ for(let p=1;p<=7;p++){
+ const cell=tt[`${todayDi}_${p}`];
+ periods.push({p,cell:(cell&&cell.name&&!cell.isNoClass)?cell:null});
+ }
+ const PERIOD_START_HOUR={1:9,2:10,3:11,4:12,5:14,6:15,7:16};
  const nowHour=now.getHours();
  let currentPeriod=null;
  periods.forEach(({p})=>{const sh=PERIOD_START_HOUR[p];if(sh!=null&&nowHour>=sh&&nowHour<sh+1)currentPeriod=p;});
  return{periods,currentPeriod,noSchoolToday:false};
 }
+const TT_WIDGET_SECTIONS=[
+ {id:'home',label:'홈',emoji:'🏠'},
+ {id:'homeroom',label:'담임',emoji:'🧑‍🏫'},
+ {id:'students',label:'학생관리',emoji:'👥'},
+ {id:'memos',label:'할 일',emoji:'✅'},
+ {id:'notepad',label:'메모',emoji:'📝'},
+ {id:'bookmarks',label:'즐겨찾기',emoji:'🔖'},
+ {id:'timetable',label:'시간표',emoji:'📅'},
+ {id:'anecdotal',label:'누가기록',emoji:'💬'},
+];
+function _ttWidgetMenuHtml(){
+ return `<div class="tt-widget-menu-wrap">
+ <div class="tt-widget-chip tt-widget-menu-btn" onclick="_ttWidgetToggleMenu(event)"><img src="logo.png" alt=""></div>
+ <div class="tt-widget-menu-popup" id="ttWidgetMenuPopup">${TT_WIDGET_SECTIONS.map(s=>`<button class="tt-widget-menu-item" onclick="_ttWidgetGoto('${s.id}')"><span>${s.emoji}</span><span>${s.label}</span></button>`).join('')}</div>
+ </div>`;
+}
 function renderTimetableWidget(){
  const el=document.getElementById('timetableWidget');
  if(!el)return;
  const data=_ttWidgetToday();
- if(data.noSchoolToday||!data.periods.length){
- const msg=data.noSchoolToday?'오늘은 수업이 없어요':'오늘 등록된 수업이 없어요';
- el.innerHTML=`<div class="tt-widget-empty">${msg}</div>`;
- return;
- }
- el.innerHTML=`<div class="tt-widget-row">${data.periods.map(({p,cell})=>{
- const isFree=cell.isFree||cell.name==='공강';
- const label=isFree?'공강':(cell.room||cell.name);
+ let bodyHtml;
+ if(data.noSchoolToday){
+ bodyHtml=`<div class="tt-widget-empty">오늘은 수업이 없어요</div>`;
+ }else{
+ bodyHtml=data.periods.map(({p,cell})=>{
+ const isFree=!cell||cell.isFree||cell.name==='공강';
+ const label=!cell?'없음':(isFree?'공강':(cell.room||cell.name));
  const cls=`tt-widget-chip${isFree?' free':''}${p===data.currentPeriod?' current':''}`;
  const style=isFree?'':` style="background:${cell.color||'#818CF8'};color:${_getContrastColor(cell.color||'#818CF8')};"`;
  return `<div class="${cls}"${style}>${label}</div>`;
- }).join('')}</div>`;
+ }).join('');
+ }
+ el.innerHTML=`<div class="tt-widget-container"><div class="tt-widget-row">${bodyHtml}${_ttWidgetMenuHtml()}</div></div>`;
+}
+function _ttWidgetToggleMenu(e){
+ if(e)e.stopPropagation();
+ const p=document.getElementById('ttWidgetMenuPopup');
+ if(p)p.classList.toggle('show');
+}
+function _ttWidgetGoto(sectionId){
+ const p=document.getElementById('ttWidgetMenuPopup');
+ if(p)p.classList.remove('show');
+ if(window.kosickWidget&&window.kosickWidget.navigate)window.kosickWidget.navigate(sectionId);
 }
 function initTimetableWidgetMode(){
  document.body.classList.add('widget-mode');
@@ -2472,6 +2510,10 @@ function initTimetableWidgetMode(){
  renderTimetableWidget();
  window.addEventListener('storage',e=>{if(e.key==='timetable')renderTimetableWidget();});
  setInterval(renderTimetableWidget,60000);
+ document.addEventListener('click',(e)=>{
+ const popup=document.getElementById('ttWidgetMenuPopup');
+ if(popup&&popup.classList.contains('show')&&!e.target.closest('.tt-widget-menu-wrap'))popup.classList.remove('show');
+ });
 }
 if(_isTimetableWidgetMode())initTimetableWidgetMode();
 
