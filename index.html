@@ -1802,12 +1802,14 @@ const titleEl=document.getElementById('mobileTabTitle');
  if(typeof buildArcFab==='function')buildArcFab();
  if(typeof updateHeaderDate==='function')updateHeaderDate();
  /* ★ 드로어 닫기 */
+ if(!document.body.classList.contains('widget-mode')){
  const _bg=SECTION_BG_MAP[id]||'#F5F1E6';
  document.documentElement.style.background=_bg;
  document.body.style.background=_bg;
  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',_bg);
  const _sa=document.getElementById('topSafeArea');if(_sa)_sa.style.background=_bg;
  const _hd=document.querySelector('.header');if(_hd)_hd.style.background=_bg;
+ }
  closeDrawer();
  /* ★ 메모 탭은 어떤 경로로 들어오든(상단 탭/홈 바로가기/홈 꾹 눌러 진입) 항상 기본 화면(전체)으로 진입한다 */
  if(id==='notepad'){_currentNoteId=null;_notepadActiveTab='all';}
@@ -2466,6 +2468,7 @@ function renderTimetableWidget(){
 }
 function initTimetableWidgetMode(){
  document.body.classList.add('widget-mode');
+ document.documentElement.style.background='transparent';
  renderTimetableWidget();
  window.addEventListener('storage',e=>{if(e.key==='timetable')renderTimetableWidget();});
  setInterval(renderTimetableWidget,60000);
@@ -5037,6 +5040,7 @@ buildSidebarNav();
  검은색으로 남아있는 WebKit 초기 렌더링 이슈 방지: 최초 로드 시에도
  탭 전환과 동일한 배경 재적용 로직을 강제로 한 번 실행한다. */
 function _forceStatusBarRepaint(){
+ if(document.body.classList.contains('widget-mode'))return;
  const activeId=document.querySelector('.section.active')?.id||'home';
  const _bg=SECTION_BG_MAP[activeId]||'#F5F1E6';
  document.documentElement.style.background=_bg;
