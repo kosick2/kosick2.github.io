@@ -358,6 +358,13 @@ textarea{resize:vertical;min-height:80px;}
 .ank-inline-chip button{background:none;border:none;cursor:pointer;color:var(--primary-light);opacity:0.6;font-size:0.62rem;padding:2px;line-height:1;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;width:14px;height:14px;}
 .ank-inline-chip button:hover{opacity:1;background:rgba(129,140,248,0.15);}
 .mention-tags-row{display:none;flex-wrap:wrap;gap:0;}
+.ank-tag-bar{display:none;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 20px 0;flex-shrink:0;}
+.ank-tag-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-size:0.76rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.ank-tag-chip:hover{background:var(--surface2);color:var(--text);}
+.ank-tag-chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.ank-tag-highlight{color:var(--primary-light);font-weight:700;}
+.ank-tag-filter-close{margin-left:auto;background:none;border:none;color:var(--text-secondary);font-size:0.76rem;font-weight:700;cursor:pointer;font-family:inherit;padding:4px 6px;}
+.ank-bubble-who{font-weight:700;color:var(--text);}
 .ank-send-btn{width:40px;height:40px;flex-shrink:0;border-radius:50%;border:none;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:filter 0.15s;}
 .ank-send-btn:hover{filter:brightness(1.08);}
 /* ═══ 설정 ═══ */
@@ -963,6 +970,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="ank-layout">
  <aside class="ank-sidebar" id="ankSidebar"></aside>
  <div class="ank-main">
+ <div class="ank-tag-bar" id="ankTagBar"></div>
  <div class="ank-thread" id="ankThread"></div>
  <div class="ank-composer-wrap">
  <div class="ank-mention-popup" id="ankMentionPopup"></div>
@@ -2997,7 +3005,9 @@ let _ankExpandedClassId=null;
 let _ankSelectedClassId=null;
 let _ankSelectedStudentId=null;
 let _ankMentionMatch=null; /* {start,end,query}: 입력창에서 현재 편집 중인 @멘션 구간 */
+let _ankTagMatch=null; /* {start,end,query}: 입력창에서 현재 편집 중인 #태그 구간 */
 let _ankEditingId=null; /* 현재 수정 중인 기록의 id(없으면 null) */
+let _ankActiveTagFilter=null; /* 설정되면 학생별 스레드 대신 이 태그가 달린 기록을 전체 학생 대상으로 모아 보여준다 */
 
 function _ankAllStudents(){
  const classes=DB.get('classes');
@@ -3168,6 +3178,7 @@ function _ankCurrentStudent(){
 }
 function renderAnecdotalSection(){
  renderAnecdotalSidebar();
+ renderAnkTagBar();
  renderAnkThread();
 }
 /* 사이드바 강조/스레드 전환만 담당(입력창 내용은 건드리지 않음) — 인라인 칩 삽입 시 사용 */
@@ -3175,6 +3186,8 @@ function _ankSetActiveStudent(classId,studentId){
  _ankSelectedClassId=classId;
  _ankSelectedStudentId=studentId;
  _ankExpandedClassId=classId;
+ /* 학생을 직접 고르면 태그 모아보기 화면에서 그 학생의 스레드로 돌아온다 */
+ if(_ankActiveTagFilter!=null){_ankActiveTagFilter=null;renderAnkTagBar();}
  /* 다른 학생으로 넘어가면 진행 중이던 수정은 취소한다(엉뚱한 기록에 덮어써지는 것 방지) */
  if(_ankEditingId!=null)cancelAnkEdit();
  /* @멘션으로 붙였던 칩은 학생이 다시 바뀌면 낡은 정보가 되므로 일단 지운다
@@ -3183,6 +3196,36 @@ function _ankSetActiveStudent(classId,studentId){
  if(tagsRow){tagsRow.innerHTML='';tagsRow.style.display='none';}
  renderAnecdotalSidebar();
  renderAnkThread();
+}
+/* 기록에 적힌 #태그들을 모아 사용 빈도순으로 정렬해 반환한다 */
+function _ankAllTags(){
+ const freq={};
+ DB.get('counselings').forEach(c=>(c.tags||[]).forEach(t=>{freq[t]=(freq[t]||0)+1;}));
+ return Object.keys(freq).sort((a,b)=>freq[b]-freq[a]||a.localeCompare(b));
+}
+function renderAnkTagBar(){
+ const wrap=document.getElementById('ankTagBar');
+ if(!wrap)return;
+ const tags=_ankAllTags();
+ if(!tags.length){wrap.style.display='none';wrap.innerHTML='';return;}
+ wrap.style.display='flex';
+ const chipsHtml=tags.map(t=>`<button type="button" class="ank-tag-chip${_ankActiveTagFilter===t?' active':''}" data-tag="${escHtml(t)}" onclick="filterAnkByTag(this.dataset.tag)">#${escHtml(t)}</button>`).join('');
+ const closeHtml=_ankActiveTagFilter!=null?`<button type="button" class="ank-tag-filter-close" onclick="clearAnkTagFilter()">✕ 전체 보기</button>`:'';
+ wrap.innerHTML=chipsHtml+closeHtml;
+}
+function filterAnkByTag(tag){
+ _ankActiveTagFilter=_ankActiveTagFilter===tag?null:tag;
+ renderAnkTagBar();
+ renderAnkThread();
+}
+function clearAnkTagFilter(){
+ _ankActiveTagFilter=null;
+ renderAnkTagBar();
+ renderAnkThread();
+}
+/* 기록 본문에 적힌 #태그를 눈에 띄게 강조 표시한다(escHtml로 이미 이스케이프된 문자열에 적용) */
+function _ankHighlightTags(escapedHtml){
+ return escapedHtml.replace(/#([^\s<#]+)/g,'<span class="ank-tag-highlight">#$1</span>');
 }
 function renderAnecdotalSidebar(){
  const wrap=document.getElementById('ankSidebar');
@@ -3256,9 +3299,26 @@ function _ankPickerSelectStudent(classId,studentId){
  closeModal('ankPickerModal');
  selectAnkStudent(classId,studentId);
 }
+function _ankBubbleHtml(e,whoLabel){
+ const whoHtml=whoLabel?`<span class="ank-bubble-who">${whoLabel}</span> · `:'';
+ return `<div class="ank-bubble"><div class="ank-bubble-actions"><button type="button" class="ank-bubble-action-btn" onclick="editAnkEntry(${e.id})" title="수정"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button type="button" class="ank-bubble-action-btn danger" onclick="deleteAnkEntry(${e.id})" title="삭제"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div><div class="ank-bubble-date">${whoHtml}${e.date}</div><div class="ank-bubble-content">${_ankHighlightTags(escHtml(e.content)).replace(/\n/g,'<br>')}</div></div>`;
+}
 function renderAnkThread(){
  const wrap=document.getElementById('ankThread');
  if(!wrap)return;
+ if(_ankActiveTagFilter!=null){
+ const tag=_ankActiveTagFilter;
+ const entries=DB.get('counselings').filter(c=>(c.tags||[]).includes(tag))
+ .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+ const bubbles=entries.length?entries.map(e=>{
+ const cls=DB.get('classes').find(c=>c.id===e.classId);
+ const who=cls?`${escHtml(String(cls.grade))}학년 ${escHtml(String(cls.classNum))}반 ${escHtml(e.studentName||'')}`:escHtml(e.studentName||'이름 없음');
+ return _ankBubbleHtml(e,who);
+ }).join(''):'<div class="ank-thread-empty">이 태그가 달린 기록이 없어요.</div>';
+ wrap.innerHTML=`<div class="ank-thread-header">#${escHtml(tag)} 태그 기록 (${entries.length}건)</div>${bubbles}`;
+ wrap.scrollTop=0;
+ return;
+ }
  const cur=_ankCurrentStudent();
  if(!cur){
  wrap.innerHTML=`<div class="ank-thread-empty">학생을 선택하고 기록을 남겨보세요.</div>`;
@@ -3269,7 +3329,7 @@ function renderAnkThread(){
  if(c.studentId!=null&&c.classId!=null)return c.studentId===student.id&&c.classId===cls.id;
  return c.studentName===student.name;
  }).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)||(a.date||'').localeCompare(b.date||''));
- const bubbles=entries.length?entries.map(e=>`<div class="ank-bubble"><div class="ank-bubble-actions"><button type="button" class="ank-bubble-action-btn" onclick="editAnkEntry(${e.id})" title="수정"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button type="button" class="ank-bubble-action-btn danger" onclick="deleteAnkEntry(${e.id})" title="삭제"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div><div class="ank-bubble-date">${e.date}</div><div class="ank-bubble-content">${escHtml(e.content).replace(/\n/g,'<br>')}</div></div>`).join(''):'<div class="ank-thread-empty">아직 기록이 없어요. 아래에 첫 기록을 남겨보세요.</div>';
+ const bubbles=entries.length?entries.map(e=>_ankBubbleHtml(e,null)).join(''):'<div class="ank-thread-empty">아직 기록이 없어요. 아래에 첫 기록을 남겨보세요.</div>';
  wrap.innerHTML=`<div class="ank-thread-header">${escHtml(String(cls.grade))}학년 ${escHtml(String(cls.classNum))}반 ${student.number?student.number+'번 ':''}${escHtml(student.name)}</div>${bubbles}`;
  wrap.scrollTop=wrap.scrollHeight;
 }
@@ -3286,18 +3346,56 @@ function _ankGetCaretContext(){
 }
 function handleAnkComposerInput(){
  const ctx=_ankGetCaretContext();
- if(!ctx){_ankMentionMatch=null;_hideAnkMentionPopup();return;}
+ if(!ctx){_ankMentionMatch=null;_ankTagMatch=null;_hideAnkMentionPopup();return;}
  const{node,offset,text}=ctx;
  let i=offset-1;
- while(i>=0&&text[i]!==' '&&text[i]!=='\n'&&text[i]!=='@')i--;
+ while(i>=0&&text[i]!==' '&&text[i]!=='\n'&&text[i]!=='@'&&text[i]!=='#')i--;
  if(i>=0&&text[i]==='@'){
  const query=text.slice(i+1,offset);
  _ankMentionMatch={node,start:i,end:offset,query};
+ _ankTagMatch=null;
  _showAnkMentionPopup(query);
+ }else if(i>=0&&text[i]==='#'){
+ const query=text.slice(i+1,offset);
+ _ankTagMatch={node,start:i,end:offset,query};
+ _ankMentionMatch=null;
+ _showAnkTagPopup(query);
  }else{
  _ankMentionMatch=null;
+ _ankTagMatch=null;
  _hideAnkMentionPopup();
  }
+}
+function _showAnkTagPopup(query){
+ const popup=document.getElementById('ankMentionPopup');
+ if(!popup)return;
+ if(!query){popup.style.display='none';popup.innerHTML='';return;}
+ const all=_ankAllTags();
+ const matches=all.filter(t=>t.includes(query)&&t!==query).slice(0,6);
+ let html=matches.map(t=>`<button type="button" class="ank-mention-opt" data-tag="${escHtml(t)}" onclick="pickAnkTag(this.dataset.tag)">#${escHtml(t)}</button>`).join('');
+ if(!all.includes(query)){
+ html+=`<button type="button" class="ank-mention-opt" data-tag="${escHtml(query)}" onclick="pickAnkTag(this.dataset.tag)">"#${escHtml(query)}" 새 태그</button>`;
+ }
+ popup.innerHTML=html;
+ popup.style.display='flex';
+}
+function pickAnkTag(tagName){
+ const inp=document.getElementById('ankComposerInput');
+ if(!inp||!_ankTagMatch)return;
+ const{node,start,end}=_ankTagMatch;
+ const fullText=node.textContent;
+ const insert='#'+tagName+' ';
+ node.textContent=fullText.slice(0,start)+insert+fullText.slice(end);
+ const newPos=start+insert.length;
+ const range=document.createRange();
+ range.setStart(node,Math.min(newPos,node.textContent.length));
+ range.collapse(true);
+ const sel=window.getSelection();
+ sel.removeAllRanges();
+ sel.addRange(range);
+ inp.focus();
+ _ankTagMatch=null;
+ _hideAnkMentionPopup();
 }
 function _showAnkMentionPopup(query){
  const popup=document.getElementById('ankMentionPopup');
@@ -3397,6 +3495,25 @@ function submitAnkMessage(){
  });
  const content=textParts.join('').trim();
  if(!content&&mentionClassId==null)return;
+ const tags=[...new Set([...content.matchAll(/#([^\s#@]+)/g)].map(m=>m[1]))];
+ /* 수정은 이미 존재하는 기록의 내용만 바꾸는 것이라, 태그 모아보기처럼 다른 학생의
+ 스레드가 보이는 화면에서도(=학생이 선택 안 된 상태여도) 항상 성공해야 한다 */
+ if(_ankEditingId!=null){
+ if(content){
+ const items=DB.get('counselings');
+ const idx=items.findIndex(c=>c.id===_ankEditingId);
+ if(idx!==-1){items[idx]={...items[idx],content,tags};DB.set('counselings',items);}
+ }
+ inp.innerHTML='';
+ _ankMentionMatch=null;
+ _ankEditingId=null;
+ const banner=document.getElementById('ankEditingBanner');if(banner)banner.style.display='none';
+ _hideAnkMentionPopup();
+ renderAnkTagBar();
+ renderAnkThread();
+ inp.focus();
+ return;
+ }
  const targetClassId=mentionClassId!=null?mentionClassId:_ankSelectedClassId;
  const targetStudentId=mentionStudentId!=null?mentionStudentId:_ankSelectedStudentId;
  if(targetClassId==null||targetStudentId==null){
@@ -3408,20 +3525,15 @@ function submitAnkMessage(){
  if(!cls||!student)return;
  if(content){
  const items=DB.get('counselings');
- if(_ankEditingId!=null){
- const idx=items.findIndex(c=>c.id===_ankEditingId);
- if(idx!==-1)items[idx]={...items[idx],content};
- }else{
- items.push({id:Date.now(),classId:targetClassId,studentId:targetStudentId,studentName:student.name,date:_getLocalTodayStr(),type:'cumulative',content,createdAt:Date.now()});
- }
+ items.push({id:Date.now(),classId:targetClassId,studentId:targetStudentId,studentName:student.name,date:_getLocalTodayStr(),type:'cumulative',content,tags,createdAt:Date.now()});
  DB.set('counselings',items);
  }
  inp.innerHTML='';
  _ankMentionMatch=null;
- _ankEditingId=null;
  const banner=document.getElementById('ankEditingBanner');if(banner)banner.style.display='none';
  _hideAnkMentionPopup();
  _ankSetActiveStudent(targetClassId,targetStudentId);
+ renderAnkTagBar();
  inp.focus();
 }
 function editAnkEntry(id){
@@ -3451,6 +3563,7 @@ function deleteAnkEntry(id){
  if(!confirm('이 기록을 삭제할까요?'))return;
  DB.set('counselings',DB.get('counselings').filter(c=>c.id!==id));
  if(_ankEditingId===id)cancelAnkEdit();
+ renderAnkTagBar();
  renderAnkThread();
  renderAnecdotalSidebar();
  showToast('삭제되었습니다');
