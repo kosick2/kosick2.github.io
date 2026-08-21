@@ -31,25 +31,12 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFo
  재사용). */
 body.widget-mode > :not(#timetableWidget){display:none !important;}
 body.widget-mode{background:transparent;}
-body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:8px;-webkit-app-region:drag;align-items:center;justify-content:center;}
-.tt-widget-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
-.tt-widget-gear{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;-webkit-app-region:no-drag;opacity:0;transition:opacity .15s;z-index:6;}
-.tt-widget-wrap:hover .tt-widget-gear{opacity:1;}
-.tt-widget-settings{position:absolute;top:26px;right:2px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.22);padding:8px;display:none;flex-direction:column;gap:6px;-webkit-app-region:no-drag;z-index:7;min-width:112px;}
-.tt-widget-settings.show{display:flex;}
-.tt-widget-settings .tt-ws-label{font-size:0.66rem;color:var(--text-secondary);font-weight:700;padding:0 2px;}
-.tt-widget-settings button{border:none;background:var(--surface2);color:var(--text);font-size:0.76rem;font-weight:700;padding:6px 8px;border-radius:8px;cursor:pointer;text-align:left;}
-.tt-widget-settings button.active{background:var(--primary);color:#fff;}
-.tt-widget-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,0.18);width:100%;height:100%;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
-.tt-widget-title{font-weight:800;font-size:0.88rem;color:var(--text);flex-shrink:0;}
-.tt-widget-row{display:flex;align-items:center;gap:8px;border-radius:10px;padding:6px 10px;font-size:0.82rem;font-weight:700;background:var(--surface2);color:var(--text);flex-shrink:0;}
-.tt-widget-row.current{background:var(--primary);color:#fff;}
-.tt-widget-row .tt-widget-period{flex-shrink:0;width:36px;font-size:0.72rem;opacity:0.75;}
-.tt-widget-empty{text-align:center;color:var(--text-secondary);font-size:0.82rem;padding:16px 0;}
-.tt-widget-circle{height:100%;aspect-ratio:1/1;max-width:100%;max-height:100%;border-radius:50%;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,0.18);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;gap:2px;}
-.tt-widget-circle .tt-c-period{font-size:0.66rem;color:var(--text-secondary);font-weight:700;}
-.tt-widget-circle .tt-c-main{font-size:0.92rem;font-weight:800;color:var(--text);line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.tt-widget-circle .tt-c-next{font-size:0.64rem;color:var(--text-secondary);margin-top:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:4px;-webkit-app-region:drag;align-items:center;justify-content:center;}
+.tt-widget-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;}
+.tt-widget-chip{flex-shrink:0;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;text-align:center;line-height:1.1;box-shadow:0 2px 6px rgba(0,0,0,0.2);padding:2px;}
+.tt-widget-chip.free{background:var(--surface2);color:var(--text-secondary);box-shadow:none;}
+.tt-widget-chip.current{transform:scale(1.16);box-shadow:0 0 0 2px #fff,0 4px 12px rgba(0,0,0,0.35);}
+.tt-widget-empty{font-size:0.74rem;font-weight:700;color:var(--text-secondary);background:rgba(255,255,255,0.7);padding:6px 10px;border-radius:10px;}
 /* ═══ 좌측 사이드바 내비게이션 (데스크톱) ═══ */
 .app-sidebar{position:fixed;top:16px;left:16px;bottom:16px;width:188px;background:var(--primary);border-radius:28px;box-shadow:0 16px 40px rgba(31,107,91,0.28);display:flex;flex-direction:column;z-index:150;padding:22px 10px;}
 .sidebar-brand{display:flex;align-items:center;gap:10px;padding:4px 10px 22px;flex-shrink:0;}
@@ -2447,98 +2434,40 @@ updateHome();
 function _isTimetableWidgetMode(){
  try{return new URLSearchParams(location.search).get('widget')==='timetable';}catch(e){return false;}
 }
-function _ttWidgetSettings(){
- let saved={};
- try{saved=JSON.parse(localStorage.getItem('ttWidgetSettings')||'{}');}catch(e){}
- return {shape:'square',...saved};
-}
-function _ttWidgetSaveSettings(partial){
- const next={..._ttWidgetSettings(),...partial};
- try{localStorage.setItem('ttWidgetSettings',JSON.stringify(next));}catch(e){}
- return next;
-}
 function _ttWidgetToday(){
  const tt=DB.get('timetable');
  const now=new Date();
  const todayDi=now.getDay()-1;
- const dow=['월','화','수','목','금'];
- const dateStr=`${now.getMonth()+1}월 ${now.getDate()}일${todayDi>=0&&todayDi<5?` (${dow[todayDi]})`:''}`;
- if(todayDi<0||todayDi>4)return{dateStr,periods:[],currentPeriod:null,noSchoolToday:true};
+ if(todayDi<0||todayDi>4)return{periods:[],currentPeriod:null,noSchoolToday:true};
  const periods=[];
  for(let p=1;p<=8;p++){const cell=tt[`${todayDi}_${p}`];if(cell&&cell.name&&!cell.isNoClass)periods.push({p,cell});}
  const PERIOD_START_HOUR={1:9,2:10,3:11,4:12,5:14,6:15,7:16,8:17};
  const nowHour=now.getHours();
  let currentPeriod=null;
  periods.forEach(({p})=>{const sh=PERIOD_START_HOUR[p];if(sh!=null&&nowHour>=sh&&nowHour<sh+1)currentPeriod=p;});
- return{dateStr,periods,currentPeriod,noSchoolToday:false,PERIOD_START_HOUR,nowHour};
-}
-function _ttWidgetLabel(cell){
- const isFree=cell.isFree||cell.name==='공강';
- return isFree?'공강':(cell.room||cell.name);
-}
-function _ttWidgetRenderList(data){
- let bodyHtml;
- if(data.noSchoolToday){
- bodyHtml=`<div class="tt-widget-empty">오늘은 수업이 없어요</div>`;
- }else if(!data.periods.length){
- bodyHtml=`<div class="tt-widget-empty">오늘 등록된 수업이 없어요</div>`;
- }else{
- bodyHtml=data.periods.map(({p,cell})=>`<div class="tt-widget-row${p===data.currentPeriod?' current':''}"><span class="tt-widget-period">${p}교시</span><span>${_ttWidgetLabel(cell)}</span></div>`).join('');
- }
- return `<div class="tt-widget-card"><div class="tt-widget-title">${data.dateStr} 시간표</div>${bodyHtml}</div>`;
-}
-function _ttWidgetRenderCircle(data){
- if(data.noSchoolToday||!data.periods.length){
- const msg=data.noSchoolToday?'오늘은 수업이 없어요':'등록된 수업이 없어요';
- return `<div class="tt-widget-circle"><div class="tt-c-main">${msg}</div></div>`;
- }
- const current=data.periods.find(x=>x.p===data.currentPeriod);
- const next=data.periods.find(({p})=>{const sh=data.PERIOD_START_HOUR[p];return sh!=null&&sh>data.nowHour;});
- let periodLabel,mainLabel,nextLabel;
- if(current){
- periodLabel=`${current.p}교시 진행중`;
- mainLabel=_ttWidgetLabel(current.cell);
- nextLabel=next?`다음 ${next.p}교시 ${_ttWidgetLabel(next.cell)}`:'오늘 마지막 수업';
- }else if(next){
- periodLabel='다음 수업';
- mainLabel=_ttWidgetLabel(next.cell);
- nextLabel=`${next.p}교시`;
- }else{
- periodLabel='오늘 일정';
- mainLabel='수업 끝';
- nextLabel=data.dateStr;
- }
- return `<div class="tt-widget-circle"><div class="tt-c-period">${periodLabel}</div><div class="tt-c-main">${mainLabel}</div><div class="tt-c-next">${nextLabel}</div></div>`;
+ return{periods,currentPeriod,noSchoolToday:false};
 }
 function renderTimetableWidget(){
  const el=document.getElementById('timetableWidget');
  if(!el)return;
  const data=_ttWidgetToday();
- const settings=_ttWidgetSettings();
- const inner=settings.shape==='circle'?_ttWidgetRenderCircle(data):_ttWidgetRenderList(data);
- el.innerHTML=`<div class="tt-widget-wrap">
- <div class="tt-widget-gear" onclick="_ttWidgetToggleSettings(event)">⚙</div>
- <div class="tt-widget-settings" id="ttWidgetSettingsPanel">
- <div class="tt-ws-label">모양</div>
- <button class="${settings.shape==='square'?'active':''}" onclick="_ttWidgetSetShape('square')">둥근 네모</button>
- <button class="${settings.shape==='circle'?'active':''}" onclick="_ttWidgetSetShape('circle')">원형</button>
- </div>
- ${inner}
- </div>`;
-}
-function _ttWidgetToggleSettings(e){
- if(e)e.stopPropagation();
- const panel=document.getElementById('ttWidgetSettingsPanel');
- if(panel)panel.classList.toggle('show');
-}
-function _ttWidgetSetShape(shape){
- _ttWidgetSaveSettings({shape});
- renderTimetableWidget();
+ if(data.noSchoolToday||!data.periods.length){
+ const msg=data.noSchoolToday?'오늘은 수업이 없어요':'오늘 등록된 수업이 없어요';
+ el.innerHTML=`<div class="tt-widget-empty">${msg}</div>`;
+ return;
+ }
+ el.innerHTML=`<div class="tt-widget-row">${data.periods.map(({p,cell})=>{
+ const isFree=cell.isFree||cell.name==='공강';
+ const label=isFree?'공강':(cell.room||cell.name);
+ const cls=`tt-widget-chip${isFree?' free':''}${p===data.currentPeriod?' current':''}`;
+ const style=isFree?'':` style="background:${cell.color||'#818CF8'};color:${_getContrastColor(cell.color||'#818CF8')};"`;
+ return `<div class="${cls}"${style}>${label}</div>`;
+ }).join('')}</div>`;
 }
 function initTimetableWidgetMode(){
  document.body.classList.add('widget-mode');
  renderTimetableWidget();
- window.addEventListener('storage',e=>{if(e.key==='timetable'||e.key==='ttWidgetSettings')renderTimetableWidget();});
+ window.addEventListener('storage',e=>{if(e.key==='timetable')renderTimetableWidget();});
  setInterval(renderTimetableWidget,60000);
 }
 if(_isTimetableWidgetMode())initTimetableWidgetMode();
