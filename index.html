@@ -2493,7 +2493,7 @@ function renderTimetableWidget(){
  return `<div class="${cls}"${style}>${label}</div>`;
  }).join('');
  }
- el.innerHTML=`<div class="tt-widget-container"><div class="tt-widget-row">${_ttWidgetMenuHtml()}${bodyHtml}</div></div>`;
+ el.innerHTML=`<div class="tt-widget-container"><div class="tt-widget-row">${bodyHtml}${_ttWidgetMenuHtml()}</div></div>`;
 }
 function _ttWidgetMenuBtnClick(e){
  if(e)e.stopPropagation();
