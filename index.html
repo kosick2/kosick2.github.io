@@ -920,7 +920,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div id="evalListContent"></div>
  </div>
  <div id="sgibuSection" class="student-tab">
- <div class="section-header" style="margin-bottom:16px;"><div style="font-size:1rem;font-weight:600;">생활기록부 작성</div></div>
+ <div class="section-header" style="margin-bottom:16px;display:flex;align-items:center;"><div style="font-size:1rem;font-weight:600;">생활기록부 작성</div><div id="sgibuSemesterSelectArea"></div></div>
  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
  <label style="font-size:0.88rem;color:var(--text-secondary);">학급 선택</label>
  <select class="sgibu-class-select" id="sgibuClassSelect" onchange="renderSgibuSection(this.value)">
@@ -1713,10 +1713,10 @@ document.addEventListener('focusout',e=>{
  if(sm&&typeof _sgibuCurrentCategory!=='undefined'){
  clearTimeout(_sgibuSaveTimer);
  let _sgibuRec=DB.get('sgibuRecords');if(!_sgibuRec||Array.isArray(_sgibuRec))_sgibuRec={};
- const _cid=sm[1],_sid=Number(sm[2]);
- if(!_sgibuRec[_cid])_sgibuRec[_cid]={};
- if(!_sgibuRec[_cid][_sid]||typeof _sgibuRec[_cid][_sid]!=='object')_sgibuRec[_cid][_sid]={};
- _sgibuRec[_cid][_sid][_sgibuCurrentCategory]=el.value;
+ const _cid=sm[1],_sid=Number(sm[2]),_skey=_sgibuStorageKey(_cid);
+ if(!_sgibuRec[_skey])_sgibuRec[_skey]={};
+ if(!_sgibuRec[_skey][_sid]||typeof _sgibuRec[_skey][_sid]!=='object')_sgibuRec[_skey][_sid]={};
+ _sgibuRec[_skey][_sid][_sgibuCurrentCategory]=el.value;
  DB.set('sgibuRecords',_sgibuRec);
  }
  /* 안내사항 textarea */
@@ -1780,11 +1780,11 @@ function manualSave(){
  document.querySelectorAll('.sgibu-textarea').forEach(el=>{
  const m=el.id.match(/^sgibu_(\d+)_(\d+)$/);
  if(!m)return;
- const classId=m[1],studentId=Number(m[2]);
+ const classId=m[1],studentId=Number(m[2]),skey=_sgibuStorageKey(classId);
  let records=DB.get('sgibuRecords');if(!records||Array.isArray(records))records={};
- if(!records[classId])records[classId]={};
- if(typeof records[classId][studentId]!=='object'||records[classId][studentId]===null)records[classId][studentId]={};
- records[classId][studentId][_sgibuCurrentCategory]=el.value;
+ if(!records[skey])records[skey]={};
+ if(typeof records[skey][studentId]!=='object'||records[skey][studentId]===null)records[skey][studentId]={};
+ records[skey][studentId][_sgibuCurrentCategory]=el.value;
  DB.set('sgibuRecords',records);
  });
  }catch(e){
@@ -6497,8 +6497,42 @@ function closeNotepadPanel(){
 let _sgibuSaveTimer=null;
 let _sgibuCurrentClassId=null;
 let _sgibuCurrentCategory='subject';
+/* 생기부는 학기별로 완전히 다른 내용을 써야 하므로, 실제 저장 키에
+ "{classId}_{연도}_{학기}"처럼 학기를 붙여 서로 겹치지 않게 분리한다.
+ (textarea의 id 등 DOM/파라미터에는 손대지 않고, 저장소에 쓸 때만 이 키를 쓴다) */
+let _sgibuYear=null;
+let _sgibuSemester=null;
+function _sgibuDefaultSemester(){const m=new Date().getMonth()+1;return(m>=3&&m<=8)?1:2;}
+function _sgibuInitSemester(){
+ if(_sgibuYear&&_sgibuSemester)return;
+ let saved=null;
+ try{saved=JSON.parse(localStorage.getItem('sgibuSemesterSel')||'null');}catch(e){}
+ _sgibuYear=(saved&&saved.year)||new Date().getFullYear();
+ _sgibuSemester=(saved&&saved.sem)||_sgibuDefaultSemester();
+}
+function _sgibuStorageKey(classId){_sgibuInitSemester();return`${classId}_${_sgibuYear}_${_sgibuSemester}`;}
+function setSgibuSemester(year,sem){
+ _sgibuYear=Number(year);_sgibuSemester=Number(sem);
+ localStorage.setItem('sgibuSemesterSel',JSON.stringify({year:_sgibuYear,sem:_sgibuSemester}));
+ if(window._syncSettings)window._syncSettings();
+ if(_sgibuCurrentClassId)renderSgibuSection(_sgibuCurrentClassId);
+}
+function _sgibuSemesterSelectHtml(){
+ _sgibuInitSemester();
+ const nowYear=new Date().getFullYear();
+ const years=new Set([nowYear-1,nowYear,nowYear+1,_sgibuYear]);
+ const yearOptions=[...years].sort((a,b)=>a-b).map(y=>`<option value="${y}" ${y===_sgibuYear?'selected':''}>${y}년</option>`).join('');
+ const semOptions=[1,2].map(s=>`<option value="${s}" ${s===_sgibuSemester?'selected':''}>${s}학기</option>`).join('');
+ return `<div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+ <select class="sgibu-class-select" style="padding:6px 10px;font-size:0.85rem;" onchange="setSgibuSemester(this.value,_sgibuSemester)">${yearOptions}</select>
+ <select class="sgibu-class-select" style="padding:6px 10px;font-size:0.85rem;" onchange="setSgibuSemester(_sgibuYear,this.value)">${semOptions}</select>
+ </div>`;
+}
 
 function initSgibuSection(){
+ _sgibuInitSemester();
+ const semArea=document.getElementById('sgibuSemesterSelectArea');
+ if(semArea)semArea.innerHTML=_sgibuSemesterSelectHtml();
  const classes=DB.get('classes');
  const sel=document.getElementById('sgibuClassSelect');
  if(!sel)return;
@@ -6576,13 +6610,13 @@ function deleteSgibuCategory(catId){
 }
 function getSgibuClassLimit(classId,catId){
  const limits=DB.get('sgibuClassLimits');
- const cid=String(classId);
+ const cid=_sgibuStorageKey(classId);
  if(!limits[cid])return{maxChar:0,maxByte:0};
  return limits[cid][String(catId)]||{maxChar:0,maxByte:0};
 }
 function setSgibuClassLimit(classId,catId,maxChar,maxByte){
  const limits=DB.get('sgibuClassLimits');
- const cid=String(classId);
+ const cid=_sgibuStorageKey(classId);
  if(!limits[cid])limits[cid]={};
  limits[cid][String(catId)]={maxChar:Number(maxChar)||0,maxByte:Number(maxByte)||0};
  DB.set('sgibuClassLimits',limits);
@@ -6623,7 +6657,7 @@ function renderSgibuSection(classId){
  const cls=DB.get('classes').find(cl=>cl.id===Number(classId));
  if(!cls||!cls.students.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon"></div><p>이 학급에 학생이 없어요</p></div>`;return;}
  const records=DB.get('sgibuRecords')||{};
- const classRecords=records[classId]||{};
+ const classRecords=records[_sgibuStorageKey(classId)]||{};
  const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
  const CATS=getSgibuCategories();
  const currentCat=CATS.find(ct=>ct.id===_sgibuCurrentCategory)||CATS[0];
@@ -6672,7 +6706,7 @@ function renderSgibuSection(classId){
  const _sLv=SGIBU_LEVELS.find(l=>l.id===_sLevel);
  const _sLvStyle=_sLv?`background:${_sLv.color};color:${_sLv.textColor};border-color:transparent;`:`background:var(--surface2);color:var(--text-secondary);border:1px dashed var(--border);`;
  const _sLvPopup=[{id:'',label:'미설정',bg:'var(--surface2)',tc:'var(--text-secondary)'},...SGIBU_LEVELS].map(lv=>`<button class="sgibu-level-popup-btn" onclick="event.stopPropagation();setSgibuAchievement('${classId}',${s.id},'${lv.id}')" style="background:${lv.bg||lv.color};color:${lv.tc||lv.textColor};">${lv.label||lv.id}</button>`).join('');
- const _sDoneKey=classId+'_'+_sgibuCurrentCategory;
+ const _sDoneKey=_sgibuStorageKey(classId)+'_'+_sgibuCurrentCategory;
  const _sDoneMap=DB.get('sgibuDone')[_sDoneKey]||{};
  const _sDone=!!_sDoneMap[s.id];
  return `<div class="sgibu-row${_sDone?' sgibu-row-done':''}">
@@ -6736,7 +6770,7 @@ async function runSgibuAiReview(classId,category){
  const cls=DB.get('classes').find(c=>c.id===Number(classId));
  if(!cls||!cls.students.length)return;
  const records=DB.get('sgibuRecords')||{};
- const classRecords=records[classId]||{};
+ const classRecords=records[_sgibuStorageKey(classId)]||{};
  const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
  const studentsWithContent=sorted.filter(s=>{
  const sr=classRecords[s.id];
@@ -6818,7 +6852,7 @@ async function exportSgibuToExcel(classId){
  const cls=DB.get('classes').find(c=>c.id===Number(classId));
  if(!cls){showToast(' 학급 정보를 찾을 수 없어요');return;}
  const records=DB.get('sgibuRecords')||{};
- const classRecords=records[classId]||records[String(classId)]||{};
+ const classRecords=records[_sgibuStorageKey(classId)]||{};
  const sorted=[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));
  const getVal=(sr,cat)=>{if(!sr)return'';if(typeof sr==='string')return cat==='subject'?sr:'';return sr[cat]||'';};
  const getByteLen=(str)=>{let b=0;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);if(c<=0x7F)b+=1;else if(c<=0x7FF)b+=2;else b+=3;}return b;};
@@ -6948,10 +6982,11 @@ async function handleSgibuExcelFile(event,classId){
  if(!confirm(`"${cat.label}" 항목에서 ${changes.length}명의 학생 데이터를 업로드한 파일 내용으로 교체합니다.\n(다른 항목은 이 파일에 있어도 반영되지 않아요)\n계속할까요?`))return;
  let records=DB.get('sgibuRecords');
  if(!records||Array.isArray(records))records={};
- if(!records[classId])records[classId]={};
+ const skey=_sgibuStorageKey(classId);
+ if(!records[skey])records[skey]={};
  changes.forEach(({studentId,content})=>{
- if(typeof records[classId][studentId]!=='object'||records[classId][studentId]===null)records[classId][studentId]={};
- records[classId][studentId][_sgibuCurrentCategory]=content;
+ if(typeof records[skey][studentId]!=='object'||records[skey][studentId]===null)records[skey][studentId]={};
+ records[skey][studentId][_sgibuCurrentCategory]=content;
  });
  DB.set('sgibuRecords',records);
  if(window._syncSettings)window._syncSettings();
@@ -6981,15 +7016,15 @@ const SGIBU_LEVELS=[
  {id:'하',color:'#F87171',textColor:'#7F1D1D'},
 ];
 function getSgibuAchievements(){const a=DB.get('sgibuAchievements');if(!a||Array.isArray(a))return{};return a;}
-function getSgibuStudentLevel(classId,studentId){const cid=String(classId),sid=String(studentId);const a=getSgibuAchievements();return(a[cid]&&a[cid][sid])||'';}
+function getSgibuStudentLevel(classId,studentId){const cid=_sgibuStorageKey(classId),sid=String(studentId);const a=getSgibuAchievements();return(a[cid]&&a[cid][sid])||'';}
 function setSgibuAchievement(classId,studentId,level){
- const cid=String(classId),sid=String(studentId);
+ const cid=_sgibuStorageKey(classId),sid=String(studentId);
  let a=getSgibuAchievements();
  if(!a[cid])a[cid]={};
  if(level==='')delete a[cid][sid];
  else a[cid][sid]=level;
  DB.set('sgibuAchievements',a);
- const badge=document.getElementById(`levelBadge_${cid}_${sid}`);
+ const badge=document.getElementById(`levelBadge_${classId}_${sid}`);
  if(badge){
  const lv=SGIBU_LEVELS.find(l=>l.id===level);
  if(lv){badge.textContent=lv.id;badge.style.background=lv.color;badge.style.color=lv.textColor;badge.style.borderColor='transparent';}
@@ -7000,7 +7035,7 @@ function setSgibuAchievement(classId,studentId,level){
 }
 function toggleSgibuDone(classId,studentId,checked){
  const all=DB.get('sgibuDone');
- const key=classId+'_'+_sgibuCurrentCategory;
+ const key=_sgibuStorageKey(classId)+'_'+_sgibuCurrentCategory;
  if(!all[key])all[key]={};
  if(checked)all[key][studentId]=true;else delete all[key][studentId];
  DB.set('sgibuDone',all);
@@ -7032,13 +7067,14 @@ function onSgibuInput(classId,studentId,el){
  clearTimeout(_sgibuSaveTimer);
  _sgibuSaveTimer=setTimeout(()=>{
  let records=DB.get('sgibuRecords');if(!records||Array.isArray(records))records={};
- if(!records[classId])records[classId]={};
- if(typeof records[classId][studentId]==='string'){
- const oldText=records[classId][studentId];
- records[classId][studentId]={subject:oldText};
+ const skey=_sgibuStorageKey(classId);
+ if(!records[skey])records[skey]={};
+ if(typeof records[skey][studentId]==='string'){
+ const oldText=records[skey][studentId];
+ records[skey][studentId]={subject:oldText};
  }
- if(!records[classId][studentId]||typeof records[classId][studentId]!=='object')records[classId][studentId]={};
- records[classId][studentId][_sgibuCurrentCategory]=text;
+ if(!records[skey][studentId]||typeof records[skey][studentId]!=='object')records[skey][studentId]={};
+ records[skey][studentId][_sgibuCurrentCategory]=text;
  DB.set('sgibuRecords',records);
  const st=document.getElementById('sgibuSaveStatus');
  if(st){st.textContent=' 저장됨';setTimeout(()=>{if(st)st.textContent='';},1500);}
@@ -7265,7 +7301,7 @@ const SUPA_KEY='sb_publishable_RtJ1-wVBWkUuBGi8-71mAQ_tmX6QiGb';
 const SUPA_USER='kosick2';
 const SUPA_HEADERS={apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json'};
 const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords','favBarIds','sgibuCategories','sgibuAchievements','sgibuClassLimits','sgibuDone','seatCharts','cleaningCharts'];
-const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','homeroomMyClassId','pinnedMobileTabs'];
+const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','homeroomMyClassId','pinnedMobileTabs','sgibuSemesterSel'];
 let _isSaving=false;
 let _dbReady=false;
 let _saveToastTimer=null;
