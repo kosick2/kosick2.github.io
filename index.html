@@ -594,7 +594,6 @@ textarea{resize:vertical;min-height:80px;}
  #seatPrintArea,#cleanPrintArea{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
  #seatPrintArea .seat-grid-wrap{overflow:visible;padding:0;}
  #cleanPrintArea .clean-cal-grid{width:auto;}
- @page{size:A4 landscape;margin:12mm;}
 }
 @media(max-width:600px){
  .hr-cal-day{min-height:56px;padding:2px 1px;}
@@ -4070,14 +4069,21 @@ function saveSeatChart(){
  DB.set('seatCharts',charts);
  showToast('💾 자리가 저장되었습니다');
 }
-function _printAreaFit(areaId,contentSelector){
+function _printAreaFit(areaId,contentSelector,orientation){
+ orientation=orientation==='portrait'?'portrait':'landscape';
+ /* @page는 셀렉터로 범위를 못 좁히는 전역 규칙이라, 인쇄 대상마다(좌석표=가로,
+ 청소 당번표=세로) 방향이 다를 수 있게 인쇄 직전에 이 스타일 태그 내용을 바꿔 끼운다 */
+ let pageStyle=document.getElementById('_dynPrintPageStyle');
+ if(!pageStyle){pageStyle=document.createElement('style');pageStyle.id='_dynPrintPageStyle';document.head.appendChild(pageStyle);}
+ pageStyle.textContent=`@media print{@page{size:A4 ${orientation};margin:12mm;}}`;
  const area=document.getElementById(areaId);
  const content=area?area.querySelector(contentSelector):null;
  if(!content){window.print();return;}
  content.style.zoom='';
  const rect=content.getBoundingClientRect();
  const pxPerMm=96/25.4;
- const availW=(297-24)*pxPerMm,availH=(210-24)*pxPerMm;
+ const pageW=orientation==='portrait'?210:297,pageH=orientation==='portrait'?297:210;
+ const availW=(pageW-24)*pxPerMm,availH=(pageH-24)*pxPerMm;
  const scale=Math.min(availW/rect.width,availH/rect.height);
  content.style.zoom=String(Math.max(0.2,Math.min(3,scale)));
  setTimeout(()=>{
@@ -4085,7 +4091,7 @@ function _printAreaFit(areaId,contentSelector){
  setTimeout(()=>{content.style.zoom='';},300);
  },50);
 }
-function printSeatChart(){_printAreaFit('seatPrintArea','.seat-board-wrap');}
+function printSeatChart(){_printAreaFit('seatPrintArea','.seat-board-wrap','landscape');}
 function viewSavedSeatChart(){
  const cls=_seatMyClass();
  if(!cls)return;
@@ -4434,7 +4440,7 @@ function saveCleaningChart(){
  DB.set('cleaningCharts',charts);
  showToast('💾 청소 당번이 저장되었습니다');
 }
-function printCleaningChart(){_printAreaFit('cleanPrintArea','.clean-cal-grid');}
+function printCleaningChart(){_printAreaFit('cleanPrintArea','.clean-cal-grid','portrait');}
 function viewSavedCleaningChart(){
  const cls=_seatMyClass();
  if(!cls)return;
