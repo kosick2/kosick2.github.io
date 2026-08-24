@@ -3299,7 +3299,10 @@ function _ankPickerShowStudents(classId){
  if(!studentsWrap)return;
  const cls=DB.get('classes').find(c=>c.id===classId);
  const students=cls?[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
- studentsWrap.innerHTML=students.length?students.map(s=>`<button type="button" class="seat-pick-chip ank-picker-chip-student" onclick="_ankPickerSelectStudent(${classId},${s.id})">${s.number?s.number+'번 ':''}${escHtml(s.name)}</button>`).join(''):'<div class="ank-empty-note">학생이 없어요</div>';
+ studentsWrap.innerHTML=students.length?students.map(s=>{
+ const cnt=_ankCountForStudent(classId,s.id,s.name);
+ return `<button type="button" class="seat-pick-chip ank-picker-chip-student" onclick="_ankPickerSelectStudent(${classId},${s.id})" style="display:inline-flex;align-items:center;gap:5px;">${s.number?s.number+'번 ':''}${escHtml(s.name)}${cnt>0?`<span class="ank-count-badge show">${cnt}</span>`:''}</button>`;
+ }).join(''):'<div class="ank-empty-note">학생이 없어요</div>';
  studentsWrap.style.marginTop='12px';
  requestAnimationFrame(()=>{
  studentsWrap.style.maxHeight=studentsWrap.scrollHeight+'px';
