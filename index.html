@@ -7328,42 +7328,63 @@ let _saveToastTimer=null;
 /* ── 데이터 소실 방지 안전장치: 핵심 데이터가 갑자기 크게 줄어든 채로
  로컬↔서버 어느 방향으로든 덮어써지려는 상황을 잡아내 확인을 요구한다.
  (실수로 테스트/손상 데이터가 실제 데이터를 지워버리는 사고를 막기 위함) */
-const _GUARD_COLLECTIONS=[
- {key:'classes',label:'학급/학생 수'},
- {key:'memoItems',label:'할 일 개수'},
- {key:'counselings',label:'누가기록 개수'},
-];
+/* DK의 모든 컬렉션을 대상으로 검사한다 — 특정 몇 개만 골라뒀다가 다른
+ 컬렉션(예: 즐겨찾기)이 뚫려서 사고가 반복된 적이 있어, 이제는 목록을
+ 하드코딩하지 않고 DK 전체를 자동으로 훑는다. */
+const _GUARD_LABELS={
+ classes:'학급/학생 수',memoItems:'할 일 개수',memoLists:'할 일 목록 수',
+ counselings:'누가기록 개수',bookmarks:'즐겨찾기 개수',bookmarkGroups:'즐겨찾기 그룹 수',
+ dailyNotices:'안내사항 개수',attendanceRecords:'출결기록 개수',evaluations:'수행평가 개수',
+ noteItems:'메모 개수',noteGroups:'메모장 수',schedules:'일정 개수',
+ fieldTrips:'체험학습 개수',specialPrograms:'특별프로그램 개수',
+ sgibuRecords:'생기부 작성 항목 수',sgibuAchievements:'생기부 성취도 항목 수',
+ timetable:'시간표 칸 수',seatCharts:'자리배치 저장 수',cleaningCharts:'청소당번 저장 수',
+};
 function _guardCollectionCount(val,key){
  if(key==='classes'){const arr=Array.isArray(val)?val:[];return arr.reduce((s,c)=>s+((c&&c.students)?c.students.length:0),0);}
- return Array.isArray(val)?val.length:0;
+ if(Array.isArray(val))return val.length;
+ if(val&&typeof val==='object')return Object.keys(val).length;
+ return 0;
 }
 function _guardParseMaybeJson(v){
  if(typeof v!=='string')return v;
  try{return JSON.parse(v);}catch(e){return null;}
 }
+/* checkSide가 referenceSide보다 컬렉션별로 큰 폭(50% 이상)으로 줄어든 게 있는지 찾는다.
+ 방향(로컬→서버 push인지, 서버→로컬 apply인지)에 무관하게 "이걸 저 기준과 비교했을 때
+ 뭐가 줄었나"만 본다 — 호출부에서 어느 쪽이 checkSide/referenceSide인지 결정한다. */
+function _guardFindDrops(checkSide,referenceSide){
+ const drops=[];
+ for(const key of DK){
+ const refCount=_guardCollectionCount(_guardParseMaybeJson(referenceSide[key]),key);
+ const checkCount=_guardCollectionCount(_guardParseMaybeJson(checkSide[key]),key);
+ if(refCount>=5&&checkCount<refCount*0.5){
+ drops.push({key,label:_GUARD_LABELS[key]||key,refCount,checkCount});
+ }
+ }
+ return drops;
+}
 async function _guardBeforePush(p){
  try{
  const remote=await fetchRemote();
  if(!remote)return true;
- for(const g of _GUARD_COLLECTIONS){
- const remoteCount=_guardCollectionCount(_guardParseMaybeJson(remote[g.key]),g.key);
- const localCount=_guardCollectionCount(p[g.key],g.key);
- if(remoteCount>=5&&localCount<remoteCount*0.5){
- const ok=confirm(`⚠ 저장 전 확인해주세요!\n\n${g.label}: 서버 ${remoteCount}개 → 지금 ${localCount}개로 큰 폭 감소\n\n실수로 데이터 일부가 사라진 상태일 수 있어요. 이대로 저장하면 서버에 있던 기존 데이터가 사라집니다.\n정말 이 상태로 저장할까요?`);
+ const drops=_guardFindDrops(p,remote);
+ if(drops.length){
+ const msg='⚠ 저장 전 확인해주세요!\n\n'+drops.map(d=>`- ${d.label}: 서버 ${d.refCount}개 → 지금 ${d.checkCount}개`).join('\n')+'\n\n실수로 데이터 일부가 사라진 상태일 수 있어요. 이대로 저장하면 서버에 있던 기존 데이터가 사라집니다.\n정말 이 상태로 저장할까요?';
+ const ok=confirm(msg);
  if(!ok){showToast('⚠ 데이터 감소가 감지되어 저장을 취소했어요');return false;}
- }
  }
  return true;
  }catch(e){return true;}
 }
 function _guardBeforeApplyRemote(remoteData){
- for(const g of _GUARD_COLLECTIONS){
- const remoteCount=_guardCollectionCount(_guardParseMaybeJson(remoteData[g.key]),g.key);
- const localCount=_guardCollectionCount(_guardParseMaybeJson(localStorage.getItem(g.key)),g.key);
- if(localCount>=5&&remoteCount<localCount*0.5){
- const ok=confirm(`⚠ 서버에서 받아온 데이터를 확인해주세요!\n\n${g.label}: 지금 이 기기 ${localCount}개 → 서버 ${remoteCount}개로 큰 폭 감소\n\n이대로 받아오면 이 기기의 데이터가 서버의 (더 적은) 데이터로 덮어써져요.\n정말 서버 데이터로 갱신할까요?`);
+ const localSide={};
+ DK.forEach(k=>{localSide[k]=localStorage.getItem(k);});
+ const drops=_guardFindDrops(remoteData,localSide);
+ if(drops.length){
+ const msg='⚠ 서버에서 받아온 데이터를 확인해주세요!\n\n'+drops.map(d=>`- ${d.label}: 지금 이 기기 ${d.refCount}개 → 서버 ${d.checkCount}개`).join('\n')+'\n\n이대로 받아오면 이 기기의 데이터가 서버의 (더 적은) 데이터로 덮어써져요.\n정말 서버 데이터로 갱신할까요?';
+ const ok=confirm(msg);
  if(!ok){showToast('⚠ 데이터 감소가 감지되어 갱신을 취소했어요');return false;}
- }
  }
  return true;
 }
