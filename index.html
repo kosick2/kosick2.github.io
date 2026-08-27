@@ -1744,7 +1744,31 @@ document.addEventListener('touchstart',e=>{
  try{const bms=JSON.parse(localStorage.getItem('bookmarks')||'[]');const m=bms.map(b=>({groupId:null,...b}));if(JSON.stringify(m)!==JSON.stringify(bms))localStorage.setItem('bookmarks',JSON.stringify(m));}catch(e){}
  try{const _sr=localStorage.getItem('sgibuRecords');if(_sr){const _srp=JSON.parse(_sr);if(Array.isArray(_srp)){localStorage.setItem('sgibuRecords','{}');}}}catch(e){}
  try{const items=JSON.parse(localStorage.getItem('memoItems')||'[]');let ch=false;const m=items.map(i=>{if(i.priority===undefined){i.priority=false;ch=true;}if(i.deadline===undefined){i.deadline='';ch=true;}return i;});if(ch)localStorage.setItem('memoItems',JSON.stringify(m));}catch(e){}
+ _migrateNoticeCarryOverTags();
 })();
+/* 예전 이월 로직이 studentIds/studentNames 대신 옛 단일 필드로 복사하던 버그 때문에,
+ 이미 넘어와 있던 안내사항들은 태그가 빈 채로 저장돼 있다 — 같은 원본(originalSourceId)의
+ 다른 사본 중 태그가 남아있는 게 있으면 거기서 채워 넣는다(멱등적이라 몇 번을 다시 돌려도
+ 안전함). 페이지가 처음 뜰 때뿐 아니라, 서버에서 새 데이터를 받아올 때마다(applyRemoteData)
+ 다시 불러줘야 한다 — 안 그러면 방금 서버에서 받은 아직 안 고쳐진 데이터가 그대로 남는다. */
+function _migrateNoticeCarryOverTags(){
+ try{
+ const notices=JSON.parse(localStorage.getItem('dailyNotices')||'[]');
+ const bySrc={};
+ notices.forEach(n=>{const srcId=n.originalSourceId||n.id;(bySrc[srcId]=bySrc[srcId]||[]).push(n);});
+ let ch=false;
+ Object.values(bySrc).forEach(group=>{
+ const withTags=group.find(n=>(n.studentIds&&n.studentIds.length)||(n.studentNames&&n.studentNames.length));
+ if(!withTags)return;
+ group.forEach(n=>{
+ if(!(n.studentIds&&n.studentIds.length)&&!(n.studentNames&&n.studentNames.length)){
+ n.studentIds=withTags.studentIds||[];n.studentNames=withTags.studentNames||[];ch=true;
+ }
+ });
+ });
+ if(ch)localStorage.setItem('dailyNotices',JSON.stringify(notices));
+ }catch(e){}
+}
 function initColors(){const p=localStorage.getItem('colorPrimary')||'#1F6B5B',s=localStorage.getItem('colorSecondary')||'#10B981';document.documentElement.style.setProperty('--primary',p);document.documentElement.style.setProperty('--primary-light',p);document.documentElement.style.setProperty('--secondary',s);}
 initColors();
 function initHeaderTitle(){const e=localStorage.getItem('titleEmoji')||'',n=localStorage.getItem('titleName')||'KOSICK2';document.getElementById('headerEmoji').textContent=e;const el=document.getElementById('headerName');el.textContent=n;el.style.color='';el.style.webkitTextStroke='';el.style.paintOrder='';}
@@ -7409,6 +7433,7 @@ function applyRemoteData(data){
 DK.forEach(k=>{if(data[k]!==undefined){let _v=data[k];if((k==='sgibuRecords'||k==='sgibuAchievements'||k==='sgibuClassLimits'||k==='sgibuDone'||k==='seatCharts'||k==='cleaningCharts')&&Array.isArray(_v))_v={};localStorage.setItem(k,JSON.stringify(_v));}});
  SK.forEach(k=>{if(data[k]!==undefined&&data[k]!=='')localStorage.setItem(k,data[k]);});
  localStorage.setItem('_savedAt',Number(data._savedAt||0));
+ if(typeof _migrateNoticeCarryOverTags==='function')_migrateNoticeCarryOverTags();
  initHeaderTitle();initColors();initPinnedTabs();
  renderFavBar();
  const activeId=document.querySelector('.section.active')?.id;
