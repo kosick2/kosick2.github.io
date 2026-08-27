@@ -5645,7 +5645,7 @@ function carryOverUndoneNotices(){
  const srcId=n.originalSourceId||n.id;
  if(!todaySourceIds.has(srcId)){
  todaySourceIds.add(srcId);
- notices.push({id:now+i+1,date:today,content:n.content,done:false,studentId:n.studentId||null,studentName:n.studentName||null,carriedOverFrom:srcId,originalSourceId:srcId});
+ notices.push({id:now+i+1,date:today,content:n.content,done:false,studentIds:n.studentIds||[],studentNames:n.studentNames||[],carriedOverFrom:srcId,originalSourceId:srcId});
  changed=true;
  }
  });
