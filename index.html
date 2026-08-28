@@ -3685,18 +3685,36 @@ function renderProgramTab(){
  <button class="hr-program-card" onclick="openGradeConverter()"><div class="hr-program-icon">🔄</div><div class="hr-program-name">5등급제 환산기</div><div class="hr-program-desc">5등급제 ↔ 9등급제 상호 변환</div></button>
  </div>`;
 }
-/* ── 5등급제 ↔ 9등급제 환산기 (참고용 추정치, 선형회귀식) ──
- 아래 9개 실측 대응값 (5등급,9등급):
- (1.19,1.81) (1.59,2.43) (2.01,3.26) (2.23,3.73) (2.89,4.86)
- (3.06,5.10) (3.39,5.47) (3.87,6.42) (4.19,6.98)
- 을 최소제곱 선형회귀로 적합한 결과, 9등급 ≈ 1.7158×5등급 − 0.2043 (R²=0.998)로
- 아홉 점 모두를 오차 0.15 이내에서 잘 설명하는 거의 완벽한 직선 관계였다.
- 그래서 점을 하나하나 잇는 구간별 보간 대신, 이 하나의 1차식을 그대로 쓴다. */
-const GRADE_CONVERTER_SLOPE=1.715759701681204;
-const GRADE_CONVERTER_INTERCEPT=-0.20431687945055543;
-const GRADE_CONVERTER_RANGE={min:1.19,max:4.19};
-function _gcConvert5to9(five){return GRADE_CONVERTER_SLOPE*five+GRADE_CONVERTER_INTERCEPT;}
-function _gcConvert9to5(nine){return(nine-GRADE_CONVERTER_INTERCEPT)/GRADE_CONVERTER_SLOPE;}
+/* ── 5등급제 ↔ 9등급제 환산기 (참고용 추정치, 구간별 보간) ──
+ 1.0~4.0을 0.1 간격으로 촘촘하게 준 실측 대응표를 그대로 쓴다. 직선 하나로
+ 맞춰봤더니(이전 버전) 원래 9개 점 사이/바깥 값에서 실제와 어긋나는 걸 확인했다 —
+ 즉 이 관계는 완전한 직선이 아니라서, 구간마다 주어진 값을 그대로 잇는 보간이
+ 더 정확하다. 표 범위(1.0~4.0) 밖은 가장 가까운 끝 구간의 기울기로 외삽한다. */
+const GRADE_CONVERTER_ANCHORS=[
+ {five:1.0,nine:1.10},{five:1.1,nine:1.44},{five:1.2,nine:1.83},{five:1.3,nine:2.05},
+ {five:1.4,nine:2.22},{five:1.5,nine:2.33},{five:1.6,nine:2.49},{five:1.7,nine:2.70},
+ {five:1.8,nine:2.86},{five:1.9,nine:3.06},{five:2.0,nine:3.25},{five:2.1,nine:3.47},
+ {five:2.2,nine:3.69},{five:2.3,nine:3.87},{five:2.4,nine:4.03},{five:2.5,nine:4.18},
+ {five:2.6,nine:4.32},{five:2.7,nine:4.49},{five:2.8,nine:4.67},{five:2.9,nine:4.89},
+ {five:3.0,nine:5.02},{five:3.1,nine:5.17},{five:3.2,nine:5.41},{five:3.3,nine:5.58},
+ {five:3.4,nine:5.76},{five:3.5,nine:5.87},{five:3.6,nine:6.01},{five:3.7,nine:6.16},
+ {five:3.8,nine:6.27},{five:3.9,nine:6.48},{five:4.0,nine:6.64},
+];
+const GRADE_CONVERTER_RANGE={min:1.0,max:4.0};
+/* anchors는 keyX 기준 오름차순 정렬돼 있어야 한다(9등급 값도 같은 순서로 오름차순이라
+ keyX를 'nine'으로 줘도 그대로 쓸 수 있음). 범위 밖 입력은 양 끝 구간의 기울기로 외삽한다. */
+function _gcInterp(anchors,x,keyX,keyY){
+ let a=anchors[0],b=anchors[1];
+ if(x>anchors[anchors.length-1][keyX]){a=anchors[anchors.length-2];b=anchors[anchors.length-1];}
+ else{
+ for(let i=0;i<anchors.length-1;i++){
+ if(x<=anchors[i+1][keyX]){a=anchors[i];b=anchors[i+1];break;}
+ }
+ }
+ return a[keyY]+(x-a[keyX])/(b[keyX]-a[keyX])*(b[keyY]-a[keyY]);
+}
+function _gcConvert5to9(five){return _gcInterp(GRADE_CONVERTER_ANCHORS,five,'five','nine');}
+function _gcConvert9to5(nine){return _gcInterp(GRADE_CONVERTER_ANCHORS,nine,'nine','five');}
 function openGradeConverter(){
  const wrap=document.getElementById('hrProgramContent');
  if(!wrap)return;
@@ -3707,14 +3725,14 @@ function openGradeConverter(){
  <div style="text-align:center;color:var(--text-secondary);font-size:1.1rem;margin:2px 0;">⇅</div>
  <div class="form-group"><label class="form-label">9등급제 환산 평균등급</label><input type="number" id="gcNine" step="0.01" min="1" max="9" placeholder="예: 3.26" oninput="_gcOnNineInput()"></div>
  <div id="gcResultNote" style="font-size:0.8rem;color:var(--text-secondary);min-height:1.2em;margin-top:4px;"></div>
- <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">⚠ 이 환산기는 9등급 ≈ 1.7158 × 5등급 − 0.2043 라는 <b>선형회귀식(참고용 추정치)</b>을 써요. 교육부가 공식 발표한 9등급제-5등급제 환산 공식은 존재하지 않으며, 실제 해석에는 세부능력특기사항 등 다른 요소도 함께 고려해야 해요.</div>
+ <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">⚠ 이 환산기는 1.0~4.0 구간을 0.1 간격으로 제공된 실측 대응표를 구간별로 보간한 <b>참고용 추정치</b>예요. 교육부가 공식 발표한 9등급제-5등급제 환산 공식은 존재하지 않으며, 실제 해석에는 세부능력특기사항 등 다른 요소도 함께 고려해야 해요.</div>
  </div>`;
 }
 function _gcUpdateNote(five){
  const note=document.getElementById('gcResultNote');
  const{min,max}=GRADE_CONVERTER_RANGE;
  const outOfRange=five<min||five>max;
- note.innerHTML=outOfRange?`<span style="color:#F59E0B;">⚠ 실측 범위(${min}~${max}) 밖 — 회귀식 외삽값</span>`:'실측 구간 내 회귀식 계산값';
+ note.innerHTML=outOfRange?`<span style="color:#F59E0B;">⚠ 실측 범위(${min}~${max}) 밖 — 추세 외삽값</span>`:'실측 구간 내 보간값';
 }
 function _gcOnFiveInput(){
  const fiveEl=document.getElementById('gcFive'),nineEl=document.getElementById('gcNine');
