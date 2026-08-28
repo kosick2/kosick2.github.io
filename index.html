@@ -3685,74 +3685,57 @@ function renderProgramTab(){
  <button class="hr-program-card" onclick="openGradeConverter()"><div class="hr-program-icon">🔄</div><div class="hr-program-name">5등급제 환산기</div><div class="hr-program-desc">5등급제 ↔ 9등급제 상호 변환</div></button>
  </div>`;
 }
-/* ── 5등급제 ↔ 9등급제 환산기 (부산진로진학지원센터 실측 데이터 기반 참고용 추정치) ── */
-const GRADE_CONVERTER_DATASETS={
- '1,2학기 누적(2026.2 발표)':[{five:1,nine:1.45,pct:0.013},{five:1.5,nine:2.45,pct:0.0708},{five:2,nine:3.35,pct:0.1742},{five:2.5,nine:4.2,pct:0.3139}],
- '1학기(2025.8 발표)':[{five:1,nine:1.64,pct:0.0207},{five:1.5,nine:2.48,pct:0.073},{five:2,nine:3.44,pct:0.1859},{five:2.5,nine:4.22,pct:0.3187}],
-};
-let _gcDataset='1,2학기 누적(2026.2 발표)';
-function _gcConvert5to9(five,anchors){
- const[a0,a1,a2,a3]=anchors;
- if(five<=a1.five)return a0.nine+(five-a0.five)/(a1.five-a0.five)*(a1.nine-a0.nine);
- if(five<=a2.five)return a1.nine+(five-a1.five)/(a2.five-a1.five)*(a2.nine-a1.nine);
- if(five<=a3.five)return a2.nine+(five-a2.five)/(a3.five-a2.five)*(a3.nine-a2.nine);
- return a3.nine+(five-a3.five)/(a3.five-a2.five)*(a3.nine-a2.nine);
+/* ── 5등급제 ↔ 9등급제 환산기 (참고용 추정치, 선형 보간) ── */
+const GRADE_CONVERTER_ANCHORS=[
+ {five:1.19,nine:1.81},{five:1.59,nine:2.43},{five:2.01,nine:3.26},{five:2.23,nine:3.73},
+ {five:2.89,nine:4.86},{five:3.06,nine:5.1},{five:3.39,nine:5.47},{five:3.87,nine:6.42},
+ {five:4.19,nine:6.98},
+];
+/* anchors는 keyX 기준 오름차순 정렬되어 있어야 한다(9등급 값도 같은 순서로 오름차순이라
+ keyX를 'nine'으로 줘도 그대로 쓸 수 있음). 범위 밖 입력은 양 끝 구간의 기울기로 외삽한다. */
+function _gcInterp(anchors,x,keyX,keyY){
+ let a=anchors[0],b=anchors[1];
+ if(x>anchors[anchors.length-1][keyX]){a=anchors[anchors.length-2];b=anchors[anchors.length-1];}
+ else{
+ for(let i=0;i<anchors.length-1;i++){
+ if(x<=anchors[i+1][keyX]){a=anchors[i];b=anchors[i+1];break;}
+ }
+ }
+ return a[keyY]+(x-a[keyX])/(b[keyX]-a[keyX])*(b[keyY]-a[keyY]);
 }
-function _gcConvert9to5(nine,anchors){
- const[a0,a1,a2,a3]=anchors;
- if(nine<=a1.nine)return a0.five+(nine-a0.nine)/(a1.nine-a0.nine)*(a1.five-a0.five);
- if(nine<=a2.nine)return a1.five+(nine-a1.nine)/(a2.nine-a1.nine)*(a2.five-a1.five);
- if(nine<=a3.nine)return a2.five+(nine-a2.nine)/(a3.nine-a2.nine)*(a3.five-a2.five);
- return a3.five+(nine-a3.nine)/(a3.nine-a2.nine)*(a3.five-a2.five);
-}
-function _gcPctFrom5(five,anchors){
- const[a0,a1,a2,a3]=anchors;
- if(five<=a1.five)return a0.pct+(five-a0.five)/(a1.five-a0.five)*(a1.pct-a0.pct);
- if(five<=a2.five)return a1.pct+(five-a1.five)/(a2.five-a1.five)*(a2.pct-a1.pct);
- if(five<=a3.five)return a2.pct+(five-a2.five)/(a3.five-a2.five)*(a3.pct-a2.pct);
- return a3.pct+(five-a3.five)/(a3.five-a2.five)*(a3.pct-a2.pct);
-}
+function _gcConvert5to9(five){return _gcInterp(GRADE_CONVERTER_ANCHORS,five,'five','nine');}
+function _gcConvert9to5(nine){return _gcInterp(GRADE_CONVERTER_ANCHORS,nine,'nine','five');}
 function openGradeConverter(){
  const wrap=document.getElementById('hrProgramContent');
  if(!wrap)return;
  wrap.innerHTML=`
  <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">5등급제 ↔ 9등급제 환산기</span></div>
  <div class="card">
- <div class="form-group"><label class="form-label">기준 데이터</label><select id="gcDataset" onchange="_gcOnDatasetChange()">${Object.keys(GRADE_CONVERTER_DATASETS).map(k=>`<option value="${escHtml(k)}" ${k===_gcDataset?'selected':''}>${escHtml(k)}</option>`).join('')}</select></div>
- <div class="form-group"><label class="form-label">5등급제 평균등급 (1.00~5.00)</label><input type="number" id="gcFive" step="0.01" min="1" max="5" placeholder="예: 2.01" oninput="_gcOnFiveInput()"></div>
+ <div class="form-group"><label class="form-label">5등급제 평균등급</label><input type="number" id="gcFive" step="0.01" min="1" max="5" placeholder="예: 2.01" oninput="_gcOnFiveInput()"></div>
  <div style="text-align:center;color:var(--text-secondary);font-size:1.1rem;margin:2px 0;">⇅</div>
- <div class="form-group"><label class="form-label">9등급제 환산 평균등급</label><input type="number" id="gcNine" step="0.01" min="1" max="9" placeholder="예: 3.37" oninput="_gcOnNineInput()"></div>
+ <div class="form-group"><label class="form-label">9등급제 환산 평균등급</label><input type="number" id="gcNine" step="0.01" min="1" max="9" placeholder="예: 3.26" oninput="_gcOnNineInput()"></div>
  <div id="gcResultNote" style="font-size:0.8rem;color:var(--text-secondary);min-height:1.2em;margin-top:4px;"></div>
- <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">⚠ 이 환산기는 부산진로진학지원센터가 발표한 실측 데이터(부산 지역 고1 대상)를 선형 보간·외삽한 <b>참고용 추정치</b>이며, 교육부가 공식 발표한 9등급제-5등급제 환산 공식은 존재하지 않아요. 실제 해석에는 세부능력특기사항 등 다른 요소도 함께 고려해야 해요.</div>
+ <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">⚠ 이 환산기는 선형 보간을 이용한 <b>참고용 추정치</b>이며, 교육부가 공식 발표한 9등급제-5등급제 환산 공식은 존재하지 않아요. 실제 해석에는 세부능력특기사항 등 다른 요소도 함께 고려해야 해요.</div>
  </div>`;
-}
-function _gcOnDatasetChange(){
- _gcDataset=document.getElementById('gcDataset').value;
- const fiveInput=document.getElementById('gcFive');
- if(fiveInput.value)_gcOnFiveInput();
- else if(document.getElementById('gcNine').value)_gcOnNineInput();
 }
 function _gcUpdateNote(five){
  const note=document.getElementById('gcResultNote');
- const anchors=GRADE_CONVERTER_DATASETS[_gcDataset];
- const pct=_gcPctFrom5(five,anchors);
- const outOfRange=five>2.5||five<1;
- note.innerHTML=`상위 약 ${(pct*100).toFixed(1)}% 추정${outOfRange?' · <span style="color:#F59E0B;">⚠ 실측 범위(1.00~2.50) 밖 — 추세 외삽값</span>':' · 실측 구간 내 보간값'}`;
+ const min=GRADE_CONVERTER_ANCHORS[0].five,max=GRADE_CONVERTER_ANCHORS[GRADE_CONVERTER_ANCHORS.length-1].five;
+ const outOfRange=five<min||five>max;
+ note.innerHTML=outOfRange?`<span style="color:#F59E0B;">⚠ 실측 범위(${min}~${max}) 밖 — 추세 외삽값</span>`:'실측 구간 내 보간값';
 }
 function _gcOnFiveInput(){
  const fiveEl=document.getElementById('gcFive'),nineEl=document.getElementById('gcNine');
  const five=parseFloat(fiveEl.value);
  if(isNaN(five)){nineEl.value='';document.getElementById('gcResultNote').textContent='';return;}
- const anchors=GRADE_CONVERTER_DATASETS[_gcDataset];
- nineEl.value=_gcConvert5to9(five,anchors).toFixed(2);
+ nineEl.value=_gcConvert5to9(five).toFixed(2);
  _gcUpdateNote(five);
 }
 function _gcOnNineInput(){
  const fiveEl=document.getElementById('gcFive'),nineEl=document.getElementById('gcNine');
  const nine=parseFloat(nineEl.value);
  if(isNaN(nine)){fiveEl.value='';document.getElementById('gcResultNote').textContent='';return;}
- const anchors=GRADE_CONVERTER_DATASETS[_gcDataset];
- const five=_gcConvert9to5(nine,anchors);
+ const five=_gcConvert9to5(nine);
  fiveEl.value=five.toFixed(2);
  _gcUpdateNote(five);
 }
