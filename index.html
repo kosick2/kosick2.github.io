@@ -48,7 +48,7 @@ body.tt-locked .tt-widget-container{-webkit-app-region:no-drag;}
 .tt-widget-menu-item:hover{background:var(--surface2);}
 .tt-widget-drag-handle{flex-shrink:0;width:5px;height:26px;border-radius:3px;background:rgba(255,255,255,0.85);box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:grab;margin-left:4px;-webkit-app-region:drag;}
 .tt-widget-drag-handle:active{cursor:grabbing;}
-body.tt-locked .tt-widget-drag-handle{cursor:default;opacity:0.4;}
+body.tt-locked .tt-widget-drag-handle{cursor:default;opacity:0.4;-webkit-app-region:no-drag;}
 /* 앱 전체가 기본 스크롤바를 숨겨서(위 *::-webkit-scrollbar 규칙), 가로로 넘치는 표는
  마우스로 드래그할 손잡이가 안 보인다 — 성적 표처럼 열이 많아질 수 있는 곳에 쓰는
  직접 만든 가로 스크롤바(트랙+손잡이). */
