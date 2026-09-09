@@ -6643,6 +6643,61 @@ document.addEventListener('focusout',e=>{
  setTimeout(_adjustAnkComposerForKeyboard,350);
  }
 });
+/* 할 일(메모)의 "새 항목 추가" 칸과 오늘의 안내사항 작성칸은 메모장 툴바나 누가기록
+ 입력창과 달리 화면에 고정된 바가 아니라 페이지 안에 자연스럽게 놓인 일반 칸이라
+ 옮겨줄 필요는 없다 — 다만 포커스가 가서 키보드가 뜨면 브라우저가 이 칸을 화면
+ 위로 스크롤해 보여줄 때, 하단 탭바/FAB가 그 자리에 그대로 떠 있어서 칸이나
+ "+추가하기" 버튼을 가리는 문제가 있었다. 같은 키보드 감지 방식으로 그 동안만
+ 하단 바들을 숨긴다. */
+let _bcKbHidden=false,_bcKbConfirmTimer=null,_bcMaxViewportHeight=window.innerHeight,_bcRAF=null;
+function _isBottomComposerFocusTarget(el){
+ return!!el&&(el.id==='noticeContent'||(el.classList&&el.classList.contains('memo-add-input')));
+}
+function _adjustBottomComposerForKeyboard(){
+ if(_bcRAF)cancelAnimationFrame(_bcRAF);
+ _bcRAF=requestAnimationFrame(_applyBottomComposerForKeyboard);
+}
+function _applyBottomComposerForKeyboard(){
+ _bcRAF=null;
+ if(window.innerWidth>768){_scheduleBottomComposerHide(false);return;}
+ if(window.innerHeight>_bcMaxViewportHeight)_bcMaxViewportHeight=window.innerHeight;
+ const heightShrink=_bcMaxViewportHeight-window.innerHeight;
+ const vv=window.visualViewport;
+ const vvGap=vv?Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop)):0;
+ const keyboardVisible=heightShrink>120||vvGap>80;
+ _scheduleBottomComposerHide(keyboardVisible&&_isBottomComposerFocusTarget(document.activeElement));
+}
+function _scheduleBottomComposerHide(hide){
+ if(hide===_bcKbHidden){
+ if(_bcKbConfirmTimer){clearTimeout(_bcKbConfirmTimer);_bcKbConfirmTimer=null;}
+ return;
+ }
+ if(_bcKbConfirmTimer)clearTimeout(_bcKbConfirmTimer);
+ _bcKbConfirmTimer=setTimeout(()=>{
+ _bcKbConfirmTimer=null;
+ _bcKbHidden=hide;
+ ['mobileTabbar','saveBtn','arcFabMain','tabFabWrap'].forEach(elId=>{
+ const el=document.getElementById(elId);
+ if(el){el.style.visibility=hide?'hidden':'';el.style.pointerEvents=hide?'none':'';}
+ });
+ },120);
+}
+window.addEventListener('resize',_adjustBottomComposerForKeyboard);
+if(window.visualViewport){
+ window.visualViewport.addEventListener('resize',_adjustBottomComposerForKeyboard);
+}
+document.addEventListener('focusin',e=>{
+ if(_isBottomComposerFocusTarget(e.target)){
+ setTimeout(_adjustBottomComposerForKeyboard,50);
+ setTimeout(_adjustBottomComposerForKeyboard,350);
+ }
+});
+document.addEventListener('focusout',e=>{
+ if(_isBottomComposerFocusTarget(e.target)){
+ setTimeout(_adjustBottomComposerForKeyboard,50);
+ setTimeout(_adjustBottomComposerForKeyboard,350);
+ }
+});
 /* 체크박스는 contenteditable="false" 라벨(수정 불가 섬) 안에 있는데, 그 섬을 탭하면
  브라우저가 기본 동작으로 캐럿을 가장 가까운 편집 가능한 위치로 옮기면서 부모
  #noteContentInput에 포커스를 준다 — 그 결과로 키보드가 뜬다. mousedown 시점에
