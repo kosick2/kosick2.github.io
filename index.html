@@ -3769,8 +3769,11 @@ function _gcOnNineInput(){
 const ADM_NAESHIN_SUBJECTS=[{id:'kor',label:'국어'},{id:'eng',label:'영어'},{id:'math',label:'수학'},{id:'social',label:'사회'},{id:'sci',label:'과학'}];
 const ADM_MOCK_SUBJECTS=[{id:'kor',label:'국어'},{id:'math',label:'수학'},{id:'eng',label:'영어'},{id:'hist',label:'한국사'},{id:'social',label:'사회'},{id:'sci',label:'과학'}];
 const ADM_NAESHIN_KEY_ORDER=['1-1','1-2','2-1','2-2','3-1','3-2'];
+const ADM_TRACK_OPTIONS=['학생부 종합','학생부 교과','논술','실기','정시'];
+const ADM_JUDGMENT_OPTIONS=['과상','상향','적정','하향','과하'];
 let _admStudentId=null;
 let _admDraft=null;
+let _admWishDraft=null;
 let _admNaeshinGrade=1,_admNaeshinTerm=1;
 let _admMockYear=new Date().getFullYear(),_admMockMonth=6;
 function _admGetAllScores(){
@@ -3779,7 +3782,8 @@ function _admGetAllScores(){
 }
 function _admGetStudentScores(studentId){
  const all=_admGetAllScores();
- return all[studentId]||{naeshin:{},mock:{}};
+ const s=all[studentId]||{};
+ return{naeshin:s.naeshin||{},mock:s.mock||{},wishes:s.wishes||[]};
 }
 function _admNaeshinAvg(periodData){
  if(!periodData)return null;
@@ -3801,7 +3805,8 @@ function _admStudentHasData(studentId){
  const d=_admGetStudentScores(studentId);
  const naeshinHas=Object.values(d.naeshin||{}).some(p=>_admNaeshinAvg(p)!=null);
  const mockHas=Object.values(d.mock||{}).some(p=>_admMockAvg(p)!=null);
- return naeshinHas||mockHas;
+ const wishHas=(d.wishes||[]).length>0;
+ return naeshinHas||mockHas||wishHas;
 }
 function _admNaeshinSeries(studentId){
  const sd=_admGetStudentScores(studentId).naeshin||{};
@@ -3885,6 +3890,7 @@ function renderAdmissionTab(){
  ${students.map(s=>`<option value="${s.id}"${_admStudentId===s.id?' selected':''}>${_admStudentHasData(s.id)?'✔️':'▫️'} ${s.number?s.number+'번 ':''}${escHtml(s.name)}</option>`).join('')}
  </select>
  <button type="button" class="btn btn-primary" onclick="openAdmissionEntryScreen()"${_admStudentId?'':' disabled'} style="white-space:nowrap;">✏️ 성적 입력</button>
+ <button type="button" class="btn btn-secondary" onclick="openAdmissionWishEntryScreen()"${_admStudentId?'':' disabled'} style="white-space:nowrap;">🎓 희망 대학 입력</button>
  </div>
  </div>
  <div id="admissionDetail"></div>`;
@@ -3919,10 +3925,25 @@ function renderAdmissionDetail(){
  <div style="font-weight:600;font-size:0.92rem;margin-bottom:10px;">모의고사 성적</div>
  <div id="admMockViewWrap"></div>
  </div>
+ </div>
+ <div class="card" style="margin-top:14px;">
+ <div style="font-weight:600;font-size:0.92rem;margin-bottom:10px;">🎓 희망 진학 정보</div>
+ <div id="admWishView"></div>
  </div>`;
  _admRenderNaeshinView();
  _admRenderMockView();
+ _admRenderWishView();
  _admRefreshCharts();
+}
+function _admRenderWishView(){
+ const wrap=document.getElementById('admWishView');
+ if(!wrap)return;
+ const wishes=_admGetStudentScores(_admStudentId).wishes||[];
+ if(!wishes.length){
+ wrap.innerHTML=`<div class="ank-empty-note" style="padding:8px 0;">아직 입력된 희망 진학 정보가 없어요</div>`;
+ return;
+ }
+ wrap.innerHTML=wishes.map(w=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.86rem;"><span style="font-weight:600;">${escHtml(w.university||'-')}</span><span style="color:var(--text-secondary);"> · ${escHtml(w.track||'-')} · ${escHtml(w.department||'-')}${w.judgment?` · ${escHtml(w.judgment)}`:''}${w.memo?` · ${escHtml(w.memo)}`:''}</span></div>`).join('');
 }
 function _admRenderNaeshinView(){
  const wrap=document.getElementById('admNaeshinViewWrap');
@@ -4156,10 +4177,82 @@ function closeAdmissionEntryScreen(){
 function _admSaveEntry(){
  if(!_admStudentId||!_admDraft)return;
  const all=_admGetAllScores();
- all[_admStudentId]={naeshin:_admDraft.naeshin,mock:_admDraft.mock};
+ all[_admStudentId]={...(all[_admStudentId]||{}),naeshin:_admDraft.naeshin,mock:_admDraft.mock};
  DB.set('admissionScores',all);
  showToast('✅ 성적이 저장되었습니다');
  _admDraft=null;
+ renderAdmissionTab();
+}
+function openAdmissionWishEntryScreen(){
+ if(!_admStudentId)return;
+ const existing=_admGetStudentScores(_admStudentId);
+ _admWishDraft=JSON.parse(JSON.stringify(existing.wishes||[]));
+ if(!_admWishDraft.length)_admWishDraft.push({university:'',track:'',department:'',judgment:'',memo:''});
+ renderAdmissionWishEntryScreen();
+}
+function renderAdmissionWishEntryScreen(){
+ const wrap=document.getElementById('hrAdmissionContent');
+ if(!wrap)return;
+ const cls=_seatMyClass();
+ const students=cls?[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
+ const stu=students.find(s=>s.id===_admStudentId);
+ wrap.innerHTML=`
+ <div class="seat-back-row"><button class="seat-back-btn" onclick="closeAdmissionWishEntryScreen()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">🎓 희망 대학 입력 — ${stu?(stu.number?stu.number+'번 ':'')+escHtml(stu.name):''}</span></div>
+ <div class="card" style="margin-top:0;">
+ <div id="admWishRows"></div>
+ <button type="button" class="btn btn-secondary" style="width:100%;margin-top:6px;" onclick="_admAddWishRow()">+ 추가</button>
+ </div>
+ <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+ <button type="button" class="btn btn-secondary" onclick="closeAdmissionWishEntryScreen()">취소</button>
+ <button type="button" class="btn btn-primary" onclick="_admSaveWishEntry()">저장</button>
+ </div>`;
+ _admRenderWishRows();
+}
+function _admRenderWishRows(){
+ const wrap=document.getElementById('admWishRows');
+ if(!wrap)return;
+ wrap.innerHTML=_admWishDraft.map((row,i)=>{
+ return`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+ <input type="text" placeholder="희망 대학" value="${escHtml(row.university)}" style="flex-shrink:0;width:96px;" oninput="_admWishInput(${i},'university',this.value)">
+ <select onchange="_admWishInput(${i},'track',this.value)" style="flex-shrink:0;width:130px;">
+ <option value=""${row.track?'':' selected'}>전형 선택</option>
+ ${ADM_TRACK_OPTIONS.map(opt=>`<option value="${opt}"${row.track===opt?' selected':''}>${opt}</option>`).join('')}
+ </select>
+ <input type="text" placeholder="학과" value="${escHtml(row.department)}" style="flex-shrink:0;width:96px;" oninput="_admWishInput(${i},'department',this.value)">
+ <select onchange="_admWishInput(${i},'judgment',this.value)" style="flex-shrink:0;width:110px;">
+ <option value=""${row.judgment?'':' selected'}>종합판단</option>
+ ${ADM_JUDGMENT_OPTIONS.map(opt=>`<option value="${opt}"${row.judgment===opt?' selected':''}>${opt}</option>`).join('')}
+ </select>
+ <input type="text" placeholder="메모" value="${escHtml(row.memo)}" style="flex:1;min-width:100px;" oninput="_admWishInput(${i},'memo',this.value)">
+ <button type="button" onclick="_admRemoveWishRow(${i})" title="삭제" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:none;background:none;color:var(--text-secondary);font-size:1rem;cursor:pointer;font-family:inherit;">✕</button>
+ </div>`;
+ }).join('');
+}
+function _admWishInput(i,field,value){
+ if(!_admWishDraft[i])return;
+ _admWishDraft[i][field]=value;
+}
+function _admAddWishRow(){
+ _admWishDraft.push({university:'',track:'',department:'',judgment:'',memo:''});
+ _admRenderWishRows();
+}
+function _admRemoveWishRow(i){
+ _admWishDraft.splice(i,1);
+ if(!_admWishDraft.length)_admWishDraft.push({university:'',track:'',department:'',judgment:'',memo:''});
+ _admRenderWishRows();
+}
+function closeAdmissionWishEntryScreen(){
+ _admWishDraft=null;
+ renderAdmissionTab();
+}
+function _admSaveWishEntry(){
+ if(!_admStudentId||!_admWishDraft)return;
+ const cleaned=_admWishDraft.filter(r=>(r.university&&r.university.trim())||(r.department&&r.department.trim())||(r.track&&r.track.trim())||(r.judgment&&r.judgment.trim())||(r.memo&&r.memo.trim()));
+ const all=_admGetAllScores();
+ all[_admStudentId]={...(all[_admStudentId]||{}),wishes:cleaned};
+ DB.set('admissionScores',all);
+ showToast('✅ 희망 진학 정보가 저장되었습니다');
+ _admWishDraft=null;
  renderAdmissionTab();
 }
 function _seatMyClass(){
