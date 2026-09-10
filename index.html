@@ -7961,7 +7961,7 @@ const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(type
 p._savedAt=Date.now();
  _isSaving=true;
  fetch(`${SUPA_URL}/rest/v1/kosick_data?on_conflict=user_id`,{method:'POST',headers:{...SUPA_HEADERS,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{user_id:SUPA_USER,data:p}])})
- .then(res=>{if(!res.ok)throw new Error('save failed');localStorage.setItem('_savedAt',p._savedAt);_isSaving=false;if(!isManual){clearTimeout(_saveToastTimer);_saveToastTimer=setTimeout(()=>showToast(' 자동 저장 완료'),200);}})
+ .then(res=>{if(!res.ok)throw new Error('save failed');if(p._savedAt>=Number(localStorage.getItem('_savedAt')||0))localStorage.setItem('_savedAt',p._savedAt);_isSaving=false;if(!isManual){clearTimeout(_saveToastTimer);_saveToastTimer=setTimeout(()=>showToast(' 자동 저장 완료'),200);}})
  .catch(e=>{console.error('저장 실패:',e);showToast(' 저장 실패! 네트워크를 확인해주세요.');_isSaving=false;});
 }
 window._syncSettings=syncAll;
@@ -8033,8 +8033,19 @@ async function loadData(){
 window._manualSave=()=>syncAll(true);
 let _debounceTimer=null;
 const _s=DB.set.bind(DB);
+/* _savedAt는 예전엔 서버 저장이 "성공"한 뒤에만 갱신됐다 — 그런데 데스크톱 앱은
+ 항상 떠 있는 시간표 위젯 창이 메인 창과 localStorage를 그대로 공유하면서 자기
+ 나름대로도 새로고침 때마다 loadData()/refreshIfNewer()를 돌린다. 즉 로컬에 막
+ 적은 내용이 아직 1.5초 디바운스+네트워크 왕복을 기다리는 그 짧은 틈에 위젯(혹은
+ 다른 탭)이 먼저 서버의 예전 데이터를 받아와 "서버가 더 최신"이라고 착각하고
+ 그대로 덮어써버리면, 방금 쓴 내용이 서버에 올라가기도 전에 로컬에서 사라지고
+ 그 사라진 상태가 곧이어 서버로도 그대로 재저장돼버린다(누가기록이 작성 직후
+ 통째로 사라진 사고의 원인). 저장 "성공" 시점이 아니라 로컬에 "쓴" 그 순간
+ _savedAt을 바로 올려두면, 아직 서버 전송이 끝나지 않았어도 다른 창이 이 시점을
+ "서버보다 최신"으로 정확히 인식해 절대 덮어쓰지 않는다. */
 DB.set=(k,v)=>{
  _s(k,v);
+ localStorage.setItem('_savedAt',Date.now());
  clearTimeout(_debounceTimer);
  _debounceTimer=setTimeout(syncAll,1500);
 };
