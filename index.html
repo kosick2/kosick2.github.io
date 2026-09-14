@@ -217,7 +217,11 @@ body.tt-locked .tt-widget-drag-handle{cursor:default;opacity:0.4;-webkit-app-reg
 .arc-fab-wrap{display:none;}
 .mobile-tabbar{display:none;}
 @media(max-width:768px){
- .main{max-width:100%;margin:0;}
+ /* 하단에 항상 떠 있는 홈 아치 버튼(최대 bottom 38px+높이 58px)과 탭 고정 바가
+ 콘텐츠 위에 겹쳐 있어서, 마지막 카드까지 스크롤해도 그 밑에 가려 안 보이는
+ 문제가 있었다 — 두 플로팅 버튼이 차지하는 높이만큼 아래쪽에 여백을 더해서
+ 끝까지 스크롤하면 완전히 드러나게 한다. */
+ .main{max-width:100%;margin:0;padding-bottom:calc(116px + env(safe-area-inset-bottom));}
  body.on-home .header{display:none;}
  .m-hero{display:block;background:transparent;padding:calc(18px + env(safe-area-inset-top)) 12px 0;color:var(--text);position:relative;margin:-12px -12px 16px;}
  .home-class-card{display:none !important;}
@@ -452,7 +456,7 @@ textarea{resize:vertical;min-height:80px;}
 @media(max-width:700px){.score-modal-layout{grid-template-columns:1fr;}}
 /* ── 모바일 반응형 ── */
 @media(max-width:600px){
- .main{padding:12px;}
+ .main{padding:12px;padding-bottom:calc(116px + env(safe-area-inset-bottom));}
  .card{padding:12px;}
  .form-row .form-group{min-width:0;}
  input[type="date"],input[type="time"]{padding:8px 2px;font-size:0.75rem;min-width:0;}
