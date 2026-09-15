@@ -3811,6 +3811,9 @@ const ADM_MULTI_SUBJECT_IDS=['social','sci'];
 const ADM_SUBJECT_KOREAN_MAP={'국어':'kor','영어':'eng','수학':'math','사회':'social','과학':'sci'};
 const ADM_IMPORT_PERIOD_LABELS={'1학년1학기':'1-1','1학년2학기':'1-2','2학년1학기':'2-1','2학년2학기':'2-2','3학년1학기':'3-1','3학년2학기':'3-2'};
 const ADM_GRADE_CUT_COUNT=8; /* 1~8등급컷 원점수 — 9등급은 8등급컷 미만 전체 */
+/* 영어·한국사는 절대평가라 시험 난이도와 무관하게 원점수 기준이 고정돼 있다
+ (국어·수학·사회·과학은 상대평가라 회차마다 컷이 달라 직접 입력해야 함). */
+const ADM_ABSOLUTE_GRADE_CUTS={eng:[90,80,70,60,50,40,30,20],hist:[40,35,30,25,20,15,10,5]};
 let _admStudentId=null;
 let _admDraft=null;
 let _admWishDraft=null;
@@ -4272,19 +4275,22 @@ function _admToggleGradeCutPanel(){
  _admGradeCutPanelOpen=!_admGradeCutPanelOpen;
  _admRenderMockTable();
 }
+/* 영어·한국사는 절대평가라 컷을 입력받을 필요가 없어 이 패널에는 안 보여주고,
+ 국어·수학·사회·과학(회차마다 컷이 바뀌는 상대평가 과목)만 직접 입력받는다. */
 function _admGradeCutPanelHtml(key,periodCuts){
+ const relativeSubjects=ADM_MOCK_SUBJECTS.filter(s=>!ADM_ABSOLUTE_GRADE_CUTS[s.id]);
  return`<div style="overflow-x:auto;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;padding:8px;">
- <table style="border-collapse:collapse;font-size:0.74rem;min-width:460px;">
+ <table style="border-collapse:collapse;font-size:0.74rem;min-width:400px;">
  <thead><tr>
  <th style="padding:3px 4px;text-align:left;">과목</th>
  ${Array.from({length:ADM_GRADE_CUT_COUNT},(_,i)=>`<th style="padding:3px 2px;text-align:center;">${i+1}컷</th>`).join('')}
  </tr></thead>
- <tbody>${ADM_MOCK_SUBJECTS.map(s=>{
+ <tbody>${relativeSubjects.map(s=>{
  const cuts=periodCuts[s.id]||[];
  return`<tr><td style="padding:3px 4px;font-weight:600;">${s.label}</td>${Array.from({length:ADM_GRADE_CUT_COUNT},(_,i)=>`<td style="padding:2px;"><input type="number" style="width:36px;text-align:center;padding:4px 1px;" value="${escHtml(String(cuts[i]??''))}" oninput="_admGradeCutInput('${s.id}',${i},this.value)"></td>`).join('')}</tr>`;
  }).join('')}</tbody>
  </table>
- <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:6px;">과목별 1~8등급 컷 원점수예요(8등급컷 미만은 전부 9등급). 이 회차엔 모든 학생에게 공통 적용되고, 원점수를 입력하면 자동으로 등급이 채워져요.</div>
+ <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:6px;">과목별 1~8등급 컷 원점수예요(8등급컷 미만은 전부 9등급). 이 회차엔 모든 학생에게 공통 적용되고, 원점수를 입력하면 자동으로 등급이 채워져요. 영어·한국사는 절대평가라 원점수 기준(90/80/70/60/50/40/30/20, 40/35/30/25/20/15/10/5)이 고정이라 여기 없이도 자동으로 등급이 매겨져요.</div>
  </div>`;
 }
 function _admGradeCutInput(subjectId,cutIndex,value){
@@ -4296,11 +4302,15 @@ function _admGradeCutInput(subjectId,cutIndex,value){
  DB.set('mockGradeCuts',all);
  _admRecomputeMockGradeForSubject(subjectId);
 }
+function _admCutsForSubject(key,subjectId){
+ if(ADM_ABSOLUTE_GRADE_CUTS[subjectId])return ADM_ABSOLUTE_GRADE_CUTS[subjectId].map(String);
+ return(_admGetPeriodCuts(key)[subjectId])||[];
+}
 function _admRecomputeMockGradeForSubject(subjectId){
  const key=`${_admMockYear}-${_admMockMonth}`;
  const periodData=_admDraft&&_admDraft.mock&&_admDraft.mock[key];
  if(!periodData||!periodData[subjectId])return;
- const cuts=(_admGetPeriodCuts(key)[subjectId])||[];
+ const cuts=_admCutsForSubject(key,subjectId);
  const grade=_admComputeMockGrade(periodData[subjectId].score,cuts);
  if(grade==='')return;
  periodData[subjectId].grade=grade;
@@ -4348,7 +4358,7 @@ function _admDraftInputMock(subjectId,field,value){
  if(!_admDraft.mock[key][subjectId])_admDraft.mock[key][subjectId]={};
  _admDraft.mock[key][subjectId][field]=value;
  if(field==='score'){
- const cuts=(_admGetPeriodCuts(key)[subjectId])||[];
+ const cuts=_admCutsForSubject(key,subjectId);
  const grade=_admComputeMockGrade(value,cuts);
  if(grade!==''){
  _admDraft.mock[key][subjectId].grade=grade;
