@@ -14,6 +14,7 @@
 <script>document.documentElement.style.background='#F5F1E6';</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 button{-webkit-tap-highlight-color:transparent;}
@@ -38,7 +39,11 @@ body.tt-locked .tt-widget-container{-webkit-app-region:no-drag;}
 /* 창 너비가 좁아지면 로고 메뉴/드래그 핸들(유일하게 클릭 가능한 조작부)은 항상
  오른쪽 끝에 그대로 두고, 대신 장식용인 시간표 칸이 왼쪽부터 잘리게 한다 —
  핸들이 창 밖으로 밀려나 못 누르게 되는 사고를 막기 위함. */
-.tt-widget-chips{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:1;min-width:0;overflow:hidden;}
+/* 현재 교시 칸은 강조를 위해 살짝 확대(scale)+흰 테두리로 튀어나오게 그리는데,
+ 그 튀어나오는 만큼 안쪽에 여백(padding)을 줘서 overflow:hidden 경계에 잘리지
+ 않게 한다 — 패딩은 이 칸 자신의 바깥 경계(잘리는 기준선) 안쪽 공간이라, 실제
+ 잘리는 위치는 그대로 두면서 확대된 칸이 그 안에서 안전하게 그려진다. */
+.tt-widget-chips{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:1;min-width:0;overflow:hidden;padding:5px 8px;}
 .tt-widget-chip{flex-shrink:0;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;text-align:center;line-height:1.1;box-shadow:0 2px 6px rgba(0,0,0,0.2);padding:2px;}
 .tt-widget-chip.free{background:var(--surface2);color:var(--text-secondary);box-shadow:none;}
 .tt-widget-chip.current{transform:scale(1.16);box-shadow:0 0 0 2px #fff,0 4px 12px rgba(0,0,0,0.35);}
@@ -1367,6 +1372,10 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  </div>
 </div>
+<!-- 모달: 입시 상담 성적/희망대학/파일업로드 (내용은 JS가 채움) -->
+<div class="modal-overlay" id="admModalOverlay">
+ <div class="modal" id="admModalBox" style="max-width:700px;"></div>
+</div>
 <!-- 모달: 출결 추가 -->
 <div class="modal-overlay" id="addAttModal">
  <div class="modal" style="max-width:400px;">
@@ -1918,6 +1927,7 @@ function closeModal(id){document.getElementById(id).classList.remove('active');d
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{
  if(e.target!==ov)return;
  if(ov.id==='scoreModal'){closeScoreModal();}
+ else if(ov.id==='admModalOverlay'){closeAdmissionModal();}
  else{ov.classList.remove('active');}
 }));
 function showToast(msg){
@@ -3798,9 +3808,12 @@ const ADM_JUDGMENT_OPTIONS=['과상','상향','적정','하향','과하'];
 /* 2022 개정 교육과정에서는 사회·과학이 여러 선택과목으로 나뉘어 학생마다 듣는
  조합이 다르다 — 이 두 과목만 "여러 과목 입력 → 등급 단순평균" 방식을 쓴다. */
 const ADM_MULTI_SUBJECT_IDS=['social','sci'];
+const ADM_SUBJECT_KOREAN_MAP={'국어':'kor','영어':'eng','수학':'math','사회':'social','과학':'sci'};
+const ADM_IMPORT_PERIOD_LABELS={'1학년1학기':'1-1','1학년2학기':'1-2','2학년1학기':'2-1','2학년2학기':'2-2','3학년1학기':'3-1','3학년2학기':'3-2'};
 let _admStudentId=null;
 let _admDraft=null;
 let _admWishDraft=null;
+let _admImportDraft=null;
 let _admNaeshinGrade=1,_admNaeshinTerm=1;
 let _admMockYear=new Date().getFullYear(),_admMockMonth=6;
 function _admGetAllScores(){
@@ -3812,13 +3825,23 @@ function _admGetStudentScores(studentId){
  const s=all[studentId]||{};
  return{naeshin:s.naeshin||{},mock:s.mock||{},wishes:s.wishes||[]};
 }
+/* 학교 자체 집계(예: 유니브 내신분석표의 "학년&학기별" 시트)는 과목별 단위수(학점)로
+ 가중평균을 낸다 — 그래서 여기도 단위수가 입력된 과목은 그 단위수로, 안 적힌 과목은
+ 기본값 1로 가중해 계산한다(전부 안 적으면 결과적으로 단순평균과 같아진다). */
 function _admMultiSubjectAvg(list){
- const grades=(Array.isArray(list)?list:[]).map(c=>Number(c&&c.grade)).filter(v=>!isNaN(v));
- if(!grades.length)return null;
- return grades.reduce((a,b)=>a+b,0)/grades.length;
+ const valid=(Array.isArray(list)?list:[]).map(c=>{
+ const grade=Number(c&&c.grade);
+ const unitsNum=Number(c&&c.units);
+ const units=(!isNaN(unitsNum)&&unitsNum>0)?unitsNum:1;
+ return{grade,units};
+ }).filter(c=>!isNaN(c.grade));
+ if(!valid.length)return null;
+ const totalUnits=valid.reduce((s,c)=>s+c.units,0);
+ const weightedSum=valid.reduce((s,c)=>s+c.grade*c.units,0);
+ return weightedSum/totalUnits;
 }
-/* social/sci는 선택과목이 여러 개일 수 있어 배열로 저장된다(과목별 등급의 단순평균이
- 그 과목의 등급이 된다) — 예전 데이터나 국영수처럼 단일 과목인 경우는 객체 그대로. */
+/* social/sci는 선택과목이 여러 개일 수 있어 배열로 저장된다(과목별 등급의 단위수
+ 가중평균이 그 과목의 등급이 된다) — 예전 데이터나 국영수처럼 단일 과목인 경우는 객체 그대로. */
 function _admSubjectEffectiveGrade(entry){
  if(Array.isArray(entry))return _admMultiSubjectAvg(entry);
  const v=entry&&entry.grade;
@@ -3929,8 +3952,10 @@ function renderAdmissionTab(){
  <option value=""${_admStudentId?'':' selected'}>학생 선택</option>
  ${students.map(s=>`<option value="${s.id}"${_admStudentId===s.id?' selected':''}>${_admStudentHasData(s.id)?'✔️':'▫️'} ${s.number?s.number+'번 ':''}${escHtml(s.name)}</option>`).join('')}
  </select>
- <button type="button" class="btn btn-primary" onclick="openAdmissionEntryScreen()"${_admStudentId?'':' disabled'} style="white-space:nowrap;">✏️ 성적 입력</button>
+ <button type="button" class="btn btn-primary" onclick="openAdmissionNaeshinEntryScreen()"${_admStudentId?'':' disabled'} style="white-space:nowrap;">✏️ 내신 성적 입력</button>
+ <button type="button" class="btn btn-primary" onclick="openAdmissionMockEntryScreen()"${_admStudentId?'':' disabled'} style="white-space:nowrap;">📝 모의고사 성적 입력</button>
  <button type="button" class="btn btn-secondary" onclick="openAdmissionWishEntryScreen()"${_admStudentId?'':' disabled'} style="white-space:nowrap;">🎓 희망 대학 입력</button>
+ <button type="button" class="btn btn-secondary" onclick="openAdmissionImportScreen()" style="white-space:nowrap;">📥 성적 파일 업로드</button>
  </div>
  </div>
  <div id="admissionDetail"></div>`;
@@ -4131,7 +4156,15 @@ function _admRenderNaeshinTable(){
  </table></div>
  ${multiSubjects.map(s=>_admMultiSubjectBlockHtml(key,s)).join('')}
  <div id="admNaeshinAvg" style="margin-top:10px;font-size:0.86rem;font-weight:600;color:var(--primary);">${_admNaeshinAvgLabel(periodData)}</div>
- <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:4px;">※ 원점수(100점 만점)를 90/80/70/60% 고정분할점수로 보고 성취도(A~E)를 자동으로 채워줘요 — 분할점수 기준(고정/추정)은 학교·과목마다 다를 수 있으니 다르면 성취도 칸을 직접 고치시면 돼요.</div>`;
+ <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:4px;">※ 원점수(100점 만점)를 90/80/70/60% 고정분할점수로 보고 성취도(A~E)를 자동으로 채워줘요 — 분할점수 기준(고정/추정)은 학교·과목마다 다를 수 있으니 다르면 성취도 칸을 직접 고치시면 돼요.</div>
+ <button type="button" class="btn btn-secondary" style="width:100%;margin-top:10px;color:#EF4444;" onclick="_admClearNaeshinPeriod()">🗑 ${_admNaeshinGrade}학년 ${_admNaeshinTerm}학기 성적 전체 삭제</button>`;
+}
+function _admClearNaeshinPeriod(){
+ const key=`${_admNaeshinGrade}-${_admNaeshinTerm}`;
+ if(!_admDraft.naeshin[key]||!Object.keys(_admDraft.naeshin[key]).length){showToast('⚠️ 이 학기엔 지울 성적이 없어요');return;}
+ if(!confirm(`${_admNaeshinGrade}학년 ${_admNaeshinTerm}학기 성적을 전부 지울까요? (저장을 눌러야 실제로 반영돼요)`))return;
+ delete _admDraft.naeshin[key];
+ _admRenderNaeshinTable();
 }
 /* 성취도 산출은 학교/과목마다 "고정분할점수"(90/80/70/60% 고정) 또는 "추정분할점수"
  (시험 평균·표준편차 등으로 통계 추정) 중 하나를 택해 쓰고, 미이수 구간 포함 여부도
@@ -4170,6 +4203,7 @@ function _admMultiSubjectBlockHtml(key,subject){
  </div>
  <div id="admNaeshinMulti_${subject.id}">${list.map((c,i)=>_admMultiCourseRowHtml(subject.id,i,c)).join('')}</div>
  <button type="button" class="btn btn-secondary" style="width:100%;margin-top:4px;" onclick="_admAddNaeshinCourse('${subject.id}')">+ ${subject.label} 과목 추가</button>
+ <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:6px;">※ 단위수를 적으면 그 단위수로 가중평균, 비워두면 1로 계산돼요(학교 내신분석표와 같은 방식).</div>
  </div>`;
 }
 function _admMultiCourseRowHtml(subjectId,i,c){
@@ -4178,6 +4212,7 @@ function _admMultiCourseRowHtml(subjectId,i,c){
  <input type="number" placeholder="원점수" value="${escHtml(String(c.score??''))}" style="width:64px;text-align:center;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'score',this.value)">
  <input type="number" min="1" max="9" step="1" placeholder="등급" value="${escHtml(String(c.grade??''))}" style="width:52px;text-align:center;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'grade',this.value)">
  <input type="text" placeholder="성취도" id="admNaeshinCourseAchv_${subjectId}_${i}" value="${escHtml(c.achievement||'')}" style="width:64px;text-align:center;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'achievement',this.value)">
+ <input type="number" placeholder="단위수" min="1" step="1" title="단위수(학점) — 비워두면 1로 계산" value="${escHtml(String(c.units??''))}" style="width:56px;text-align:center;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'units',this.value)">
  <button type="button" onclick="_admRemoveNaeshinCourse('${subjectId}',${i})" title="삭제" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;background:none;color:var(--text-secondary);font-size:0.9rem;cursor:pointer;font-family:inherit;">✕</button>
  </div>`;
 }
@@ -4185,7 +4220,7 @@ function _admAddNaeshinCourse(subjectId){
  const key=`${_admNaeshinGrade}-${_admNaeshinTerm}`;
  if(!_admDraft.naeshin[key])_admDraft.naeshin[key]={};
  if(!Array.isArray(_admDraft.naeshin[key][subjectId]))_admDraft.naeshin[key][subjectId]=[];
- _admDraft.naeshin[key][subjectId].push({name:'',score:'',grade:'',achievement:''});
+ _admDraft.naeshin[key][subjectId].push({name:'',score:'',grade:'',achievement:'',units:''});
  _admRenderNaeshinTable();
 }
 function _admRemoveNaeshinCourse(subjectId,i){
@@ -4231,7 +4266,15 @@ function _admRenderMockTable(){
  }).join('')}</tbody>
  </table></div>
  <div id="admMockAvg" style="margin-top:10px;font-size:0.86rem;font-weight:600;color:var(--primary);">${_admMockAvgLabel(periodData)}</div>
- <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:4px;">평균 = 국어·수학·영어·탐구(사회+과학 평균) 4영역 평균 (한국사 제외)</div>`;
+ <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:4px;">평균 = 국어·수학·영어·탐구(사회+과학 평균) 4영역 평균 (한국사 제외)</div>
+ <button type="button" class="btn btn-secondary" style="width:100%;margin-top:10px;color:#EF4444;" onclick="_admClearMockPeriod()">🗑 ${_admMockYear}년 ${_admMockMonth}월 성적 전체 삭제</button>`;
+}
+function _admClearMockPeriod(){
+ const key=`${_admMockYear}-${_admMockMonth}`;
+ if(!_admDraft.mock[key]||!Object.keys(_admDraft.mock[key]).length){showToast('⚠️ 이 회차엔 지울 성적이 없어요');return;}
+ if(!confirm(`${_admMockYear}년 ${_admMockMonth}월 모의고사 성적을 전부 지울까요? (저장을 눌러야 실제로 반영돼요)`))return;
+ delete _admDraft.mock[key];
+ _admRenderMockTable();
 }
 function _admDraftInputMock(subjectId,field,value){
  const key=`${_admMockYear}-${_admMockMonth}`;
@@ -4249,68 +4292,95 @@ function _admNormalizeNaeshinForEdit(naeshin){
  ADM_MULTI_SUBJECT_IDS.forEach(subId=>{
  const raw=naeshin[key][subId];
  if(raw&&!Array.isArray(raw)){
- naeshin[key][subId]=(raw.score||raw.grade||raw.achievement)?[{name:'',score:raw.score||'',grade:raw.grade||'',achievement:raw.achievement||''}]:[];
+ naeshin[key][subId]=(raw.score||raw.grade||raw.achievement)?[{name:'',score:raw.score||'',grade:raw.grade||'',achievement:raw.achievement||'',units:''}]:[];
  }
  });
  });
  return naeshin;
 }
-function openAdmissionEntryScreen(){
+/* 성적/희망대학/파일업로드 입력 화면은 전부 하나의 모달(#admModalOverlay/#admModalBox)을
+ 공유한다 — 화면 하나를 통째로 쓰던 이전 방식은 데스크톱에서 불필요하게 커서,
+ 팝업 하나로 열고 배경 클릭이나 취소로 닫으면 밑에 있던 입시상담 탭이 그대로
+ 보이게 바꿨다. */
+function _admOpenModal(){
+ const ov=document.getElementById('admModalOverlay');
+ if(ov)ov.classList.add('active');
+}
+function closeAdmissionModal(){
+ _admDraft=null;
+ _admWishDraft=null;
+ _admImportDraft=null;
+ const ov=document.getElementById('admModalOverlay');
+ if(ov)ov.classList.remove('active');
+ renderAdmissionTab();
+}
+function openAdmissionNaeshinEntryScreen(){
  if(!_admStudentId)return;
  const existing=_admGetStudentScores(_admStudentId);
- const naeshinCopy=_admNormalizeNaeshinForEdit(JSON.parse(JSON.stringify(existing.naeshin||{})));
- _admDraft={naeshin:naeshinCopy,mock:JSON.parse(JSON.stringify(existing.mock||{}))};
- renderAdmissionEntryScreen();
+ _admDraft={naeshin:_admNormalizeNaeshinForEdit(JSON.parse(JSON.stringify(existing.naeshin||{})))};
+ renderAdmissionNaeshinEntryScreen();
+ _admOpenModal();
 }
-function renderAdmissionEntryScreen(){
- const wrap=document.getElementById('hrAdmissionContent');
+function renderAdmissionNaeshinEntryScreen(){
+ const wrap=document.getElementById('admModalBox');
  if(!wrap)return;
  const cls=_seatMyClass();
  const students=cls?[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
  const stu=students.find(s=>s.id===_admStudentId);
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="closeAdmissionEntryScreen()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">✏️ 성적 입력 — ${stu?(stu.number?stu.number+'번 ':'')+escHtml(stu.name):''}</span></div>
- <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;">
- <div class="card" style="margin-top:0;">
- <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
- <div style="font-weight:600;font-size:0.92rem;">내신 성적 입력</div>
- <div style="display:flex;gap:6px;">
+ <div class="modal-title">✏️ 내신 성적 입력 — ${stu?(stu.number?stu.number+'번 ':'')+escHtml(stu.name):''}</div>
+ <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;">
  <select id="admNaeshinGrade" onchange="_admChangeNaeshinPeriod()">${[1,2,3].map(g=>`<option value="${g}"${g===_admNaeshinGrade?' selected':''}>${g}학년</option>`).join('')}</select>
  <select id="admNaeshinTerm" onchange="_admChangeNaeshinPeriod()">${[1,2].map(t=>`<option value="${t}"${t===_admNaeshinTerm?' selected':''}>${t}학기</option>`).join('')}</select>
  </div>
- </div>
  <div id="admNaeshinTableWrap"></div>
- </div>
- <div class="card" style="margin-top:0;">
- <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
- <div style="font-weight:600;font-size:0.92rem;">모의고사 성적 입력</div>
- <div style="display:flex;gap:6px;">
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" onclick="closeAdmissionModal()">취소</button>
+ <button type="button" class="btn btn-primary" onclick="_admSaveNaeshinEntry()">저장</button>
+ </div>`;
+ _admRenderNaeshinTable();
+}
+function _admSaveNaeshinEntry(){
+ if(!_admStudentId||!_admDraft||!_admDraft.naeshin)return;
+ const all=_admGetAllScores();
+ all[_admStudentId]={...(all[_admStudentId]||{}),naeshin:_admDraft.naeshin};
+ DB.set('admissionScores',all);
+ showToast('✅ 내신 성적이 저장되었습니다');
+ closeAdmissionModal();
+}
+function openAdmissionMockEntryScreen(){
+ if(!_admStudentId)return;
+ const existing=_admGetStudentScores(_admStudentId);
+ _admDraft={mock:JSON.parse(JSON.stringify(existing.mock||{}))};
+ renderAdmissionMockEntryScreen();
+ _admOpenModal();
+}
+function renderAdmissionMockEntryScreen(){
+ const wrap=document.getElementById('admModalBox');
+ if(!wrap)return;
+ const cls=_seatMyClass();
+ const students=cls?[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
+ const stu=students.find(s=>s.id===_admStudentId);
+ wrap.innerHTML=`
+ <div class="modal-title">📝 모의고사 성적 입력 — ${stu?(stu.number?stu.number+'번 ':'')+escHtml(stu.name):''}</div>
+ <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;">
  <select id="admMockYear" onchange="_admChangeMockPeriod()">${_admMockYearOptions()}</select>
  <select id="admMockMonth" onchange="_admChangeMockPeriod()">${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${m}"${m===_admMockMonth?' selected':''}>${m}월</option>`).join('')}</select>
  </div>
- </div>
  <div id="admMockTableWrap"></div>
- </div>
- </div>
- <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
- <button type="button" class="btn btn-secondary" onclick="closeAdmissionEntryScreen()">취소</button>
- <button type="button" class="btn btn-primary" onclick="_admSaveEntry()">저장</button>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" onclick="closeAdmissionModal()">취소</button>
+ <button type="button" class="btn btn-primary" onclick="_admSaveMockEntry()">저장</button>
  </div>`;
- _admRenderNaeshinTable();
  _admRenderMockTable();
 }
-function closeAdmissionEntryScreen(){
- _admDraft=null;
- renderAdmissionTab();
-}
-function _admSaveEntry(){
- if(!_admStudentId||!_admDraft)return;
+function _admSaveMockEntry(){
+ if(!_admStudentId||!_admDraft||!_admDraft.mock)return;
  const all=_admGetAllScores();
- all[_admStudentId]={...(all[_admStudentId]||{}),naeshin:_admDraft.naeshin,mock:_admDraft.mock};
+ all[_admStudentId]={...(all[_admStudentId]||{}),mock:_admDraft.mock};
  DB.set('admissionScores',all);
- showToast('✅ 성적이 저장되었습니다');
- _admDraft=null;
- renderAdmissionTab();
+ showToast('✅ 모의고사 성적이 저장되었습니다');
+ closeAdmissionModal();
 }
 function openAdmissionWishEntryScreen(){
  if(!_admStudentId)return;
@@ -4318,21 +4388,20 @@ function openAdmissionWishEntryScreen(){
  _admWishDraft=JSON.parse(JSON.stringify(existing.wishes||[]));
  if(!_admWishDraft.length)_admWishDraft.push({university:'',track:'',department:'',judgment:'',memo:''});
  renderAdmissionWishEntryScreen();
+ _admOpenModal();
 }
 function renderAdmissionWishEntryScreen(){
- const wrap=document.getElementById('hrAdmissionContent');
+ const wrap=document.getElementById('admModalBox');
  if(!wrap)return;
  const cls=_seatMyClass();
  const students=cls?[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999)):[];
  const stu=students.find(s=>s.id===_admStudentId);
  wrap.innerHTML=`
- <div class="seat-back-row"><button class="seat-back-btn" onclick="closeAdmissionWishEntryScreen()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">🎓 희망 대학 입력 — ${stu?(stu.number?stu.number+'번 ':'')+escHtml(stu.name):''}</span></div>
- <div class="card" style="margin-top:0;">
+ <div class="modal-title">🎓 희망 대학 입력 — ${stu?(stu.number?stu.number+'번 ':'')+escHtml(stu.name):''}</div>
  <div id="admWishRows"></div>
  <button type="button" class="btn btn-secondary" style="width:100%;margin-top:6px;" onclick="_admAddWishRow()">+ 추가</button>
- </div>
- <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
- <button type="button" class="btn btn-secondary" onclick="closeAdmissionWishEntryScreen()">취소</button>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" onclick="closeAdmissionModal()">취소</button>
  <button type="button" class="btn btn-primary" onclick="_admSaveWishEntry()">저장</button>
  </div>`;
  _admRenderWishRows();
@@ -4370,10 +4439,6 @@ function _admRemoveWishRow(i){
  if(!_admWishDraft.length)_admWishDraft.push({university:'',track:'',department:'',judgment:'',memo:''});
  _admRenderWishRows();
 }
-function closeAdmissionWishEntryScreen(){
- _admWishDraft=null;
- renderAdmissionTab();
-}
 function _admSaveWishEntry(){
  if(!_admStudentId||!_admWishDraft)return;
  const cleaned=_admWishDraft.filter(r=>(r.university&&r.university.trim())||(r.department&&r.department.trim())||(r.track&&r.track.trim())||(r.judgment&&r.judgment.trim())||(r.memo&&r.memo.trim()));
@@ -4381,8 +4446,138 @@ function _admSaveWishEntry(){
  all[_admStudentId]={...(all[_admStudentId]||{}),wishes:cleaned};
  DB.set('admissionScores',all);
  showToast('✅ 희망 진학 정보가 저장되었습니다');
- _admWishDraft=null;
- renderAdmissionTab();
+ closeAdmissionModal();
+}
+/* 유니브 내신분석표(.xls) 일괄 업로드 — 여러 학생 파일을 한 번에 골라 파일 이름의
+ 학생 이름으로 우리 반과 자동 매칭하고, "교과&과목별" 시트에서 학기별/과목별
+ 등급을 그대로 가져온다. 원점수가 없는 자료라 원점수 칸은 비워둔다. */
+function _admExtractNameFromFilename(fileName){
+ const base=fileName.replace(/\.(xls|xlsx)$/i,'');
+ const m=base.match(/(\d+)\s*번\s*(.+)$/);
+ if(m)return m[2].trim();
+ const parts=base.trim().split(/\s+/);
+ return parts[parts.length-1];
+}
+function _admFindNaeshinSheetName(wb){
+ if(wb.SheetNames.includes('교과&과목별'))return'교과&과목별';
+ return wb.SheetNames.find(n=>{
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''});
+ return rows[0]&&rows[0].some(c=>String(c).trim()==='교과')&&rows[0].some(c=>String(c).trim()==='과목');
+ });
+}
+async function _admParseNaeshinXlsFile(file){
+ const buf=await file.arrayBuffer();
+ const wb=XLSX.read(buf,{type:'array'});
+ const sheetName=_admFindNaeshinSheetName(wb);
+ if(!sheetName)throw new Error('과목별 성적 시트를 찾을 수 없어요');
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:''});
+ const header=(rows[0]||[]).map(h=>String(h).trim());
+ const periodColIdx={};
+ header.forEach((h,i)=>{if(ADM_IMPORT_PERIOD_LABELS[h])periodColIdx[ADM_IMPORT_PERIOD_LABELS[h]]=i;});
+ const naeshin={};
+ let currentSubjectKo='';
+ for(let r=1;r<rows.length;r++){
+ const row=rows[r];
+ const subjectKoCell=String(row[0]||'').trim();
+ if(subjectKoCell)currentSubjectKo=subjectKoCell;
+ const courseName=String(row[1]||'').trim();
+ const subjectId=ADM_SUBJECT_KOREAN_MAP[currentSubjectKo];
+ if(!subjectId)continue;
+ Object.keys(periodColIdx).forEach(periodKey=>{
+ const raw=row[periodColIdx[periodKey]];
+ if(raw===''||raw==null)return;
+ const gradeNum=Number(raw);
+ if(isNaN(gradeNum))return;
+ if(!naeshin[periodKey])naeshin[periodKey]={};
+ if(ADM_MULTI_SUBJECT_IDS.includes(subjectId)){
+ if(!Array.isArray(naeshin[periodKey][subjectId]))naeshin[periodKey][subjectId]=[];
+ naeshin[periodKey][subjectId].push({name:courseName,score:'',grade:String(gradeNum),achievement:'',units:''});
+ }else{
+ naeshin[periodKey][subjectId]={score:'',grade:String(gradeNum),achievement:''};
+ }
+ });
+ }
+ return{naeshin};
+}
+function openAdmissionImportScreen(){
+ if(!_seatMyClass())return;
+ _admImportDraft=[];
+ renderAdmissionImportScreen();
+ _admOpenModal();
+}
+function renderAdmissionImportScreen(){
+ const wrap=document.getElementById('admModalBox');
+ if(!wrap)return;
+ wrap.innerHTML=`
+ <div class="modal-title">📥 성적 파일 업로드</div>
+ <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">유니브 내신분석표(.xls) 파일을 여러 개 한 번에 선택할 수 있어요. 파일 이름의 학생 이름으로 우리 반 학생과 자동으로 매칭돼요. 원점수는 이 파일에 없어서 등급만 채워지고, 성취도 칸은 비워둬요.</p>
+ <input type="file" id="admImportFileInput" multiple accept=".xls,.xlsx" style="display:none" onchange="_admHandleImportFiles(this.files)">
+ <button type="button" class="btn btn-primary" style="width:100%;" onclick="document.getElementById('admImportFileInput').click()">📁 파일 선택</button>
+ <div id="admImportResults" style="margin-top:14px;"></div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" onclick="closeAdmissionModal()">취소</button>
+ <button type="button" class="btn btn-primary" id="admImportApplyBtn" disabled onclick="_admApplyImport()">적용</button>
+ </div>`;
+}
+async function _admHandleImportFiles(fileList){
+ const cls=_seatMyClass();
+ if(!cls)return;
+ const files=[...fileList];
+ if(!files.length)return;
+ const resultsEl=document.getElementById('admImportResults');
+ if(resultsEl)resultsEl.innerHTML=`<div class="ank-empty-note">${files.length}개 파일 분석 중...</div>`;
+ if(typeof XLSX==='undefined'){if(resultsEl)resultsEl.innerHTML='<div class="ank-empty-note">⚠ 엑셀 라이브러리 로딩 중... 잠시 후 다시 시도해주세요</div>';return;}
+ const results=[];
+ for(const file of files){
+ const name=_admExtractNameFromFilename(file.name);
+ const student=(cls.students||[]).find(s=>s.name.trim()===name);
+ try{
+ const parsed=await _admParseNaeshinXlsFile(file);
+ const periodsFound=Object.keys(parsed.naeshin).sort();
+ let courseCount=0;
+ Object.values(parsed.naeshin).forEach(pd=>Object.values(pd).forEach(v=>{courseCount+=Array.isArray(v)?v.length:1;}));
+ results.push({fileName:file.name,studentName:name,matchedId:student?student.id:null,matchedLabel:student?`${student.number?student.number+'번 ':''}${student.name}`:null,naeshin:parsed.naeshin,periodsFound,courseCount});
+ }catch(e){
+ results.push({fileName:file.name,studentName:name,matchedId:student?student.id:null,error:e.message||'파일을 읽는 중 오류가 발생했어요'});
+ }
+ }
+ _admImportDraft=results;
+ _admRenderImportResults();
+}
+function _admRenderImportResults(){
+ const resultsEl=document.getElementById('admImportResults');
+ if(!resultsEl)return;
+ const matchedCount=_admImportDraft.filter(r=>r.matchedId&&!r.error).length;
+ resultsEl.innerHTML=`
+ <div style="font-size:0.82rem;font-weight:600;margin-bottom:8px;">${_admImportDraft.length}개 파일 중 ${matchedCount}명 매칭됨</div>
+ ${_admImportDraft.map(r=>{
+ if(r.error)return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;color:#EF4444;">⚠ ${escHtml(r.fileName)} — ${escHtml(r.error)}</div>`;
+ if(!r.matchedId)return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;color:#EF4444;">⚠ ${escHtml(r.fileName)} — "${escHtml(r.studentName)}" 학생을 우리 반에서 못 찾았어요</div>`;
+ return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;"><b>${escHtml(r.matchedLabel)}</b> — ${r.periodsFound.map(p=>p.replace('-','/')).join(', ')||'(감지된 학기 없음)'} · 과목 ${r.courseCount}개</div>`;
+ }).join('')}`;
+ const applyBtn=document.getElementById('admImportApplyBtn');
+ if(applyBtn)applyBtn.disabled=matchedCount===0;
+}
+function _admApplyImport(){
+ if(!_admImportDraft||!_admImportDraft.length)return;
+ const matched=_admImportDraft.filter(r=>r.matchedId&&!r.error);
+ if(!matched.length)return;
+ if(!confirm(`${matched.length}명의 내신 성적을 반영할까요? 파일에 있는 학기·과목은 기존 값을 덮어써요.`))return;
+ const all=_admGetAllScores();
+ matched.forEach(r=>{
+ const existing=all[r.matchedId]||{};
+ const mergedNaeshin=JSON.parse(JSON.stringify(existing.naeshin||{}));
+ Object.keys(r.naeshin).forEach(period=>{
+ if(!mergedNaeshin[period])mergedNaeshin[period]={};
+ Object.keys(r.naeshin[period]).forEach(subjectId=>{
+ mergedNaeshin[period][subjectId]=r.naeshin[period][subjectId];
+ });
+ });
+ all[r.matchedId]={...existing,naeshin:mergedNaeshin};
+ });
+ DB.set('admissionScores',all);
+ showToast(`✅ ${matched.length}명의 성적을 반영했어요`);
+ closeAdmissionModal();
 }
 function _seatMyClass(){
  if(!hrSelectedClassId){showToast('⚠️ 먼저 담임 학급을 설정해주세요');return null;}
