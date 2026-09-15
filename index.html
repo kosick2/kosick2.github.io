@@ -322,6 +322,11 @@ body.tt-locked .tt-widget-drag-handle{cursor:default;opacity:0.4;-webkit-app-reg
 .btn-icon{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.82rem;transition:all 0.2s;flex-shrink:0;}
 .btn-icon:hover{background:var(--surface2);color:var(--text);}
 input[type="text"],input[type="url"],input[type="date"],input[type="time"],input[type="number"],textarea,select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:0.9rem;width:100%;outline:none;transition:border-color 0.2s;font-family:inherit;}
+/* 숫자 입력칸의 위아래 화살표(스피너)가 좁은 칸(등급 등)에서 숫자를 가려서, 앱 전체에서
+ 숫자 입력칸의 스피너를 없앤다 — 어차피 타이핑으로 입력하지 화살표로 증감시키는
+ 용도로는 안 쓰인다. */
+input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+input[type="number"]{-moz-appearance:textfield;}
 input:focus,textarea:focus,select:focus{border-color:var(--primary-light);}
 textarea{resize:vertical;min-height:80px;}
 .form-group{margin-bottom:12px;}
@@ -1856,6 +1861,11 @@ function manualSave(){
  }
 }
 function showSection(id,btn){
+ /* 이미 그 탭에 있는 상태에서 같은 탭을 다시 누르면(딥링크 상태 초기화 목적) 그 탭의
+ 첫 화면으로 되돌아간다 — 담임/학생관리처럼 하위 탭(캘린더·프로그램, 학급관리·수행평가
+ 등)이 별도 표시 토글로 관리되는 화면은 렌더 함수만 다시 불러서는 지금 보고 있던
+ 하위 화면이 그대로 남아 겉보기엔 아무 반응이 없는 것처럼 보였다. */
+ const wasAlreadyActive=document.getElementById(id)?.classList.contains('active');
  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
  document.getElementById(id).classList.add('active');
@@ -1889,8 +1899,18 @@ const titleEl=document.getElementById('mobileTabTitle');
  /* ★ 메모 탭은 어떤 경로로 들어오든(상단 탭/홈 바로가기/홈 꾹 눌러 진입) 항상 기본 화면(전체)으로 진입한다 */
  if(id==='notepad'){_currentNoteId=null;_notepadActiveTab='all';}
 ({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,notepad:renderNotepadSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection,anecdotal:renderAnecdotalSection,settings:renderSettingsSection}[id])?.();
+ if(wasAlreadyActive)_resetSectionSubNav(id);
  renderMobileTabbar();
  updateTabFab(id);
+}
+function _resetSectionSubNav(id){
+ if(id==='homeroom'){
+ const btn=document.querySelector('#homeroomSubNav .sub-nav-btn');
+ if(btn)showHrTab('hrCalendarTab',btn);
+ }else if(id==='students'){
+ const btn=document.querySelector('#studentsSubNav .sub-nav-btn');
+ if(btn)showStudentTab('classSection',btn);
+ }
 }
 function showStudentTab(id,btn){document.querySelectorAll('.student-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sub-nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');({classSection:renderClasses,evalSection:renderEvalList,sgibuSection:initSgibuSection}[id])?.();updateStudentsFab();}
 function openModal(id){document.getElementById(id).classList.add('active');}
@@ -3775,6 +3795,9 @@ const ADM_MOCK_SUBJECTS=[{id:'kor',label:'국어'},{id:'math',label:'수학'},{i
 const ADM_NAESHIN_KEY_ORDER=['1-1','1-2','2-1','2-2','3-1','3-2'];
 const ADM_TRACK_OPTIONS=['학생부 종합','학생부 교과','논술','실기','정시'];
 const ADM_JUDGMENT_OPTIONS=['과상','상향','적정','하향','과하'];
+/* 2022 개정 교육과정에서는 사회·과학이 여러 선택과목으로 나뉘어 학생마다 듣는
+ 조합이 다르다 — 이 두 과목만 "여러 과목 입력 → 등급 단순평균" 방식을 쓴다. */
+const ADM_MULTI_SUBJECT_IDS=['social','sci'];
 let _admStudentId=null;
 let _admDraft=null;
 let _admWishDraft=null;
@@ -3789,9 +3812,22 @@ function _admGetStudentScores(studentId){
  const s=all[studentId]||{};
  return{naeshin:s.naeshin||{},mock:s.mock||{},wishes:s.wishes||[]};
 }
+function _admMultiSubjectAvg(list){
+ const grades=(Array.isArray(list)?list:[]).map(c=>Number(c&&c.grade)).filter(v=>!isNaN(v));
+ if(!grades.length)return null;
+ return grades.reduce((a,b)=>a+b,0)/grades.length;
+}
+/* social/sci는 선택과목이 여러 개일 수 있어 배열로 저장된다(과목별 등급의 단순평균이
+ 그 과목의 등급이 된다) — 예전 데이터나 국영수처럼 단일 과목인 경우는 객체 그대로. */
+function _admSubjectEffectiveGrade(entry){
+ if(Array.isArray(entry))return _admMultiSubjectAvg(entry);
+ const v=entry&&entry.grade;
+ const n=Number(v);
+ return(v!==undefined&&v!==null&&v!==''&&!isNaN(n))?n:null;
+}
 function _admNaeshinAvg(periodData){
  if(!periodData)return null;
- const grades=ADM_NAESHIN_SUBJECTS.map(s=>periodData[s.id]&&periodData[s.id].grade).filter(v=>v!==undefined&&v!==null&&v!=='').map(Number).filter(v=>!isNaN(v));
+ const grades=ADM_NAESHIN_SUBJECTS.map(s=>_admSubjectEffectiveGrade(periodData[s.id])).filter(v=>v!=null);
  if(!grades.length)return null;
  return grades.reduce((a,b)=>a+b,0)/grades.length;
 }
@@ -3962,7 +3998,7 @@ function _admRenderNaeshinView(){
  </tr></thead>
  <tbody>${ADM_NAESHIN_SUBJECTS.map(s=>`<tr style="border-bottom:1px solid var(--border);">
  <td style="padding:6px 4px;font-weight:600;">${s.label}</td>
- ${periods.map(k=>{const v=(sd[k]&&sd[k][s.id])||{};return`<td style="padding:6px 4px;text-align:center;color:var(--text-secondary);">${v.grade!=null&&v.grade!==''?escHtml(String(v.grade)):'-'}</td>`;}).join('')}
+ ${periods.map(k=>{const g=_admSubjectEffectiveGrade(sd[k]&&sd[k][s.id]);return`<td style="padding:6px 4px;text-align:center;color:var(--text-secondary);">${g!=null?(Array.isArray(sd[k]&&sd[k][s.id])?g.toFixed(2):escHtml(String(g))):'-'}</td>`;}).join('')}
  </tr>`).join('')}
  <tr>
  <td style="padding:6px 4px;font-weight:700;color:var(--primary);border-top:1.5px solid var(--border);">평균</td>
@@ -4076,28 +4112,102 @@ function _admRenderNaeshinTable(){
  if(!wrap)return;
  const key=`${_admNaeshinGrade}-${_admNaeshinTerm}`;
  const periodData=(_admDraft.naeshin&&_admDraft.naeshin[key])||{};
+ const singleSubjects=ADM_NAESHIN_SUBJECTS.filter(s=>!ADM_MULTI_SUBJECT_IDS.includes(s.id));
+ const multiSubjects=ADM_NAESHIN_SUBJECTS.filter(s=>ADM_MULTI_SUBJECT_IDS.includes(s.id));
  wrap.innerHTML=`
- <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.84rem;min-width:380px;">
+ <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.84rem;min-width:340px;">
  <thead><tr style="border-bottom:1.5px solid var(--border);">
  <th style="text-align:left;padding:6px 4px;">과목</th><th style="text-align:center;padding:6px 4px;">원점수</th><th style="text-align:center;padding:6px 4px;">등급</th><th style="text-align:center;padding:6px 4px;">성취도</th>
  </tr></thead>
- <tbody>${ADM_NAESHIN_SUBJECTS.map(s=>{
+ <tbody>${singleSubjects.map(s=>{
  const v=periodData[s.id]||{};
  return`<tr style="border-bottom:1px solid var(--border);">
  <td style="padding:6px 4px;font-weight:600;">${s.label}</td>
  <td style="padding:6px 4px;text-align:center;"><input type="number" style="width:64px;text-align:center;" value="${escHtml(String(v.score??''))}" oninput="_admDraftInputNaeshin('${s.id}','score',this.value)"></td>
  <td style="padding:6px 4px;text-align:center;"><input type="number" min="1" max="9" step="1" style="width:52px;text-align:center;" value="${escHtml(String(v.grade??''))}" oninput="_admDraftInputNaeshin('${s.id}','grade',this.value)"></td>
- <td style="padding:6px 4px;text-align:center;"><input type="text" style="width:64px;text-align:center;" value="${escHtml(String(v.achievement??''))}" oninput="_admDraftInputNaeshin('${s.id}','achievement',this.value)"></td>
+ <td style="padding:6px 4px;text-align:center;"><input type="text" id="admNaeshinAchv_${s.id}" style="width:64px;text-align:center;" value="${escHtml(String(v.achievement??''))}" oninput="_admDraftInputNaeshin('${s.id}','achievement',this.value)"></td>
  </tr>`;
  }).join('')}</tbody>
  </table></div>
- <div id="admNaeshinAvg" style="margin-top:10px;font-size:0.86rem;font-weight:600;color:var(--primary);">${_admNaeshinAvgLabel(periodData)}</div>`;
+ ${multiSubjects.map(s=>_admMultiSubjectBlockHtml(key,s)).join('')}
+ <div id="admNaeshinAvg" style="margin-top:10px;font-size:0.86rem;font-weight:600;color:var(--primary);">${_admNaeshinAvgLabel(periodData)}</div>
+ <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:4px;">※ 원점수(100점 만점)를 90/80/70/60% 고정분할점수로 보고 성취도(A~E)를 자동으로 채워줘요 — 분할점수 기준(고정/추정)은 학교·과목마다 다를 수 있으니 다르면 성취도 칸을 직접 고치시면 돼요.</div>`;
+}
+/* 성취도 산출은 학교/과목마다 "고정분할점수"(90/80/70/60% 고정) 또는 "추정분할점수"
+ (시험 평균·표준편차 등으로 통계 추정) 중 하나를 택해 쓰고, 미이수 구간 포함 여부도
+ 과목 재량이라 전국 공통 기준이 없다 — 그래서 가장 흔한 고정분할점수 4단계만
+ 자동으로 채워주고, 성취도 칸은 항상 직접 고칠 수 있게 둔다. */
+function _admComputeAchievement(score){
+ const n=Number(score);
+ if(score===''||score==null||isNaN(n))return'';
+ if(n>=90)return'A';
+ if(n>=80)return'B';
+ if(n>=70)return'C';
+ if(n>=60)return'D';
+ return'E';
 }
 function _admDraftInputNaeshin(subjectId,field,value){
  const key=`${_admNaeshinGrade}-${_admNaeshinTerm}`;
  if(!_admDraft.naeshin[key])_admDraft.naeshin[key]={};
  if(!_admDraft.naeshin[key][subjectId])_admDraft.naeshin[key][subjectId]={};
  _admDraft.naeshin[key][subjectId][field]=value;
+ if(field==='score'){
+ const achv=_admComputeAchievement(value);
+ _admDraft.naeshin[key][subjectId].achievement=achv;
+ const achvEl=document.getElementById(`admNaeshinAchv_${subjectId}`);
+ if(achvEl)achvEl.value=achv;
+ }
+ const avgEl=document.getElementById('admNaeshinAvg');
+ if(avgEl)avgEl.textContent=_admNaeshinAvgLabel(_admDraft.naeshin[key]);
+}
+function _admMultiSubjectBlockHtml(key,subject){
+ const list=Array.isArray(_admDraft.naeshin[key]&&_admDraft.naeshin[key][subject.id])?_admDraft.naeshin[key][subject.id]:[];
+ const avg=_admMultiSubjectAvg(list);
+ return`<div style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:10px;">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${list.length?'8px':'4px'};">
+ <span style="font-weight:600;font-size:0.86rem;">${subject.label} (선택과목 여러 개 가능)</span>
+ <span id="admNaeshinMultiAvg_${subject.id}" style="font-size:0.8rem;font-weight:600;color:var(--primary);">${avg!=null?`평균 ${avg.toFixed(2)}`:'평균 -'}</span>
+ </div>
+ <div id="admNaeshinMulti_${subject.id}">${list.map((c,i)=>_admMultiCourseRowHtml(subject.id,i,c)).join('')}</div>
+ <button type="button" class="btn btn-secondary" style="width:100%;margin-top:4px;" onclick="_admAddNaeshinCourse('${subject.id}')">+ ${subject.label} 과목 추가</button>
+ </div>`;
+}
+function _admMultiCourseRowHtml(subjectId,i,c){
+ return`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+ <input type="text" placeholder="과목명" value="${escHtml(c.name||'')}" style="flex:1;min-width:90px;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'name',this.value)">
+ <input type="number" placeholder="원점수" value="${escHtml(String(c.score??''))}" style="width:64px;text-align:center;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'score',this.value)">
+ <input type="number" min="1" max="9" step="1" placeholder="등급" value="${escHtml(String(c.grade??''))}" style="width:52px;text-align:center;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'grade',this.value)">
+ <input type="text" placeholder="성취도" id="admNaeshinCourseAchv_${subjectId}_${i}" value="${escHtml(c.achievement||'')}" style="width:64px;text-align:center;" oninput="_admNaeshinCourseInput('${subjectId}',${i},'achievement',this.value)">
+ <button type="button" onclick="_admRemoveNaeshinCourse('${subjectId}',${i})" title="삭제" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;background:none;color:var(--text-secondary);font-size:0.9rem;cursor:pointer;font-family:inherit;">✕</button>
+ </div>`;
+}
+function _admAddNaeshinCourse(subjectId){
+ const key=`${_admNaeshinGrade}-${_admNaeshinTerm}`;
+ if(!_admDraft.naeshin[key])_admDraft.naeshin[key]={};
+ if(!Array.isArray(_admDraft.naeshin[key][subjectId]))_admDraft.naeshin[key][subjectId]=[];
+ _admDraft.naeshin[key][subjectId].push({name:'',score:'',grade:'',achievement:''});
+ _admRenderNaeshinTable();
+}
+function _admRemoveNaeshinCourse(subjectId,i){
+ const key=`${_admNaeshinGrade}-${_admNaeshinTerm}`;
+ const arr=_admDraft.naeshin[key]&&_admDraft.naeshin[key][subjectId];
+ if(!Array.isArray(arr))return;
+ arr.splice(i,1);
+ _admRenderNaeshinTable();
+}
+function _admNaeshinCourseInput(subjectId,i,field,value){
+ const key=`${_admNaeshinGrade}-${_admNaeshinTerm}`;
+ const arr=_admDraft.naeshin[key]&&_admDraft.naeshin[key][subjectId];
+ if(!Array.isArray(arr)||!arr[i])return;
+ arr[i][field]=value;
+ if(field==='score'){
+ const achv=_admComputeAchievement(value);
+ arr[i].achievement=achv;
+ const achvEl=document.getElementById(`admNaeshinCourseAchv_${subjectId}_${i}`);
+ if(achvEl)achvEl.value=achv;
+ }
+ const badge=document.getElementById(`admNaeshinMultiAvg_${subjectId}`);
+ if(badge){const avg=_admMultiSubjectAvg(arr);badge.textContent=avg!=null?`평균 ${avg.toFixed(2)}`:'평균 -';}
  const avgEl=document.getElementById('admNaeshinAvg');
  if(avgEl)avgEl.textContent=_admNaeshinAvgLabel(_admDraft.naeshin[key]);
 }
@@ -4131,10 +4241,25 @@ function _admDraftInputMock(subjectId,field,value){
  const avgEl=document.getElementById('admMockAvg');
  if(avgEl)avgEl.textContent=_admMockAvgLabel(_admDraft.mock[key]);
 }
+/* 예전엔 social/sci도 단일 과목({score,grade,achievement}) 형태로 저장됐다 — 이제는
+ 선택과목 여러 개를 담는 배열이라, 편집 화면에 들어올 때 옛 데이터를 1개짜리
+ 배열로 옮겨준다(과목명은 비워둔 채로, 저장하면 새 형태로 자연히 바뀐다). */
+function _admNormalizeNaeshinForEdit(naeshin){
+ Object.keys(naeshin).forEach(key=>{
+ ADM_MULTI_SUBJECT_IDS.forEach(subId=>{
+ const raw=naeshin[key][subId];
+ if(raw&&!Array.isArray(raw)){
+ naeshin[key][subId]=(raw.score||raw.grade||raw.achievement)?[{name:'',score:raw.score||'',grade:raw.grade||'',achievement:raw.achievement||''}]:[];
+ }
+ });
+ });
+ return naeshin;
+}
 function openAdmissionEntryScreen(){
  if(!_admStudentId)return;
  const existing=_admGetStudentScores(_admStudentId);
- _admDraft={naeshin:JSON.parse(JSON.stringify(existing.naeshin||{})),mock:JSON.parse(JSON.stringify(existing.mock||{}))};
+ const naeshinCopy=_admNormalizeNaeshinForEdit(JSON.parse(JSON.stringify(existing.naeshin||{})));
+ _admDraft={naeshin:naeshinCopy,mock:JSON.parse(JSON.stringify(existing.mock||{}))};
  renderAdmissionEntryScreen();
 }
 function renderAdmissionEntryScreen(){
