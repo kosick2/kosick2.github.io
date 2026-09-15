@@ -4020,19 +4020,28 @@ function _admRenderNaeshinView(){
  if(!wrap)return;
  const sd=_admGetStudentScores(_admStudentId).naeshin||{};
  const periods=ADM_NAESHIN_KEY_ORDER;
+ const periodAvgs=periods.map(k=>_admNaeshinAvg(sd[k])).filter(v=>v!=null);
+ const overallAvg=periodAvgs.length?periodAvgs.reduce((a,b)=>a+b,0)/periodAvgs.length:null;
  wrap.innerHTML=`
- <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.82rem;min-width:460px;">
+ <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.82rem;min-width:520px;">
  <thead><tr style="border-bottom:1.5px solid var(--border);">
  <th style="text-align:left;padding:6px 4px;">과목</th>
  ${periods.map(k=>`<th style="text-align:center;padding:6px 4px;">${k.replace('-','/')}</th>`).join('')}
+ <th style="text-align:center;padding:6px 4px;border-left:1.5px solid var(--border);">전체</th>
  </tr></thead>
- <tbody>${ADM_NAESHIN_SUBJECTS.map(s=>`<tr style="border-bottom:1px solid var(--border);">
+ <tbody>${ADM_NAESHIN_SUBJECTS.map(s=>{
+ const subjGrades=periods.map(k=>_admSubjectEffectiveGrade(sd[k]&&sd[k][s.id])).filter(v=>v!=null);
+ const subjOverall=subjGrades.length?subjGrades.reduce((a,b)=>a+b,0)/subjGrades.length:null;
+ return`<tr style="border-bottom:1px solid var(--border);">
  <td style="padding:6px 4px;font-weight:600;">${s.label}</td>
  ${periods.map(k=>{const g=_admSubjectEffectiveGrade(sd[k]&&sd[k][s.id]);return`<td style="padding:6px 4px;text-align:center;color:var(--text-secondary);">${g!=null?(Array.isArray(sd[k]&&sd[k][s.id])?g.toFixed(2):escHtml(String(g))):'-'}</td>`;}).join('')}
- </tr>`).join('')}
+ <td style="padding:6px 4px;text-align:center;color:var(--text-secondary);font-weight:600;border-left:1.5px solid var(--border);">${subjOverall!=null?subjOverall.toFixed(2):'-'}</td>
+ </tr>`;
+ }).join('')}
  <tr>
  <td style="padding:6px 4px;font-weight:700;color:var(--primary);border-top:1.5px solid var(--border);">평균</td>
  ${periods.map(k=>{const avg=_admNaeshinAvg(sd[k]);return`<td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--primary);border-top:1.5px solid var(--border);">${avg!=null?avg.toFixed(2):'-'}</td>`;}).join('')}
+ <td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--primary);border-top:1.5px solid var(--border);border-left:1.5px solid var(--border);">${overallAvg!=null?overallAvg.toFixed(2):'-'}</td>
  </tr>
  </tbody>
  </table></div>`;
