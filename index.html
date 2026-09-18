@@ -2643,7 +2643,7 @@ function _petPickReminder(){
  const pool=prioritized.length?prioritized:items;
  return pool[Math.floor(Math.random()*pool.length)].text;
 }
-let _petState={x:40,dir:1,speed:1,walking:true,pauseUntil:0,frame:0,tick:0};
+let _petState={x:40,dir:1,speed:1,walking:true,pauseUntil:0,frame:0,tick:0,reportTick:0};
 function _petTick(){
  const charEl=document.getElementById('petCharacter');
  const flipEl=document.getElementById('petFlip');
@@ -2668,6 +2668,13 @@ function _petTick(){
  charEl.style.left=_petState.x+'px';
  // 프레임 원본이 서쪽(왼쪽)을 보고 있어서, 오른쪽(dir=1)으로 걸을 때만 반전한다.
  if(flipEl)flipEl.style.transform=`scaleX(${-_petState.dir})`;
+ // 시간표 위젯과 겹칠 때 메인 프로세스가 z-order를 조정할 수 있도록 위치를 알려준다
+ // (매 틱마다 보낼 필요는 없어서 5틱=150ms마다만 보냄).
+ _petState.reportTick++;
+ if(_petState.reportTick>=5){
+ _petState.reportTick=0;
+ if(window.kosickPet&&window.kosickPet.reportPosition)window.kosickPet.reportPosition(_petState.x);
+ }
  if(_petState.walking&&now>_petState.pauseUntil&&Math.random()<0.003){
  const msg=_petPickReminder();
  if(msg){
