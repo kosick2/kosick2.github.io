@@ -1,0 +1,36 @@
+{
+  "group_id": "552512f5-24e0-44d1-825d-88d7917f1bc0",
+  "states": [
+    {
+      "character": {
+        "id": "3d184c15-d000-495d-b9ac-13899fb59a88",
+        "name": "Idle",
+        "prompt": "a typical black and white colored panda. but cute.",
+        "size": {
+          "width": 32,
+          "height": 32
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-09-18T02:50:10.715718+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-09-18T02:55:33.940128"
+}

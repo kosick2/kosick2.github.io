@@ -58,6 +58,15 @@ body.tt-locked .tt-widget-container{-webkit-app-region:no-drag;}
 .tt-widget-drag-handle{flex-shrink:0;width:5px;height:26px;border-radius:3px;background:rgba(255,255,255,0.85);box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:grab;margin-left:4px;-webkit-app-region:drag;}
 .tt-widget-drag-handle:active{cursor:grabbing;}
 body.tt-locked .tt-widget-drag-handle{cursor:default;opacity:0.4;-webkit-app-region:no-drag;}
+/* ── 데스크톱 바탕화면을 돌아다니는 "할 일 캐릭터" 위젯 ── */
+body.pet-mode > :not(#petWrap){display:none !important;}
+body.pet-mode{background:transparent;}
+#petWrap{position:fixed;inset:0;pointer-events:none;}
+.pet-character{position:absolute;bottom:10px;width:80px;height:80px;pointer-events:auto;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.pet-flip{width:100%;height:100%;}
+.pet-flip img{width:100%;height:100%;image-rendering:pixelated;display:block;}
+.pet-bubble{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:8px;background:#fff;color:#222;padding:6px 10px;border-radius:10px;font-size:12px;font-weight:700;max-width:200px;width:max-content;box-shadow:0 4px 12px rgba(0,0,0,0.25);display:none;white-space:normal;pointer-events:none;}
+.pet-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#fff;}
 /* 앱 전체가 기본 스크롤바를 숨겨서(위 *::-webkit-scrollbar 규칙), 가로로 넘치는 표는
  마우스로 드래그할 손잡이가 안 보인다 — 성적 표처럼 열이 많아질 수 있는 곳에 쓰는
  직접 만든 가로 스크롤바(트랙+손잡이). */
@@ -1896,7 +1905,7 @@ const titleEl=document.getElementById('mobileTabTitle');
  if(typeof buildArcFab==='function')buildArcFab();
  if(typeof updateHeaderDate==='function')updateHeaderDate();
  /* ★ 드로어 닫기 */
- if(!document.body.classList.contains('widget-mode')){
+ if(!document.body.classList.contains('widget-mode')&&!document.body.classList.contains('pet-mode')){
  const _bg=SECTION_BG_MAP[id]||'#F5F1E6';
  document.documentElement.style.background=_bg;
  document.body.style.background=_bg;
@@ -2614,6 +2623,85 @@ function initTimetableWidgetMode(){
  });
 }
 if(_isTimetableWidgetMode())initTimetableWidgetMode();
+
+/* ── 데스크톱 앱 "할 일 캐릭터" 위젯(바탕화면을 돌아다니며 할 일을 알려줌) ──
+ PixelLab에서 만든 판다의 걷기 애니메이션(west 방향, 6프레임)을 그대로 쓴다. 프레임
+ 원본이 서쪽(왼쪽)을 보는 그림이라, 오른쪽으로 걸을 때만 CSS로 좌우 반전한다. */
+function _isPetWidgetMode(){
+ try{return new URLSearchParams(location.search).get('widget')==='pet';}catch(e){return false;}
+}
+const PET_CHAR_SIZE=80;
+const PET_WALK_FRAME_COUNT=6;
+const PET_WALK_FRAME_PATH=i=>`character/Idle/animations/Walk/west/frame_00${i}.png`;
+const PET_TICKS_PER_FRAME=4;
+function _petPickReminder(){
+ const items=DB.get('memoItems').filter(i=>!i.completed);
+ if(!items.length)return null;
+ const withDeadline=items.filter(i=>i.deadline).sort((a,b)=>a.deadline<b.deadline?-1:1);
+ if(withDeadline.length)return withDeadline[0].text;
+ const prioritized=items.filter(i=>i.priority);
+ const pool=prioritized.length?prioritized:items;
+ return pool[Math.floor(Math.random()*pool.length)].text;
+}
+let _petState={x:40,dir:1,speed:1,walking:true,pauseUntil:0,frame:0,tick:0};
+function _petTick(){
+ const charEl=document.getElementById('petCharacter');
+ const flipEl=document.getElementById('petFlip');
+ const spriteEl=document.getElementById('petSprite');
+ if(!charEl)return;
+ const maxX=Math.max(10,window.innerWidth-PET_CHAR_SIZE-10);
+ const now=Date.now();
+ if(_petState.walking){
+ _petState.x+=_petState.dir*_petState.speed;
+ if(_petState.x<10){_petState.x=10;_petState.dir=1;}
+ if(_petState.x>maxX){_petState.x=maxX;_petState.dir=-1;}
+ _petState.tick++;
+ if(_petState.tick>=PET_TICKS_PER_FRAME){
+ _petState.tick=0;
+ _petState.frame=(_petState.frame+1)%PET_WALK_FRAME_COUNT;
+ if(spriteEl)spriteEl.src=PET_WALK_FRAME_PATH(_petState.frame);
+ }
+ }else if(spriteEl&&_petState.frame!==0){
+ _petState.frame=0;
+ spriteEl.src=PET_WALK_FRAME_PATH(0);
+ }
+ charEl.style.left=_petState.x+'px';
+ // 프레임 원본이 서쪽(왼쪽)을 보고 있어서, 오른쪽(dir=1)으로 걸을 때만 반전한다.
+ if(flipEl)flipEl.style.transform=`scaleX(${-_petState.dir})`;
+ if(_petState.walking&&now>_petState.pauseUntil&&Math.random()<0.003){
+ const msg=_petPickReminder();
+ if(msg){
+ _petState.walking=false;
+ _petState.pauseUntil=now+6000;
+ const bubble=document.getElementById('petBubble');
+ if(bubble){bubble.textContent=msg;bubble.style.display='block';}
+ setTimeout(()=>{
+ _petState.walking=true;
+ if(bubble)bubble.style.display='none';
+ },6000);
+ }
+ }
+}
+function _petClick(){
+ if(window.kosickPet&&window.kosickPet.navigate)window.kosickPet.navigate('memos');
+}
+function initPetWidgetMode(){
+ document.body.classList.add('pet-mode');
+ document.documentElement.style.background='transparent';
+ const wrap=document.createElement('div');
+ wrap.id='petWrap';
+ wrap.innerHTML=`<div id="petCharacter" class="pet-character" onclick="_petClick()">
+ <div id="petBubble" class="pet-bubble"></div>
+ <div id="petFlip" class="pet-flip"><img id="petSprite" src="${PET_WALK_FRAME_PATH(0)}" alt=""></div>
+ </div>`;
+ document.body.appendChild(wrap);
+ const charEl=document.getElementById('petCharacter');
+ charEl.addEventListener('mouseenter',()=>{if(window.kosickPet)window.kosickPet.setIgnoreMouse(false);});
+ charEl.addEventListener('mouseleave',()=>{if(window.kosickPet)window.kosickPet.setIgnoreMouse(true);});
+ if(window.kosickPet)window.kosickPet.setIgnoreMouse(true);
+ setInterval(_petTick,30);
+}
+if(_isPetWidgetMode())initPetWidgetMode();
 
 /* ── 메모 ── */
 const LIST_COLORS=['#1F6B5B','#8BA888','#C97B5F','#6E8CA0','#D4A24C','#9B7EA3'];
@@ -6300,7 +6388,7 @@ buildSidebarNav();
  검은색으로 남아있는 WebKit 초기 렌더링 이슈 방지: 최초 로드 시에도
  탭 전환과 동일한 배경 재적용 로직을 강제로 한 번 실행한다. */
 function _forceStatusBarRepaint(){
- if(document.body.classList.contains('widget-mode'))return;
+ if(document.body.classList.contains('widget-mode')||document.body.classList.contains('pet-mode'))return;
  const activeId=document.querySelector('.section.active')?.id||'home';
  const _bg=SECTION_BG_MAP[activeId]||'#F5F1E6';
  document.documentElement.style.background=_bg;
