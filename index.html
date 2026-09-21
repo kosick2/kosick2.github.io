@@ -75,6 +75,27 @@ body.pet-locked .pet-character{cursor:default;}
 .adm-scroll-track{position:relative;height:10px;background:var(--surface2);border-radius:5px;margin-top:8px;}
 .adm-scroll-thumb{position:absolute;top:0;height:100%;background:var(--primary);border-radius:5px;cursor:grab;}
 .adm-scroll-thumb:active{cursor:grabbing;}
+/* 입시상담 탭 우하단 즐겨찾기 FAB + 위로 떠오르는 패널 */
+.adm-fab{position:fixed;right:28px;bottom:28px;width:60px;height:60px;border-radius:50%;background:var(--primary);color:#FFFDF7;border:none;cursor:pointer;z-index:490;box-shadow:0 10px 24px rgba(31,107,91,0.4);font-size:24px;display:flex;align-items:center;justify-content:center;padding:0;transition:transform 0.2s,background 0.2s;}
+.adm-fab:hover{transform:scale(1.07);}
+.adm-fab.open{background:#1E2B25;font-size:20px;}
+.adm-fab-panel{position:fixed;right:28px;bottom:104px;width:min(360px,calc(100vw - 32px));max-height:min(62vh,540px);overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:22px;box-shadow:0 18px 44px rgba(0,0,0,0.3);padding:14px;z-index:489;opacity:0;visibility:hidden;transform:translateY(28px) scale(0.9);transform-origin:bottom right;pointer-events:none;transition:opacity 0.22s,transform 0.32s cubic-bezier(0.34,1.56,0.64,1),visibility 0s 0.32s;}
+.adm-fab-panel.open{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity 0.22s,transform 0.32s cubic-bezier(0.34,1.56,0.64,1),visibility 0s;}
+.adm-fab-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:0.95rem;}
+.adm-fab-manage{background:none;border:none;color:var(--primary);font-weight:700;font-size:0.82rem;cursor:pointer;padding:4px 6px;font-family:inherit;}
+.adm-fab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;}
+.adm-fab-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:none;border-radius:16px;background:var(--surface2);color:var(--text);cursor:pointer;font-family:inherit;min-width:0;}
+.adm-fab-tile:hover{background:rgba(31,107,91,0.16);}
+.adm-fab-panel.open .adm-fab-tile{animation:admFabPop 0.36s cubic-bezier(0.34,1.56,0.64,1) both;animation-delay:calc(var(--i) * 45ms);}
+@keyframes admFabPop{from{opacity:0;transform:translateY(22px) scale(0.8);}to{opacity:1;transform:none;}}
+.adm-fab-icon{width:44px;height:44px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;}
+.adm-fab-icon img{width:100%;height:100%;object-fit:contain;display:block;}
+.adm-fab-name{font-size:0.78rem;font-weight:700;line-height:1.25;text-align:center;width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;}
+.adm-fab-empty{font-size:0.85rem;color:var(--text-secondary);line-height:1.5;padding:6px 2px;}
+@media (max-width:768px){
+.adm-fab{right:16px;bottom:calc(104px + env(safe-area-inset-bottom));}
+.adm-fab-panel{right:16px;bottom:calc(178px + env(safe-area-inset-bottom));}
+}
 /* ── 입시상담 조회 화면: 화면 너비에 비례해 글자가 커지는 큰 글씨 레이아웃(모달 입력창은 해당 없음) ── */
 #hrAdmissionContent{--adm-fs:clamp(16px,0.55vw + 9px,21px);font-size:var(--adm-fs);}
 .adm-toolbar{font-size:16px;}
@@ -1065,6 +1086,10 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  <div id="hrAdmissionTab" style="display:none;">
  <div id="hrAdmissionContent"></div>
+ <div id="admFabWrap">
+ <div class="adm-fab-panel" id="admFabPanel"></div>
+ <button type="button" class="adm-fab" id="admFabBtn" onclick="toggleAdmFab()" title="입시 즐겨찾기">🔖</button>
+ </div>
  </div>
 </section>
  <section id="timetable" class="section">
@@ -4288,6 +4313,7 @@ function _admWatchChartWidth(){
  _admChartRO.observe(el);
 }
 function renderAdmissionTab(){
+ closeAdmFab();
  const wrap=document.getElementById('hrAdmissionContent');
  if(!wrap)return;
  const cls=_seatMyClass();
@@ -4311,6 +4337,50 @@ function renderAdmissionTab(){
  <div id="admissionDetail"></div>`;
  if(_admStudentId)renderAdmissionDetail();
 }
+/* 입시상담 탭 우하단 FAB — 누르면 즐겨찾기 탭의 "입시" 그룹에 담아둔 사이트들이 위로 떠오르며 나타난다.
+ 링크를 누르면 즐겨찾기 탭과 똑같이 새 창(데스크톱 앱에선 기본 브라우저)으로 열린다. */
+function _admFabGroupBookmarks(){
+ const groups=DB.get('bookmarkGroups');
+ const g=groups.find(x=>String(x.name||'').trim()==='입시')||groups.find(x=>String(x.name||'').includes('입시'));
+ if(!g)return{group:null,items:[]};
+ return{group:g,items:DB.get('bookmarks').filter(b=>b.groupId===g.id)};
+}
+function _admFabRender(){
+ const panel=document.getElementById('admFabPanel');
+ if(!panel)return;
+ const{group,items}=_admFabGroupBookmarks();
+ let body;
+ if(!group)body=`<div class="adm-fab-empty">즐겨찾기 탭에 <b>'입시'</b> 그룹을 만들고 사이트를 넣어두면 여기에 나타나요.</div>`;
+ else if(!items.length)body=`<div class="adm-fab-empty">'${escHtml(group.name)}' 그룹에 아직 즐겨찾기가 없어요. 즐겨찾기 탭에서 사이트를 추가해보세요.</div>`;
+ else body=`<div class="adm-fab-grid">${items.map((b,i)=>{
+ let domain='';try{domain=new URL(b.url).hostname;}catch(e){}
+ const icon=domain
+ ?`<img src="https://${domain}/apple-touch-icon.png" alt="" loading="lazy" data-domain="${escHtml(domain)}" data-tried="0" onerror="bmIconFallback(this)" onload="if(this.naturalWidth<5||this.naturalHeight<5)bmIconFallback(this)">`
+ :escHtml(b.icon||'🔗');
+ return`<button type="button" class="adm-fab-tile" style="--i:${i}" onclick="admFabOpenLink(${b.id})" title="${escHtml(b.name)}\n${escHtml(b.url)}"><span class="adm-fab-icon">${icon}</span><span class="adm-fab-name">${escHtml(b.name)}</span></button>`;
+ }).join('')}</div>`;
+ panel.innerHTML=`<div class="adm-fab-head"><b>🔖 ${group?escHtml(group.name):'입시'} 즐겨찾기</b><button type="button" class="adm-fab-manage" onclick="goAdmFabManage()">관리 ›</button></div>${body}`;
+}
+function admFabOpenLink(id){
+ const b=DB.get('bookmarks').find(x=>x.id===id);
+ if(!b)return;
+ let u=String(b.url||'').trim();
+ if(!/^https?:\/\//i.test(u))u='https://'+u;
+ window.open(u,'_blank');
+}
+function toggleAdmFab(force){
+ const panel=document.getElementById('admFabPanel'),btn=document.getElementById('admFabBtn');
+ if(!panel||!btn)return;
+ const open=force!==undefined?force:!panel.classList.contains('open');
+ if(open)_admFabRender();
+ panel.classList.toggle('open',open);
+ btn.classList.toggle('open',open);
+ btn.textContent=open?'✕':'🔖';
+}
+function closeAdmFab(){toggleAdmFab(false);}
+function goAdmFabManage(){closeAdmFab();showSection('bookmarks');}
+document.addEventListener('click',e=>{if(!e.target.closest('#admFabWrap'))closeAdmFab();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAdmFab();});
 function selectAdmissionStudent(studentId){
  _admStudentId=studentId;
  renderAdmissionTab();
