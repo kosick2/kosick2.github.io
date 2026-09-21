@@ -2770,12 +2770,15 @@ function _petTick(){
  _petState.tick++;
  if(_petState.tick>=PET_ANIMS.walk.tpf){_petState.tick=0;_petState.frame=(_petState.frame+1)%PET_ANIMS.walk.n;}
  if(!_petState.nextIdleAt)_petScheduleIdle();
- if(Math.random()<0.003){
- const msg=_petPickReminder();
- if(msg)_petStartFront(msg);
- }else if(now>=_petState.nextIdleAt){
+ if(now>=_petState.nextIdleAt){
+ // 걷다가 15~35초마다 한 번 행동: 할 일 알림 30% / 정면 숨쉬기 20% / 정면 앉기 25% / 옆모습 앉기 25%
+ // (알림이 없으면 그 몫은 앉기·숨쉬기로 넘어감)
  const r=Math.random();
- if(r<0.4)_petStartFront(null);else if(r<0.7)_petStartSitFront();else _petStartSitSide();
+ const msg=r<0.3?_petPickReminder():null;
+ if(msg)_petStartFront(msg);
+ else if(r<0.5)_petStartFront(null);
+ else if(r<0.75)_petStartSitFront();
+ else _petStartSitSide();
  }
  }else if(_petState.mode==='drag'){
  _petState.anim='walk';_petState.frame=0;
