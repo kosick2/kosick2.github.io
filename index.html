@@ -289,6 +289,10 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .home-class-card-title{font-size:20px;font-weight:800;margin-top:4px;letter-spacing:-0.3px;}
 .m-hero-badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 .m-hero-badge{background:rgba(255,255,255,0.16);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:default;}
+.home-class-pills{display:flex;gap:10px;margin-top:12px;}
+.home-class-pill{flex:1;min-width:0;background:rgba(255,255,255,0.16);border-radius:999px;padding:8px 14px;cursor:pointer;}
+.home-class-pill-label{font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.home-class-pill-sub{font-size:11px;font-weight:500;opacity:0.85;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 @media(min-width:769px){
  .home-grid{display:grid;grid-template-columns:1.4fr 360px;gap:20px;align-items:start;}
  .home-cal-col{display:flex;}
@@ -386,6 +390,10 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .priority-card-title{font-size:1rem;font-weight:700;color:#78350F;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .priority-item{padding:8px 10px;border-radius:8px;background:rgba(252,211,77,0.1);border-left:3px solid #FCD34D;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;}
 .priority-item:last-child{margin-bottom:0;}
+.priority-item.dragging{opacity:0.35;}
+.priority-item.drag-over-priority{outline:2px dashed #D4A24C;outline-offset:-2px;}
+.priority-item:hover .memo-drag-handle{opacity:1;}
+.priority-rank-badge{width:20px;height:20px;border-radius:50%;background:#D4A24C;color:#fff;font-size:0.7rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
 .priority-item-body{flex:1;min-width:0;}
 .priority-item-text{font-size:0.88rem;font-weight:600;word-break:break-word;}
 .priority-item-detail{font-size:0.75rem;color:var(--text-secondary);margin-top:2px;}
@@ -986,10 +994,8 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="home-class-card" id="homeClassCard" style="display:none;">
  <div class="home-class-card-label">우리 반</div>
  <div class="home-class-card-title" id="homeClassTitle"></div>
- <div class="m-hero-badges" id="homeClassBadges"></div>
+ <div class="home-class-pills" id="homeClassBadges"></div>
  </div>
- <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘의 안내사항</div><div id="homeNoticeList"></div></div>
- <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘 출결</div><div id="homeAttList"></div></div>
  <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">할 일</div><button onclick="showSection('memos',null)" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:4px 2px;margin-top:6px;">전체 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></div><div id="recentMemos"></div></div>
  <div><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
  </div>
@@ -2458,32 +2464,15 @@ function heroGoNotice(){
 function heroGoCounseling(){
  showSection('anecdotal',null);
 }
-function buildHomeTodayWidgets(){
- const noticeListEl=document.getElementById('homeNoticeList');
- const attListEl=document.getElementById('homeAttList');
- if(!noticeListEl||!attListEl)return;
- const todayStr=new Date().toISOString().split('T')[0];
- const savedClassId=localStorage.getItem('homeroomMyClassId');
- const classes=DB.get('classes');
- const notices=DB.get('dailyNotices').filter(n=>n.date===todayStr&&!n.done);
- if(!notices.length){
- noticeListEl.innerHTML='<div style="font-size:0.9em;color:var(--text-secondary);padding:0.4em 0;">오늘 등록된 안내사항이 없어요</div>';
- }else{
- noticeListEl.innerHTML=notices.slice(0,5).map(n=>{
- const plain=(n.content||'').replace(/<[^>]*>/g,'');
- return `<div onclick="heroGoNotice()" style="padding:0.6em 0.8em;border-radius:10px;background:var(--surface2);margin-bottom:0.4em;cursor:pointer;font-size:0.95em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n.studentName?`<b>${escHtml(n.studentName)}</b> · `:''}${escHtml(plain)}</div>`;
- }).join('')+(notices.length>5?`<div style="font-size:0.85em;color:var(--text-secondary);padding:0.15em 0.15em;">+${notices.length-5}개 더보기</div>`:'');
- }
- const attRecs=DB.get('attendanceRecords').filter(r=>r.deadline===todayStr&&!r.documented&&!r.missedSubmission&&(!savedClassId||r.classId===Number(savedClassId)));
- if(!attRecs.length){
- attListEl.innerHTML='<div style="font-size:0.9em;color:var(--text-secondary);padding:0.4em 0;">오늘 마감인 출결 서류가 없어요</div>';
- }else{
- attListEl.innerHTML=attRecs.slice(0,5).map(r=>{
- const cls=classes.find(c=>c.id===r.classId);
- const student=cls?cls.students.find(s=>s.id===r.studentId):null;
- return `<div onclick="heroGoAttendance()" style="padding:0.6em 0.8em;border-radius:10px;background:var(--surface2);margin-bottom:0.4em;cursor:pointer;font-size:0.95em;display:flex;justify-content:space-between;gap:8px;"><span>${student?escHtml(student.name):'학생'}</span><span style="color:var(--text-secondary);font-size:0.78rem;">${escHtml(r.type||'')}</span></div>`;
- }).join('')+(attRecs.length>5?`<div style="font-size:0.85em;color:var(--text-secondary);padding:0.15em 0.15em;">+${attRecs.length-5}개 더보기</div>`:'');
- }
+function _homeAttPreviewText(attRecs,cls){
+ if(!attRecs.length)return'오늘 마감인 출결 서류가 없어요';
+ const names=attRecs.map(r=>{const student=cls.students.find(s=>s.id===r.studentId);return student?student.name:'학생';});
+ return names.slice(0,4).join(', ')+(names.length>4?` 외 ${names.length-4}명`:'');
+}
+function _homeNoticePreviewText(notices){
+ if(!notices.length)return'오늘 등록된 안내사항이 없어요';
+ const plain=(notices[0].content||'').replace(/<[^>]*>/g,'');
+ return(notices[0].studentName?`${notices[0].studentName} · `:'')+plain+(notices.length>1?` 외 ${notices.length-1}건`:'');
 }
 function buildMobileHero(){
  const sub=document.getElementById('mHeroSub');
@@ -2516,7 +2505,19 @@ function buildMobileHero(){
  if(classNameEl)classNameEl.textContent=`${cls.grade}학년 ${cls.classNum}반`;
  if(homeCardEl)homeCardEl.style.display='block';
  if(homeTitleEl)homeTitleEl.textContent=`${cls.grade}학년 ${cls.classNum}반`;
- if(homeBadgesEl)homeBadgesEl.innerHTML=badges;
+ if(homeBadgesEl){
+ const attRecsFull=DB.get('attendanceRecords').filter(r=>r.deadline===_todayStr0&&!r.documented&&!r.missedSubmission&&r.classId===Number(savedClassId));
+ const noticesFull=DB.get('dailyNotices').filter(n=>n.date===_todayStr0&&!n.done);
+ homeBadgesEl.innerHTML=`
+ <div class="home-class-pill" onclick="heroGoAttendance()">
+ <div class="home-class-pill-label">오늘 출결 ${_attCnt0}</div>
+ <div class="home-class-pill-sub">${escHtml(_homeAttPreviewText(attRecsFull,cls))}</div>
+ </div>
+ <div class="home-class-pill" onclick="heroGoNotice()">
+ <div class="home-class-pill-label">오늘의 안내사항 ${_noticeCnt0}</div>
+ <div class="home-class-pill-sub">${escHtml(_homeNoticePreviewText(noticesFull))}</div>
+ </div>`;
+ }
  }else{if(cardEl)cardEl.style.display='none';if(homeCardEl)homeCardEl.style.display='none';}
  }else{if(cardEl)cardEl.style.display='none';if(homeCardEl)homeCardEl.style.display='none';}
  sub.textContent=subText;
@@ -2659,12 +2660,13 @@ function _memoStatsHtml(){
  `</div>`;
 }
 function updateHome(){
- renderCalendar();updateNavBadges();renderMiniTimetable();buildHomeQuickLinks();updateHeaderDate();buildMobileHero();buildHomeTodayWidgets();buildHomeStats();
+ renderCalendar();updateNavBadges();renderMiniTimetable();buildHomeQuickLinks();updateHeaderDate();buildMobileHero();buildHomeStats();
  const allItems=DB.get('memoItems').filter(i=>!i.completed);
  const lists=DB.get('memoLists');
  const c=document.getElementById('recentMemos');
  const today=new Date();today.setHours(0,0,0,0);
  const priorityItems=allItems.filter(i=>i.priority);
+ const priorityRank=new Map(priorityItems.map((it,idx)=>[it.id,idx+1]));
  const deadlineItems=allItems.filter(i=>!i.priority&&i.deadline).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
  const seen=new Set(),candidates=[];
  [...priorityItems,...deadlineItems].forEach(item=>{if(!seen.has(item.id)&&candidates.length<5){seen.add(item.id);candidates.push(item);}});
@@ -2682,7 +2684,7 @@ function updateHome(){
  <div style="font-size:1.02em;font-weight:700;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${plainText||'(내용 없음)'}</div>
  ${dateHint?`<div style="font-size:0.8em;color:var(--text-secondary);margin-top:0.15em;">${dateHint}</div>`:''}
  </div>
- <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${item.priority?'<svg width="18" height="18" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>':''}${dlHtml}</div>
+ <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${item.priority?`<div class="priority-rank-badge" title="우선순위 ${priorityRank.get(item.id)}순위">${priorityRank.get(item.id)}</div>`:''}${dlHtml}</div>
  </div>`;
  }).join('');
  c.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;">${slotsHtml}</div>`;
@@ -2704,9 +2706,9 @@ function renderMiniTimetable(){
  const bg=isCurrent?'#1E2B25':(isFree?'var(--surface2)':'#E4EDDD');
  const fg=isCurrent?'#F5F1E6':'var(--text)';
  const fgSub=isCurrent?'rgba(245,241,230,0.7)':'var(--text-secondary)';
- return `<div style="flex:1;min-width:0;background:${bg};border-radius:16px;padding:0.75em 0.4em;text-align:center;">
- <div style="font-size:0.75em;font-weight:700;color:${fgSub};">${p}교시</div>
- <div style="font-size:1.05em;font-weight:800;margin-top:0.2em;color:${fg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isFree?'공강':(cell.room||cell.name)}</div>
+ return `<div style="flex:1;min-width:0;background:${bg};border-radius:16px;padding:12px 6px;text-align:center;">
+ <div style="font-size:11px;font-weight:700;color:${fgSub};">${p}교시</div>
+ <div style="font-size:14px;font-weight:800;margin-top:3px;color:${fg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isFree?'공강':(cell.room||cell.name)}</div>
  </div>`;
  }).join('')}</div>`;
 }
@@ -3066,6 +3068,13 @@ let dragMemoItemId=null;
 function memoItemDragStart(e,id){dragMemoItemId=id;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const el=document.getElementById(`memoItem_${id}`);if(el)el.classList.add('dragging');},0);}
 function memoItemDragOver(e,id,el){e.preventDefault();e.stopPropagation();document.querySelectorAll('.memo-item').forEach(c=>c.classList.remove('drag-over-memo'));el.classList.add('drag-over-memo');}
 function memoItemDrop(e,toId){e.preventDefault();e.stopPropagation();document.querySelectorAll('.memo-item').forEach(c=>c.classList.remove('drag-over-memo'));if(!dragMemoItemId||dragMemoItemId===toId){dragMemoItemId=null;return;}const items=DB.get('memoItems');const fi=items.findIndex(i=>i.id===dragMemoItemId);const ti=items.findIndex(i=>i.id===toId);if(fi===-1||ti===-1){dragMemoItemId=null;return;}const toItem=items[ti];const[moved]=items.splice(fi,1);moved.listId=toItem.listId;const nti=items.findIndex(i=>i.id===toId);items.splice(nti,0,moved);DB.set('memoItems',items);dragMemoItemId=null;renderMemoSection();showToast(' 순서가 변경되었습니다');}
+/* 우선순위(★) 할 일들 사이의 실행 순서(1순위, 2순위...) — 목록이 달라도 상관없이
+ memoItems 배열 안에서의 상대적 위치가 곧 순위이므로, listId는 건드리지 않고
+ 드래그한 항목을 놓은 항목 바로 앞으로 옮기기만 한다. */
+let dragPriorityItemId=null;
+function priorityItemDragStart(e,id){dragPriorityItemId=id;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const el=document.getElementById(`priorityItem_${id}`);if(el)el.classList.add('dragging');},0);}
+function priorityItemDragOver(e,id,el){e.preventDefault();e.stopPropagation();document.querySelectorAll('.priority-item').forEach(c=>c.classList.remove('drag-over-priority'));el.classList.add('drag-over-priority');}
+function priorityItemDrop(e,toId){e.preventDefault();e.stopPropagation();document.querySelectorAll('.priority-item').forEach(c=>c.classList.remove('drag-over-priority'));if(!dragPriorityItemId||dragPriorityItemId===toId){dragPriorityItemId=null;return;}const items=DB.get('memoItems');const fi=items.findIndex(i=>i.id===dragPriorityItemId);const ti=items.findIndex(i=>i.id===toId);if(fi===-1||ti===-1){dragPriorityItemId=null;return;}const[moved]=items.splice(fi,1);const nti=items.findIndex(i=>i.id===toId);items.splice(nti,0,moved);DB.set('memoItems',items);dragPriorityItemId=null;renderMemoSection();if(document.getElementById('home').classList.contains('active'))updateHome();showToast(' 우선순위가 변경되었습니다');}
 function getDeadlineBadgeHtml(item){
  if(!item.deadline)return '';
  const today=new Date();today.setHours(0,0,0,0);
@@ -3255,10 +3264,10 @@ const pItems=items.filter(i=>i.priority&&!i.completed);
  if(pItems.length||dlItems.length){
  const totalCount=pItems.length+dlItems.length;
  pSection=`<div class="priority-card"><div class="priority-card-title" style="display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg><span>우선순위 & 기한</span> <span style="font-size:0.78rem;font-weight:400;color:var(--text-secondary);">${totalCount}개</span></div>
- ${pItems.map(item=>{const list=lists.find(l=>l.id===item.listId),color=list?.color||'#FCD34D';
+ ${pItems.map((item,pIdx)=>{const list=lists.find(l=>l.id===item.listId),color=list?.color||'#FCD34D';
  let dlHtml='';
  if(item.deadline){const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-todayP)/(1000*60*60*24));let dlColor='#94A3B8',dlText=item.deadline;if(diff<0){dlColor='#EF4444';dlText='⚠ 기한초과';}else if(diff===0){dlColor='#F59E0B';dlText=' 오늘까지';}else if(diff<=3){dlColor='#FBBF24';dlText=` D-${diff}`;}dlHtml=`<span style="font-size:0.8em;color:${dlColor};margin-left:4px;">${dlText}</span>`;}
-return `<div class="priority-item"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}${dlHtml}</div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}${_memoStudentBadgesHtml(item)}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn on" onclick="togglePriority(${item.id})" style="color:#D4A24C;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg></button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
+return `<div class="priority-item" id="priorityItem_${item.id}" ondragstart="priorityItemDragStart(event,${item.id})" ondragover="priorityItemDragOver(event,${item.id},this)" ondragleave="this.classList.remove('drag-over-priority')" ondrop="priorityItemDrop(event,${item.id})" ondragend="this.removeAttribute('draggable')"><div class="memo-drag-handle" title="드래그로 순위 변경" onmousedown="this.closest('.priority-item').setAttribute('draggable','true')" ontouchstart="this.closest('.priority-item').setAttribute('draggable','true')">⠿</div><div class="priority-rank-badge" title="우선순위 ${pIdx+1}순위">${pIdx+1}</div><div class="priority-item-body"><div class="priority-item-text">${item.text||''}${dlHtml}</div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}${_memoStudentBadgesHtml(item)}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn on" onclick="togglePriority(${item.id})" style="color:#D4A24C;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg></button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
  ${dlItems.length?`<div style="font-size:0.88em;font-weight:700;color:#60A5FA;margin:${pItems.length?'10px':'0'} 0 6px;display:flex;align-items:center;gap:6px;"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span>기한 있는 할 일</span></div>`:''}
  ${dlItems.map(item=>{const list=lists.find(l=>l.id===item.listId),color=list?.color||'#60A5FA';
  const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-todayP)/(1000*60*60*24));
