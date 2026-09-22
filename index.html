@@ -75,6 +75,23 @@ body.pet-locked .pet-character{cursor:default;}
 .adm-scroll-track{position:relative;height:10px;background:var(--surface2);border-radius:5px;margin-top:8px;}
 .adm-scroll-thumb{position:absolute;top:0;height:100%;background:var(--primary);border-radius:5px;cursor:grab;}
 .adm-scroll-thumb:active{cursor:grabbing;}
+/* ── 홈·할 일 탭: 입시상담과 같은 큰 글씨 + 파스텔 요약 카드 스타일(.adm-stat 계열 재사용) ── */
+#home,#memos{--dash-fs:clamp(16px,0.55vw + 9px,21px);font-size:var(--dash-fs);}
+.dash-stat-row{margin:0 0 0.9em;}
+.adm-stat.click{cursor:pointer;transition:transform 0.15s;}
+.adm-stat.click:hover{transform:translateY(-2px);}
+#home .card-title{font-size:1.2em;font-weight:800;letter-spacing:-0.02em;}
+#home .home-right{gap:1.2em;}
+#home .home-notice-att-web,#home .home-right>div{font-size:1em;}
+#home .home-class-card-title{font-size:1.3em;}
+#memos .memo-item-text,#memos .memo-add-input{font-size:1.02em;}
+#memos .memo-item-detail{font-size:0.85em;}
+#memos .priority-card-title{font-size:1.1em;}
+#memos .priority-item-text{font-size:1em;}
+#memos .priority-item-detail{font-size:0.82em;}
+#memos .priority-item-list{font-size:0.78em;}
+#memos .priority-item{padding:0.55em 0.75em;}
+#memos .memo-item{padding:0.7em 0;}
 /* 입시상담 탭 우하단 즐겨찾기 FAB + 위로 떠오르는 패널 */
 .adm-fab{position:fixed;right:28px;bottom:28px;width:60px;height:60px;border-radius:50%;background:var(--primary);color:#FFFDF7;border:none;cursor:pointer;z-index:490;box-shadow:0 10px 24px rgba(31,107,91,0.4);font-size:24px;display:flex;align-items:center;justify-content:center;padding:0;transition:transform 0.2s,background 0.2s;}
 .adm-fab:hover{transform:scale(1.07);}
@@ -273,9 +290,9 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .m-hero-badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 .m-hero-badge{background:rgba(255,255,255,0.16);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:default;}
 @media(min-width:769px){
- .home-grid{display:grid;grid-template-columns:1.4fr 360px;gap:20px;align-items:start;}
+ .home-grid{display:flex;flex-direction:column;gap:20px;}
  .home-cal-col{display:flex;}
- .home-cal-inline{display:flex;min-height:600px;flex:1;min-width:0;}
+ .home-cal-inline{display:flex;min-height:520px;flex:1;min-width:0;}
 }
 .home-cal-card{background:var(--surface);border-radius:var(--radius);padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);display:flex;flex-direction:column;height:100%;}
 .calendar-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
@@ -298,6 +315,9 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .cal-day.sunday .cal-day-num{color:#F87171;}
 .home-right{display:flex;flex-direction:column;gap:20px;min-width:0;overflow:hidden;}
 .home-right .card{margin-bottom:0;overflow:hidden;min-width:0;}
+@media(min-width:769px){
+ .home-right{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+}
 .home-quicklinks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
 @media(min-width:769px){.home-quicklinks{display:none;}}
 @media(max-width:900px){.home-quicklinks{grid-template-columns:repeat(3,1fr);}}
@@ -953,6 +973,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="m-hero-badges" id="mHeroBadges"></div>
  </div>
  </div>
+ <div class="adm-stat-grid dash-stat-row" id="homeStatRow"></div>
  <div class="home-grid">
  <div class="home-cal-col">
  <div class="home-cal-card home-cal-inline">
@@ -970,10 +991,10 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="home-class-card-title" id="homeClassTitle"></div>
  <div class="m-hero-badges" id="homeClassBadges"></div>
  </div>
- <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘의 안내사항</div><div id="homeNoticeList"></div></div>
- <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘 출결</div><div id="homeAttList"></div></div>
- <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">할 일</div><button onclick="showSection('memos',null)" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:4px 2px;margin-top:6px;">전체 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></div><div id="recentMemos"></div></div>
- <div><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
+ <div class="home-notice-att-web card"><div class="card-title" style="margin-bottom:8px;">오늘의 안내사항</div><div id="homeNoticeList"></div></div>
+ <div class="home-notice-att-web card"><div class="card-title" style="margin-bottom:8px;">오늘 출결</div><div id="homeAttList"></div></div>
+ <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">할 일</div><button onclick="showSection('memos',null)" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:4px 2px;margin-top:6px;">전체 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></div><div id="recentMemos"></div></div>
+ <div class="card"><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
  </div>
  </div>
  <div class="home-quicklinks" id="homeQuickLinks"></div>
@@ -2449,22 +2470,22 @@ function buildHomeTodayWidgets(){
  const classes=DB.get('classes');
  const notices=DB.get('dailyNotices').filter(n=>n.date===todayStr&&!n.done);
  if(!notices.length){
- noticeListEl.innerHTML='<div style="font-size:0.82rem;color:var(--text-secondary);padding:6px 0;">오늘 등록된 안내사항이 없어요</div>';
+ noticeListEl.innerHTML='<div style="font-size:0.9em;color:var(--text-secondary);padding:0.4em 0;">오늘 등록된 안내사항이 없어요</div>';
  }else{
  noticeListEl.innerHTML=notices.slice(0,5).map(n=>{
  const plain=(n.content||'').replace(/<[^>]*>/g,'');
- return `<div onclick="heroGoNotice()" style="padding:9px 12px;border-radius:10px;background:var(--surface2);margin-bottom:6px;cursor:pointer;font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n.studentName?`<b>${escHtml(n.studentName)}</b> · `:''}${escHtml(plain)}</div>`;
- }).join('')+(notices.length>5?`<div style="font-size:0.78rem;color:var(--text-secondary);padding:2px 2px;">+${notices.length-5}개 더보기</div>`:'');
+ return `<div onclick="heroGoNotice()" style="padding:0.6em 0.8em;border-radius:10px;background:var(--surface2);margin-bottom:0.4em;cursor:pointer;font-size:0.95em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n.studentName?`<b>${escHtml(n.studentName)}</b> · `:''}${escHtml(plain)}</div>`;
+ }).join('')+(notices.length>5?`<div style="font-size:0.85em;color:var(--text-secondary);padding:0.15em 0.15em;">+${notices.length-5}개 더보기</div>`:'');
  }
  const attRecs=DB.get('attendanceRecords').filter(r=>r.deadline===todayStr&&!r.documented&&!r.missedSubmission&&(!savedClassId||r.classId===Number(savedClassId)));
  if(!attRecs.length){
- attListEl.innerHTML='<div style="font-size:0.82rem;color:var(--text-secondary);padding:6px 0;">오늘 마감인 출결 서류가 없어요</div>';
+ attListEl.innerHTML='<div style="font-size:0.9em;color:var(--text-secondary);padding:0.4em 0;">오늘 마감인 출결 서류가 없어요</div>';
  }else{
  attListEl.innerHTML=attRecs.slice(0,5).map(r=>{
  const cls=classes.find(c=>c.id===r.classId);
  const student=cls?cls.students.find(s=>s.id===r.studentId):null;
- return `<div onclick="heroGoAttendance()" style="padding:9px 12px;border-radius:10px;background:var(--surface2);margin-bottom:6px;cursor:pointer;font-size:0.85rem;display:flex;justify-content:space-between;gap:8px;"><span>${student?escHtml(student.name):'학생'}</span><span style="color:var(--text-secondary);font-size:0.78rem;">${escHtml(r.type||'')}</span></div>`;
- }).join('')+(attRecs.length>5?`<div style="font-size:0.78rem;color:var(--text-secondary);padding:2px 2px;">+${attRecs.length-5}개 더보기</div>`:'');
+ return `<div onclick="heroGoAttendance()" style="padding:0.6em 0.8em;border-radius:10px;background:var(--surface2);margin-bottom:0.4em;cursor:pointer;font-size:0.95em;display:flex;justify-content:space-between;gap:8px;"><span>${student?escHtml(student.name):'학생'}</span><span style="color:var(--text-secondary);font-size:0.78rem;">${escHtml(r.type||'')}</span></div>`;
+ }).join('')+(attRecs.length>5?`<div style="font-size:0.85em;color:var(--text-secondary);padding:0.15em 0.15em;">+${attRecs.length-5}개 더보기</div>`:'');
  }
 }
 function buildMobileHero(){
@@ -2578,8 +2599,70 @@ function updateHeaderDate(){
  const days=['일','월','화','수','목','금','토'];
  el.textContent=`${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
 }
+/* 홈·할 일 탭 상단 요약 카드 — 입시상담 화면과 같은 파스텔 카드(.adm-stat) 재사용 */
+function _dashStatCard(color,label,value,sub,onclick,isText){
+ return`<div class="adm-stat ${color}${onclick?' click':''}"${onclick?` onclick="${onclick}"`:''}><div class="adm-stat-label">${label}</div><div class="adm-stat-value${isText?' text':''}">${value}</div><div class="adm-stat-sub">${sub}</div></div>`;
+}
+function _dashMemoCounts(){
+ const all=DB.get('memoItems');
+ const items=all.filter(i=>!i.completed);
+ const today=new Date();today.setHours(0,0,0,0);
+ let urgent=0,overdue=0;
+ items.forEach(i=>{
+ if(!i.deadline)return;
+ const d=Math.ceil((new Date(i.deadline+'T00:00:00')-today)/86400000);
+ if(d<0){overdue++;urgent++;}else if(d<=3)urgent++;
+ });
+ return{open:items.length,priority:items.filter(i=>i.priority).length,urgent,overdue,completed:all.length-items.length};
+}
+function buildHomeStats(){
+ const el=document.getElementById('homeStatRow');
+ if(!el)return;
+ const c=_dashMemoCounts();
+ const tt=DB.get('timetable');
+ const di=new Date().getDay()-1;
+ let lessonValue='-',lessonSub='오늘은 수업이 없어요';
+ if(di>=0&&di<=4){
+ const ps=[];
+ for(let p=1;p<=8;p++){
+ const cell=tt[`${di}_${p}`];
+ if(cell&&cell.name&&!cell.isNoClass&&!cell.isFree&&cell.name!=='공강')ps.push({p,cell});
+ }
+ if(ps.length){
+ lessonValue=String(ps.length);
+ lessonSub=`${ps[0].p}~${ps[ps.length-1].p}교시`;
+ const START={1:9,2:10,3:11,4:12,5:14,6:15,7:16,8:17};
+ const h=new Date().getHours();
+ const cur=ps.find(x=>START[x.p]!=null&&h>=START[x.p]&&h<START[x.p]+1);
+ if(cur)lessonSub=`지금 ${cur.p}교시 ${escHtml(cur.cell.room||cur.cell.name)}`;
+ }else lessonSub='오늘 등록된 수업이 없어요';
+ }
+ const todayStr=new Date().toISOString().split('T')[0];
+ const todaySchedules=DB.get('schedules').filter(s=>{
+ const start=s.date,end=s.dateEnd||s.date;
+ return todayStr>=start&&todayStr<=end;
+ }).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+ const scheduleSub=todaySchedules.length
+ ?todaySchedules.slice(0,2).map(s=>escHtml(s.title)).join(', ')+(todaySchedules.length>2?` 외 ${todaySchedules.length-2}건`:'')
+ :'오늘 등록된 일정이 없어요';
+ el.innerHTML=
+ _dashStatCard('purple','남은 할 일',c.open,`★ 우선순위 ${c.priority}개`,"showSection('memos',null)")+
+ _dashStatCard('yellow','마감 임박',c.urgent,c.overdue?`기한초과 ${c.overdue}개 포함`:'3일 이내 마감',"showSection('memos',null)")+
+ _dashStatCard('green','오늘 수업',lessonValue,lessonSub,"showSection('timetable',null)")+
+ _dashStatCard('blue','오늘 일정',todaySchedules.length,scheduleSub,"openDayModal(new Date().toISOString().split('T')[0])");
+}
+function _memoStatsHtml(){
+ const c=_dashMemoCounts();
+ const lists=DB.get('memoLists');
+ return`<div class="adm-stat-grid dash-stat-row">`+
+ _dashStatCard('purple','남은 할 일',c.open,`${lists.length}개 목록`,"selectMemoTab('all')")+
+ _dashStatCard('yellow','마감 임박',c.urgent,c.overdue?`기한초과 ${c.overdue}개 포함`:'3일 이내 마감')+
+ _dashStatCard('green','우선순위 ★',c.priority,'별 표시한 항목')+
+ _dashStatCard('blue','완료',c.completed,'완료한 항목 보기',"selectMemoTab('completed')")+
+ `</div>`;
+}
 function updateHome(){
- renderCalendar();updateNavBadges();renderMiniTimetable();buildHomeQuickLinks();updateHeaderDate();buildMobileHero();buildHomeTodayWidgets();
+ renderCalendar();updateNavBadges();renderMiniTimetable();buildHomeQuickLinks();updateHeaderDate();buildMobileHero();buildHomeTodayWidgets();buildHomeStats();
  const allItems=DB.get('memoItems').filter(i=>!i.completed);
  const lists=DB.get('memoLists');
  const c=document.getElementById('recentMemos');
@@ -2591,16 +2674,16 @@ function updateHome(){
  const slotCount=Math.max(candidates.length,1);
  const slots=Array(slotCount).fill(null).map((_,i)=>candidates[i]||null);
  const slotsHtml=slots.map(item=>{
- if(!item){return `<div style="padding:16px;border-radius:18px;background:var(--surface2);color:var(--text-secondary);font-size:0.82rem;font-weight:600;text-align:center;">우선순위·기한이 설정된 할 일이 없어요</div>`;}
+ if(!item){return `<div style="padding:1em;border-radius:18px;background:var(--surface2);color:var(--text-secondary);font-size:0.9em;font-weight:600;text-align:center;">우선순위·기한이 설정된 할 일이 없어요</div>`;}
  const plainText=(item.text||'').replace(/<[^>]*>/g,'');
  let dlHtml='';
- if(item.deadline){const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-today)/(1000*60*60*24));let dlBg='#EAE4D3',dlColor='var(--text-secondary)',dlText=`D-${diff}`;if(diff<0){dlBg='#F3D9C8';dlColor='#8A4A22';dlText='기한초과';}else if(diff===0){dlBg='#F3D9C8';dlColor='#8A4A22';dlText='오늘까지';}else if(diff<=3){dlBg='#F3D9C8';dlColor='#8A4A22';dlText=`D-${diff}`;}dlHtml=`<span style="background:${dlBg};color:${dlColor};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;flex-shrink:0;">${dlText}</span>`;}
+ if(item.deadline){const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-today)/(1000*60*60*24));let dlBg='#EAE4D3',dlColor='var(--text-secondary)',dlText=`D-${diff}`;if(diff<0){dlBg='#F3D9C8';dlColor='#8A4A22';dlText='기한초과';}else if(diff===0){dlBg='#F3D9C8';dlColor='#8A4A22';dlText='오늘까지';}else if(diff<=3){dlBg='#F3D9C8';dlColor='#8A4A22';dlText=`D-${diff}`;}dlHtml=`<span style="background:${dlBg};color:${dlColor};border-radius:999px;padding:0.25em 0.7em;font-size:0.75em;font-weight:700;flex-shrink:0;">${dlText}</span>`;}
  const dateHint=item.deadline?`${Number(item.deadline.split('-')[1])}월 ${Number(item.deadline.split('-')[2])}일까지`:'';
- return `<div style="background:var(--surface);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;border:1.5px solid var(--border);">
+ return `<div style="background:var(--surface);border-radius:18px;padding:0.85em 1em;display:flex;align-items:center;gap:0.75em;border:1.5px solid var(--border);">
  <div onclick="event.stopPropagation();homeMemoItemClick(${item.id})" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);flex-shrink:0;cursor:pointer;"></div>
  <div style="flex:1;min-width:0;">
- <div style="font-size:14px;font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${plainText||'(내용 없음)'}</div>
- ${dateHint?`<div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${dateHint}</div>`:''}
+ <div style="font-size:1.02em;font-weight:700;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${plainText||'(내용 없음)'}</div>
+ ${dateHint?`<div style="font-size:0.8em;color:var(--text-secondary);margin-top:0.15em;">${dateHint}</div>`:''}
  </div>
  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${item.priority?'<svg width="18" height="18" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>':''}${dlHtml}</div>
  </div>`;
@@ -2610,10 +2693,10 @@ function updateHome(){
 function renderMiniTimetable(){
  const tt=DB.get('timetable'),c=document.getElementById('miniTimetable');
  const todayDi=new Date().getDay()-1;
- if(todayDi<0||todayDi>4){c.innerHTML=`<div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;padding:14px 0;">오늘은 수업이 없어요</div>`;return;}
+ if(todayDi<0||todayDi>4){c.innerHTML=`<div style="text-align:center;color:var(--text-secondary);font-size:0.9em;padding:0.9em 0;">오늘은 수업이 없어요</div>`;return;}
  const periods=[];
  for(let p=1;p<=8;p++){const cell=tt[`${todayDi}_${p}`];if(cell&&cell.name&&!cell.isNoClass)periods.push({p,cell});}
- if(!periods.length){c.innerHTML=`<div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;padding:14px 0;">오늘 등록된 수업이 없어요</div>`;return;}
+ if(!periods.length){c.innerHTML=`<div style="text-align:center;color:var(--text-secondary);font-size:0.9em;padding:0.9em 0;">오늘 등록된 수업이 없어요</div>`;return;}
  const PERIOD_START_HOUR={1:9,2:10,3:11,4:12,5:14,6:15,7:16,8:17};
  const nowHour=new Date().getHours();
  let currentPeriod=null;
@@ -2624,9 +2707,9 @@ function renderMiniTimetable(){
  const bg=isCurrent?'#1E2B25':(isFree?'var(--surface2)':'#E4EDDD');
  const fg=isCurrent?'#F5F1E6':'var(--text)';
  const fgSub=isCurrent?'rgba(245,241,230,0.7)':'var(--text-secondary)';
- return `<div style="flex:1;min-width:0;background:${bg};border-radius:16px;padding:12px 6px;text-align:center;">
- <div style="font-size:11px;font-weight:700;color:${fgSub};">${p}교시</div>
- <div style="font-size:14px;font-weight:800;margin-top:3px;color:${fg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isFree?'공강':(cell.room||cell.name)}</div>
+ return `<div style="flex:1;min-width:0;background:${bg};border-radius:16px;padding:0.75em 0.4em;text-align:center;">
+ <div style="font-size:0.75em;font-weight:700;color:${fgSub};">${p}교시</div>
+ <div style="font-size:1.05em;font-weight:800;margin-top:0.2em;color:${fg};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isFree?'공강':(cell.room||cell.name)}</div>
  </div>`;
  }).join('')}</div>`;
 }
@@ -3177,14 +3260,14 @@ const pItems=items.filter(i=>i.priority&&!i.completed);
  pSection=`<div class="priority-card"><div class="priority-card-title" style="display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg><span>우선순위 & 기한</span> <span style="font-size:0.78rem;font-weight:400;color:var(--text-secondary);">${totalCount}개</span></div>
  ${pItems.map(item=>{const list=lists.find(l=>l.id===item.listId),color=list?.color||'#FCD34D';
  let dlHtml='';
- if(item.deadline){const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-todayP)/(1000*60*60*24));let dlColor='#94A3B8',dlText=item.deadline;if(diff<0){dlColor='#EF4444';dlText='⚠ 기한초과';}else if(diff===0){dlColor='#F59E0B';dlText=' 오늘까지';}else if(diff<=3){dlColor='#FBBF24';dlText=` D-${diff}`;}dlHtml=`<span style="font-size:0.7rem;color:${dlColor};margin-left:4px;">${dlText}</span>`;}
+ if(item.deadline){const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-todayP)/(1000*60*60*24));let dlColor='#94A3B8',dlText=item.deadline;if(diff<0){dlColor='#EF4444';dlText='⚠ 기한초과';}else if(diff===0){dlColor='#F59E0B';dlText=' 오늘까지';}else if(diff<=3){dlColor='#FBBF24';dlText=` D-${diff}`;}dlHtml=`<span style="font-size:0.8em;color:${dlColor};margin-left:4px;">${dlText}</span>`;}
 return `<div class="priority-item"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}${dlHtml}</div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}${_memoStudentBadgesHtml(item)}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn on" onclick="togglePriority(${item.id})" style="color:#D4A24C;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg></button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
- ${dlItems.length?`<div style="font-size:0.78rem;font-weight:700;color:#60A5FA;margin:${pItems.length?'10px':'0'} 0 6px;display:flex;align-items:center;gap:6px;"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span>기한 있는 할 일</span></div>`:''}
+ ${dlItems.length?`<div style="font-size:0.88em;font-weight:700;color:#60A5FA;margin:${pItems.length?'10px':'0'} 0 6px;display:flex;align-items:center;gap:6px;"><span style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span>기한 있는 할 일</span></div>`:''}
  ${dlItems.map(item=>{const list=lists.find(l=>l.id===item.listId),color=list?.color||'#60A5FA';
  const dl=new Date(item.deadline+'T00:00:00');const diff=Math.ceil((dl-todayP)/(1000*60*60*24));
  let dlColor='#94A3B8',dlText=item.deadline;
  if(diff<0){dlColor='#EF4444';dlText='⚠ 기한초과';}else if(diff===0){dlColor='#F59E0B';dlText=' 오늘까지';}else if(diff<=3){dlColor='#FBBF24';dlText=` D-${diff}`;}else{dlColor='#60A5FA';dlText=` D-${diff}`;}
-return `<div class="priority-item" style="background:rgba(96,165,250,0.08);border-left-color:#60A5FA;"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}<span style="font-size:0.7rem;color:${dlColor};margin-left:4px;">${dlText}</span></div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}${_memoStudentBadgesHtml(item)}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn${item.priority?' on':''}" onclick="togglePriority(${item.id})" style="color:${item.priority?'#D4A24C':'var(--text-secondary)'};">${item.priority?'<svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>'}</button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
+return `<div class="priority-item" style="background:rgba(96,165,250,0.08);border-left-color:#60A5FA;"><div class="priority-item-body"><div class="priority-item-text">${item.text||''}<span style="font-size:0.8em;color:${dlColor};margin-left:4px;">${dlText}</span></div>${item.detail?`<div class="priority-item-detail">${item.detail}</div>`:''}${_memoStudentBadgesHtml(item)}<div class="priority-item-list" style="color:${color};">${list?` ${escHtml(list.name)}`:''}</div></div><button class="star-btn${item.priority?' on':''}" onclick="togglePriority(${item.id})" style="color:${item.priority?'#D4A24C':'var(--text-secondary)'};">${item.priority?'<svg width="15" height="15" viewBox="0 0 24 24" fill="#D4A24C" stroke="#D4A24C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"></path></svg>'}</button><button class="memo-check-btn" style="border-color:${color};" onclick="toggleMemoItem(${item.id})" title="완료 처리"></button></div>`;}).join('')}
  </div>`;
  }
  let body='';
@@ -3199,12 +3282,12 @@ return `<div class="priority-item" style="background:rgba(96,165,250,0.08);borde
  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:${li.length?'12px':'8px'};">
  <div style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="selectMemoTab(${list.id})">
  <div style="width:10px;height:10px;border-radius:50%;background:${list.fillStyle==='fill'?_ctc:list.color};border:${list.fillStyle==='fill'?'2px solid '+list.color+'88':'none'};flex-shrink:0;"></div>
- <span style="font-size:1rem;font-weight:700;color:${_ctc};">${escHtml(list.name)}</span>
- <span style="font-size:0.82rem;color:${_ctcs};">${li.length}개</span>
+ <span style="font-size:1.2em;font-weight:800;color:${_ctc};">${escHtml(list.name)}</span>
+ <span style="font-size:0.9em;color:${_ctcs};">${li.length}개</span>
  </div>
  </div>
  <div>
-${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).join(''):'<div style="text-align:center;padding:8px 0;color:'+_ctcs+';font-size:0.85rem;">항목이 없어요</div>'}
+${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).join(''):'<div style="text-align:center;padding:8px 0;color:'+_ctcs+';font-size:0.95em;">항목이 없어요</div>'}
  </div>
  <div class="mention-tags-row" id="newMemoTags_${list.id}" style="padding:0 0 0 30px;"></div>
  <div class="memo-add-row" style="border-top:1px solid ${list.fillStyle==='fill'?_getContrastColor(list.color)+'33':'var(--border)'};">
@@ -3237,13 +3320,13 @@ ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).joi
  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:${li.length?'12px':'8px'};">
  <div style="display:flex;align-items:center;gap:10px;">
  <div style="width:10px;height:10px;border-radius:50%;background:${list.fillStyle==='fill'?_ctc:list.color};border:${list.fillStyle==='fill'?'2px solid '+list.color+'88':'none'};flex-shrink:0;"></div>
- <span style="font-size:1rem;font-weight:700;color:${_ctc};">${escHtml(list.name)}</span>
- <span style="font-size:0.82rem;color:${_ctcs};">${li.length}개</span>
+ <span style="font-size:1.2em;font-weight:800;color:${_ctc};">${escHtml(list.name)}</span>
+ <span style="font-size:0.9em;color:${_ctcs};">${li.length}개</span>
  </div>
  <div style="display:flex;gap:2px;"><button class="btn-icon" onclick="openEditListModal(${list.id})" style="color:${_ctcs};"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button><button class="btn-icon" onclick="deleteList(${list.id})" style="color:${_ctcs};"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div>
  </div>
  <div style="max-height:600px;overflow-y:auto;padding-right:4px;">
-${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).join(''):'<div style="text-align:center;padding:8px 0;color:'+_ctcs+';font-size:0.85rem;">항목이 없어요</div>'}
+${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).join(''):'<div style="text-align:center;padding:8px 0;color:'+_ctcs+';font-size:0.95em;">항목이 없어요</div>'}
  </div>
  <div class="mention-tags-row" id="newMemoTags_${list.id}" style="padding:0 0 0 30px;"></div>
  <div class="memo-add-row" style="border-top:1px solid ${list.fillStyle==='fill'?_getContrastColor(list.color)+'33':'var(--border)'};">
@@ -3264,7 +3347,7 @@ ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).joi
  }
  const bodyEl=document.getElementById('memoBody');
  if(!bodyEl)return;
- bodyEl.innerHTML=filterHtml+pSection+body;
+ bodyEl.innerHTML=_memoStatsHtml()+filterHtml+pSection+body;
  document.querySelectorAll('[data-text-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.textId));if(f)el.innerHTML=f.text||'';});
  
  updateNavBadges();document.querySelectorAll('[data-id]').forEach(el=>{const f=DB.get('memoItems').find(i=>i.id===Number(el.dataset.id));const d=f?.detail||'';el.innerHTML=(d&&d.trim()!==''&&d!=='<br>')?d:'';});
@@ -5030,7 +5113,9 @@ function _admFindNaeshinSheetName(wb){
 }
 async function _admParseNaeshinXlsFile(file){
  const buf=await file.arrayBuffer();
- const wb=XLSX.read(buf,{type:'array'});
+ return _admParseNaeshinWorkbook(XLSX.read(buf,{type:'array'}));
+}
+function _admParseNaeshinWorkbook(wb){
  const sheetName=_admFindNaeshinSheetName(wb);
  if(!sheetName)throw new Error('과목별 성적 시트를 찾을 수 없어요');
  const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:''});
@@ -5170,22 +5255,253 @@ function _admPredReset(){
  _admPredDraft={};
  renderAdmissionPredictScreen();
 }
+/* 직접 입력용 엑셀 양식 — "형식 받기"로 우리 반 학생 명단이 미리 들어간 양식(내신·모의고사 시트)을 받아
+ 채운 뒤 그대로 업로드하면 자동으로 성적이 들어간다. 시트 A1의 "[Kosick 모의고사 …]"/"[Kosick 내신 …]"
+ 표시로 양식을 알아보고, 한 파일에 같은 종류 시트를 여러 개 복사해 둬도(시험/학기별) 전부 읽는다. */
+const ADM_TPL_SUBJECT_MAP={'국어':'kor','수학':'math','영어':'eng','한국사':'hist','사회':'social','과학':'sci'};
+async function downloadAdmissionTemplate(){
+ if(typeof ExcelJS==='undefined'){showToast(' 라이브러리 로딩 중... 잠시 후 다시 시도해주세요');return;}
+ const cls=_seatMyClass();
+ if(!cls)return;
+ const students=[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999));
+ const wb=new ExcelJS.Workbook();
+ const thin={style:'thin',color:{argb:'FFCCCCCC'}};
+ const border={top:thin,bottom:thin,left:thin,right:thin};
+ const baseFont={name:'맑은 고딕',size:10};
+ const inputFill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF9DB'}};
+ const guide=wb.addWorksheet('안내');
+ guide.getColumn(1).width=110;
+ [
+ '📋 Kosick 성적 입력 양식 안내',
+ '',
+ '1. "모의고사" 시트: 위쪽 노란 칸에 시행 연도와 월(예: 2026년 9월)을 적고, 학생별로 과목 등급(필요하면 원점수)을 적어요.',
+ '2. "내신" 시트: 위쪽 노란 칸에 학년과 학기(예: 2학년 2학기)를 적고, 학생별로 과목 등급(필요하면 원점수)을 적어요.',
+ '3. 다른 시험/학기도 넣으려면 시트를 복사(시트 탭 우클릭 → 이동/복사)해서 위쪽 연도·월 또는 학년·학기만 바꿔 쓰면 돼요.',
+ '4. 등급은 1~9 정수예요. 모의고사는 등급을 비워두고 원점수만 적으면, 앱에 입력해 둔 등급컷(영어·한국사는 고정 기준)으로 등급이 자동 계산돼요.',
+ '5. 사회·과학은 한 칸에 하나만 적을 수 있어요(선택과목이 여러 개면 평균 등급을 적거나 앱에서 직접 입력해주세요).',
+ '6. 비워둔 칸은 기존 값을 건드리지 않아요. 번호·이름 열과 머리글 줄은 바꾸지 마세요(이름으로 학생을 찾아요).',
+ '7. 완성한 파일을 그대로 "성적 파일 업로드"에서 선택하면 돼요.'
+ ].forEach((t,i)=>{const r=guide.addRow([t]);r.getCell(1).font={...baseFont,bold:i===0,size:i===0?13:10};r.getCell(1).alignment={wrapText:true,vertical:'top'};});
+ function addSheet(kind){
+ const isMock=kind==='mock';
+ const subjects=isMock?ADM_MOCK_SUBJECTS:ADM_NAESHIN_SUBJECTS;
+ const ws=wb.addWorksheet(isMock?'모의고사':'내신');
+ const colCount=2+subjects.length*2;
+ ws.getColumn(1).width=10;
+ ws.getColumn(2).width=12;
+ for(let c=3;c<=colCount;c++)ws.getColumn(c).width=10;
+ ws.getCell('A1').value=isMock?'[Kosick 모의고사 성적 양식]':'[Kosick 내신 성적 양식]';
+ ws.getCell('A1').font={...baseFont,bold:true,size:13};
+ const labelFont={...baseFont,bold:true};
+ const setMeta=(addr,val,isLabel)=>{const c=ws.getCell(addr);c.value=val;c.font=isLabel?labelFont:{...baseFont,size:11};c.alignment={horizontal:'center',vertical:'middle'};c.border=border;if(!isLabel)c.fill=inputFill;};
+ if(isMock){
+ setMeta('A2','시행 연도',true);setMeta('B2',new Date().getFullYear(),false);
+ setMeta('C2','시행 월',true);setMeta('D2','',false);
+ ws.getCell('B2').dataValidation={type:'whole',operator:'between',allowBlank:true,formulae:[2000,2100],showErrorMessage:true,errorTitle:'시행 연도',error:'연도(예: 2026)를 입력해주세요'};
+ ws.getCell('D2').dataValidation={type:'whole',operator:'between',allowBlank:true,formulae:[1,12],showErrorMessage:true,errorTitle:'시행 월',error:'1~12 사이의 월을 입력해주세요'};
+ ws.getCell('A3').value='※ 노란 칸(연도·월)과 학생별 점수 칸을 채워주세요. 등급을 비워두면 원점수와 등급컷으로 자동 계산돼요.';
+ }else{
+ setMeta('A2','학년',true);setMeta('B2',cls.grade||'',false);
+ setMeta('C2','학기',true);setMeta('D2','',false);
+ ws.getCell('B2').dataValidation={type:'list',allowBlank:true,formulae:['"1,2,3"'],showErrorMessage:true,errorTitle:'학년',error:'1, 2, 3 중에서 골라주세요'};
+ ws.getCell('D2').dataValidation={type:'list',allowBlank:true,formulae:['"1,2"'],showErrorMessage:true,errorTitle:'학기',error:'1 또는 2를 골라주세요'};
+ ws.getCell('A3').value='※ 노란 칸(학년·학기)과 학생별 점수 칸을 채워주세요. 원점수를 적으면 성취도(A~E)가 자동으로 들어가요.';
+ }
+ ws.getCell('A3').font={...baseFont,color:{argb:'FF6B7A72'}};
+ const headers=['번호','이름',...subjects.flatMap(s=>[`${s.label} 원점수`,`${s.label} 등급`])];
+ const hr=ws.getRow(4);
+ hr.height=28;
+ headers.forEach((h,i)=>{
+ const c=hr.getCell(i+1);
+ c.value=h;
+ c.font={...baseFont,bold:true};
+ c.fill={type:'pattern',pattern:'solid',fgColor:{argb:i>=2&&h.endsWith('등급')?'FFBFE3D0':'FFE4E7EC'}};
+ c.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+ c.border=border;
+ });
+ students.forEach((s,idx)=>{
+ const rowNum=5+idx;
+ const row=ws.getRow(rowNum);
+ row.getCell(1).value=s.number??'';
+ row.getCell(2).value=s.name;
+ for(let c=1;c<=colCount;c++){
+ const cell=row.getCell(c);
+ cell.font=baseFont;
+ cell.border=border;
+ cell.alignment={horizontal:'center',vertical:'middle'};
+ if(c>2)cell.fill=inputFill;
+ if(c>2){
+ const isGrade=headers[c-1].endsWith('등급');
+ cell.dataValidation=isGrade
+ ?{type:'whole',operator:'between',allowBlank:true,formulae:[1,9],showErrorMessage:true,errorTitle:'등급',error:'1~9 사이의 정수를 입력해주세요'}
+ :{type:'decimal',operator:'between',allowBlank:true,formulae:[0,100],showErrorMessage:true,errorTitle:'원점수',error:'0~100 사이의 숫자를 입력해주세요'};
+ }
+ }
+ });
+ ws.views=[{state:'frozen',xSplit:2,ySplit:4}];
+ }
+ addSheet('mock');
+ addSheet('naeshin');
+ const buffer=await wb.xlsx.writeBuffer();
+ const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download=`입시성적_양식_${cls.grade}학년${cls.classNum}반.xlsx`;
+ a.click();
+ URL.revokeObjectURL(url);
+ showToast(' 양식을 내려받았어요. 채운 뒤 그대로 업로드하면 돼요');
+}
+function _admTplKind(ws){
+ const a1=ws&&ws['A1']?String(ws['A1'].v||'').trim():'';
+ if(!a1.startsWith('[Kosick'))return null;
+ if(a1.includes('모의고사'))return'mock';
+ if(a1.includes('내신'))return'naeshin';
+ return null;
+}
+function _admIsTemplateWorkbook(wb){
+ return wb.SheetNames.some(n=>_admTplKind(wb.Sheets[n]));
+}
+function _admTplNum(v){
+ if(v===''||v==null)return null;
+ const n=Number(v);
+ return isNaN(n)?NaN:n;
+}
+function _admTplMeta(rows,label){
+ for(let r=0;r<Math.min(rows.length,12);r++){
+ const row=rows[r];
+ for(let c=0;c<row.length-1;c++){
+ if(String(row[c]).trim()===label)return row[c+1];
+ }
+ }
+ return'';
+}
+function _admTplMatchStudent(cls,name,number){
+ const same=(cls.students||[]).filter(s=>String(s.name).trim()===name);
+ if(same.length===1)return same[0];
+ if(same.length>1&&number!=null&&number!==''){return same.find(s=>Number(s.number)===Number(number))||null;}
+ return null;
+}
+function _admTplParseSheet(sheetName,rows,kind,cls){
+ let hi=-1;
+ for(let r=0;r<Math.min(rows.length,15);r++){
+ const cells=rows[r].map(x=>String(x).trim());
+ if(cells.includes('번호')&&cells.includes('이름')){hi=r;break;}
+ }
+ if(hi<0)return{error:`'${sheetName}' 시트에서 번호·이름 머리글 줄을 찾지 못했어요`};
+ const header=rows[hi].map(x=>String(x).trim());
+ const nameCol=header.indexOf('이름'),numCol=header.indexOf('번호');
+ const cols={};
+ header.forEach((h,i)=>{
+ const m=h.match(/^(국어|수학|영어|한국사|사회|과학)\s*(원점수|등급)$/);
+ if(!m)return;
+ const sid=ADM_TPL_SUBJECT_MAP[m[1]];
+ if(kind==='naeshin'&&sid==='hist')return;
+ if(!cols[sid])cols[sid]={};
+ cols[sid][m[2]==='등급'?'grade':'score']=i;
+ });
+ let key,periodLabel;
+ if(kind==='mock'){
+ const y=Number(_admTplMeta(rows,'시행 연도')),m=Number(_admTplMeta(rows,'시행 월'));
+ if(!Number.isInteger(y)||y<2000||y>2100)return{error:`'${sheetName}' 시트의 시행 연도를 확인해주세요`};
+ if(!Number.isInteger(m)||m<1||m>12)return{error:`'${sheetName}' 시트의 시행 월(1~12)을 입력해주세요`};
+ key=`${y}-${m}`;periodLabel=`${String(y).slice(2)}/${String(m).padStart(2,'0')}`;
+ }else{
+ const g=Number(_admTplMeta(rows,'학년')),t=Number(_admTplMeta(rows,'학기'));
+ if(!Number.isInteger(g)||g<1||g>3)return{error:`'${sheetName}' 시트의 학년(1~3)을 입력해주세요`};
+ if(!Number.isInteger(t)||t<1||t>2)return{error:`'${sheetName}' 시트의 학기(1 또는 2)를 입력해주세요`};
+ key=`${g}-${t}`;periodLabel=`${g}/${t}`;
+ }
+ const entries=[];
+ let skipped=0;
+ for(let r=hi+1;r<rows.length;r++){
+ const row=rows[r];
+ const name=String(row[nameCol]||'').trim();
+ if(!name)continue;
+ const number=numCol>=0?row[numCol]:'';
+ const data={};
+ Object.keys(cols).forEach(sid=>{
+ const sc=_admTplNum(cols[sid].score!=null?row[cols[sid].score]:'');
+ const gr=_admTplNum(cols[sid].grade!=null?row[cols[sid].grade]:'');
+ const scoreOk=sc!=null&&!isNaN(sc)&&sc>=0&&sc<=100;
+ const gradeOk=gr!=null&&!isNaN(gr)&&Number.isInteger(gr)&&gr>=1&&gr<=9;
+ if((sc!=null&&!scoreOk)||(gr!=null&&!gradeOk))skipped++;
+ if(!scoreOk&&!gradeOk)return;
+ const obj={};
+ if(scoreOk)obj.score=String(sc);
+ if(gradeOk)obj.grade=String(gr);
+ if(kind==='mock'){
+ if(!gradeOk&&scoreOk){
+ const auto=_admComputeMockGrade(String(sc),_admCutsForSubject(key,sid));
+ if(auto!=='')obj.grade=auto;
+ }
+ data[sid]=obj;
+ }else{
+ if(scoreOk){const ach=_admComputeAchievement(String(sc));if(ach)obj.achievement=ach;}
+ if(ADM_MULTI_SUBJECT_IDS.includes(sid)){
+ const label=ADM_NAESHIN_SUBJECTS.find(s=>s.id===sid).label;
+ data[sid]=[{name:label,score:obj.score||'',grade:obj.grade||'',achievement:obj.achievement||'',units:''}];
+ }else data[sid]=obj;
+ }
+ });
+ entries.push({name,number,data});
+ }
+ return{key,periodLabel,entries,skipped};
+}
+function _admParseTemplateWorkbook(wb,cls,fileName){
+ const records=new Map(),out=[],unmatched=new Set();
+ let skippedTotal=0;
+ wb.SheetNames.forEach(sheetName=>{
+ const ws=wb.Sheets[sheetName];
+ const kind=_admTplKind(ws);
+ if(!kind)return;
+ const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+ const parsed=_admTplParseSheet(sheetName,rows,kind,cls);
+ if(parsed.error){out.push({fileName,error:parsed.error});return;}
+ skippedTotal+=parsed.skipped;
+ parsed.entries.forEach(en=>{
+ if(!Object.keys(en.data).length)return;
+ const stu=_admTplMatchStudent(cls,en.name,en.number);
+ if(!stu){unmatched.add(en.name);return;}
+ if(!records.has(stu.id))records.set(stu.id,{fileName,studentName:stu.name,matchedId:stu.id,matchedLabel:`${stu.number?stu.number+'번 ':''}${stu.name}`,naeshin:{},mock:{},kind:'template'});
+ const rec=records.get(stu.id);
+ if(kind==='mock')rec.mock[parsed.key]=Object.assign(rec.mock[parsed.key]||{},en.data);
+ else rec.naeshin[parsed.key]=Object.assign(rec.naeshin[parsed.key]||{},en.data);
+ });
+ });
+ records.forEach(rec=>{
+ rec.periodsFound=Object.keys(rec.naeshin).sort();
+ rec.courseCount=_admCountCourses(rec.naeshin);
+ rec.mockKeys=Object.keys(rec.mock).sort();
+ out.push(rec);
+ });
+ if(unmatched.size)out.push({fileName,warning:`우리 반에서 못 찾은 이름 ${unmatched.size}명: ${[...unmatched].slice(0,8).map(escHtml).join(', ')}${unmatched.size>8?' …':''}`});
+ if(skippedTotal)out.push({fileName,warning:`값이 올바르지 않아 건너뛴 칸이 ${skippedTotal}개 있어요 (등급은 1~9 정수, 원점수는 0~100)`});
+ if(!out.length)out.push({fileName,error:'읽을 수 있는 성적 시트가 없어요'});
+ return out;
+}
+function _admCountCourses(naeshin){
+ let n=0;
+ Object.values(naeshin||{}).forEach(pd=>Object.values(pd).forEach(v=>{n+=Array.isArray(v)?v.length:1;}));
+ return n;
+}
 function openAdmissionImportScreen(){
  if(!_seatMyClass())return;
  _admImportDraft=[];
- renderAdmissionImportScreen();
  _admOpenModal();
+ renderAdmissionImportScreen();
 }
 function renderAdmissionImportScreen(){
  const wrap=document.getElementById('admModalBox');
  if(!wrap)return;
  wrap.innerHTML=`
  <div class="modal-title">📥 성적 파일 업로드</div>
- <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">유니브 내신분석표(.xls) 파일을 여러 개 한 번에 선택할 수 있어요. 파일 이름의 학생 이름으로 우리 반 학생과 자동으로 매칭돼요. 원점수는 이 파일에 없어서 등급만 채워지고, 성취도 칸은 비워둬요.</p>
+ <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">두 가지 형태를 알아서 구분해요.<br>① <b>유니브 내신분석표(.xls)</b> — 여러 개 한 번에 선택 가능, 파일 이름의 학생 이름으로 매칭하고 등급만 채워져요.<br>② <b>직접 입력 양식(.xlsx)</b> — 왼쪽 아래 "형식 받기"로 받은 양식에 내신·모의고사 성적을 적어 올리면 여러 학생이 한 번에 들어가요.</p>
  <input type="file" id="admImportFileInput" multiple accept=".xls,.xlsx" style="display:none" onchange="_admHandleImportFiles(this.files)">
  <button type="button" class="btn btn-primary" style="width:100%;" onclick="document.getElementById('admImportFileInput').click()">📁 파일 선택</button>
  <div id="admImportResults" style="margin-top:14px;"></div>
  <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" style="margin-right:auto;" onclick="downloadAdmissionTemplate()">📄 형식 받기</button>
  <button type="button" class="btn btn-secondary" onclick="closeAdmissionModal()">취소</button>
  <button type="button" class="btn btn-primary" id="admImportApplyBtn" disabled onclick="_admApplyImport()">적용</button>
  </div>`;
@@ -5200,14 +5516,19 @@ async function _admHandleImportFiles(fileList){
  if(typeof XLSX==='undefined'){if(resultsEl)resultsEl.innerHTML='<div class="ank-empty-note">⚠ 엑셀 라이브러리 로딩 중... 잠시 후 다시 시도해주세요</div>';return;}
  const results=[];
  for(const file of files){
+ let wb;
+ try{wb=XLSX.read(await file.arrayBuffer(),{type:'array'});}
+ catch(e){results.push({fileName:file.name,error:'엑셀 파일을 읽을 수 없어요'});continue;}
+ if(_admIsTemplateWorkbook(wb)){
+ _admParseTemplateWorkbook(wb,cls,file.name).forEach(r=>results.push(r));
+ continue;
+ }
  const name=_admExtractNameFromFilename(file.name);
  const student=(cls.students||[]).find(s=>s.name.trim()===name);
  try{
- const parsed=await _admParseNaeshinXlsFile(file);
+ const parsed=_admParseNaeshinWorkbook(wb);
  const periodsFound=Object.keys(parsed.naeshin).sort();
- let courseCount=0;
- Object.values(parsed.naeshin).forEach(pd=>Object.values(pd).forEach(v=>{courseCount+=Array.isArray(v)?v.length:1;}));
- results.push({fileName:file.name,studentName:name,matchedId:student?student.id:null,matchedLabel:student?`${student.number?student.number+'번 ':''}${student.name}`:null,naeshin:parsed.naeshin,periodsFound,courseCount});
+ results.push({fileName:file.name,studentName:name,matchedId:student?student.id:null,matchedLabel:student?`${student.number?student.number+'번 ':''}${student.name}`:null,naeshin:parsed.naeshin,periodsFound,courseCount:_admCountCourses(parsed.naeshin),kind:'univ'});
  }catch(e){
  results.push({fileName:file.name,studentName:name,matchedId:student?student.id:null,error:e.message||'파일을 읽는 중 오류가 발생했어요'});
  }
@@ -5218,33 +5539,43 @@ async function _admHandleImportFiles(fileList){
 function _admRenderImportResults(){
  const resultsEl=document.getElementById('admImportResults');
  if(!resultsEl)return;
- const matchedCount=_admImportDraft.filter(r=>r.matchedId&&!r.error).length;
+ const matchedCount=_admImportDraft.filter(r=>r.matchedId&&!r.error&&!r.warning).length;
+ const rowStyle='padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;';
  resultsEl.innerHTML=`
- <div style="font-size:0.82rem;font-weight:600;margin-bottom:8px;">${_admImportDraft.length}개 파일 중 ${matchedCount}명 매칭됨</div>
+ <div style="font-size:0.82rem;font-weight:600;margin-bottom:8px;">${matchedCount}명 매칭됨</div>
  ${_admImportDraft.map(r=>{
- if(r.error)return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;color:#EF4444;">⚠ ${escHtml(r.fileName)} — ${escHtml(r.error)}</div>`;
- if(!r.matchedId)return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;color:#EF4444;">⚠ ${escHtml(r.fileName)} — "${escHtml(r.studentName)}" 학생을 우리 반에서 못 찾았어요</div>`;
- return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;"><b>${escHtml(r.matchedLabel)}</b> — ${r.periodsFound.map(p=>p.replace('-','/')).join(', ')||'(감지된 학기 없음)'} · 과목 ${r.courseCount}개</div>`;
+ if(r.error)return`<div style="${rowStyle}color:#EF4444;">⚠ ${escHtml(r.fileName)} — ${escHtml(r.error)}</div>`;
+ if(r.warning)return`<div style="${rowStyle}color:#B45309;">△ ${escHtml(r.fileName)} — ${r.warning}</div>`;
+ if(!r.matchedId)return`<div style="${rowStyle}color:#EF4444;">⚠ ${escHtml(r.fileName)} — "${escHtml(r.studentName)}" 학생을 우리 반에서 못 찾았어요</div>`;
+ const parts=[];
+ if(r.periodsFound&&r.periodsFound.length)parts.push(`내신 ${r.periodsFound.map(p=>p.replace('-','/')).join(', ')} · 과목 ${r.courseCount}개`);
+ if(r.mockKeys&&r.mockKeys.length)parts.push(`모의고사 ${r.mockKeys.map(k=>{const[y,m]=k.split('-');return`${y.slice(2)}/${m.padStart(2,'0')}`;}).join(', ')}`);
+ return`<div style="${rowStyle}"><b>${escHtml(r.matchedLabel)}</b> — ${parts.join(' · ')||'(감지된 성적 없음)'}</div>`;
  }).join('')}`;
  const applyBtn=document.getElementById('admImportApplyBtn');
  if(applyBtn)applyBtn.disabled=matchedCount===0;
 }
 function _admApplyImport(){
  if(!_admImportDraft||!_admImportDraft.length)return;
- const matched=_admImportDraft.filter(r=>r.matchedId&&!r.error);
+ const matched=_admImportDraft.filter(r=>r.matchedId&&!r.error&&!r.warning);
  if(!matched.length)return;
- if(!confirm(`${matched.length}명의 내신 성적을 반영할까요? 파일에 있는 학기·과목은 기존 값을 덮어써요.`))return;
+ if(!confirm(`${matched.length}명의 성적을 반영할까요? 파일에 있는 학기·시험·과목은 기존 값을 덮어써요.`))return;
  const all=_admGetAllScores();
+ const mergePeriods=(base,incoming)=>{
+ Object.keys(incoming||{}).forEach(period=>{
+ if(!base[period])base[period]={};
+ Object.keys(incoming[period]).forEach(sid=>{
+ const nv=incoming[period][sid],ov=base[period][sid];
+ base[period][sid]=(!Array.isArray(nv)&&!Array.isArray(ov)&&ov&&typeof ov==='object')?{...ov,...nv}:nv;
+ });
+ });
+ return base;
+ };
  matched.forEach(r=>{
  const existing=all[r.matchedId]||{};
- const mergedNaeshin=JSON.parse(JSON.stringify(existing.naeshin||{}));
- Object.keys(r.naeshin).forEach(period=>{
- if(!mergedNaeshin[period])mergedNaeshin[period]={};
- Object.keys(r.naeshin[period]).forEach(subjectId=>{
- mergedNaeshin[period][subjectId]=r.naeshin[period][subjectId];
- });
- });
- all[r.matchedId]={...existing,naeshin:mergedNaeshin};
+ const naeshin=mergePeriods(JSON.parse(JSON.stringify(existing.naeshin||{})),r.naeshin);
+ const mock=mergePeriods(JSON.parse(JSON.stringify(existing.mock||{})),r.mock);
+ all[r.matchedId]={...existing,naeshin,mock};
  });
  DB.set('admissionScores',all);
  showToast(`✅ ${matched.length}명의 성적을 반영했어요`);
