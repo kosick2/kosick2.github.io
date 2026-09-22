@@ -290,9 +290,9 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .m-hero-badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 .m-hero-badge{background:rgba(255,255,255,0.16);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:default;}
 @media(min-width:769px){
- .home-grid{display:flex;flex-direction:column;gap:20px;}
+ .home-grid{display:grid;grid-template-columns:1.4fr 360px;gap:20px;align-items:start;}
  .home-cal-col{display:flex;}
- .home-cal-inline{display:flex;min-height:520px;flex:1;min-width:0;}
+ .home-cal-inline{display:flex;min-height:600px;flex:1;min-width:0;}
 }
 .home-cal-card{background:var(--surface);border-radius:var(--radius);padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);display:flex;flex-direction:column;height:100%;}
 .calendar-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
@@ -315,9 +315,6 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .cal-day.sunday .cal-day-num{color:#F87171;}
 .home-right{display:flex;flex-direction:column;gap:20px;min-width:0;overflow:hidden;}
 .home-right .card{margin-bottom:0;overflow:hidden;min-width:0;}
-@media(min-width:769px){
- .home-right{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-}
 .home-quicklinks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
 @media(min-width:769px){.home-quicklinks{display:none;}}
 @media(max-width:900px){.home-quicklinks{grid-template-columns:repeat(3,1fr);}}
@@ -991,10 +988,10 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div class="home-class-card-title" id="homeClassTitle"></div>
  <div class="m-hero-badges" id="homeClassBadges"></div>
  </div>
- <div class="home-notice-att-web card"><div class="card-title" style="margin-bottom:8px;">오늘의 안내사항</div><div id="homeNoticeList"></div></div>
- <div class="home-notice-att-web card"><div class="card-title" style="margin-bottom:8px;">오늘 출결</div><div id="homeAttList"></div></div>
- <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">할 일</div><button onclick="showSection('memos',null)" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:4px 2px;margin-top:6px;">전체 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></div><div id="recentMemos"></div></div>
- <div class="card"><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
+ <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘의 안내사항</div><div id="homeNoticeList"></div></div>
+ <div class="home-notice-att-web"><div class="card-title" style="margin-bottom:8px;">오늘 출결</div><div id="homeAttList"></div></div>
+ <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">할 일</div><button onclick="showSection('memos',null)" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:4px 2px;margin-top:6px;">전체 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></div><div id="recentMemos"></div></div>
+ <div><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
  </div>
  </div>
  <div class="home-quicklinks" id="homeQuickLinks"></div>
