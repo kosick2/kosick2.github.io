@@ -1973,15 +1973,18 @@ function manualSave(){
  showToast('⚠️ 저장 중 문제가 발생했어요. 다시 시도해주세요');
  return;
  }
- /* ④ 전체 localStorage → Supabase 동기화 */
+ /* ④ 전체 localStorage → Supabase 동기화 — 예전엔 실제 서버 응답과 무관하게
+ 고정된 1.5초 타이머가 지나면 무조건 "저장 완료!"를 띄웠다. 회선이 느리거나
+ 중간에 끊기면 서버엔 실제로 저장되지 않았는데도 "완료"로 보여서, 그걸 보고
+ 안심하고 화면을 꺼버리면 방금 쓴 내용이 서버엔 끝내 안 올라가는 사고로
+ 이어졌다 — 이제 실제 응답(성공/실패)을 기다렸다가 그 결과 그대로 보여준다. */
  if(window._manualSave){
  if(window._cancelDebounce)window._cancelDebounce();
- setTimeout(()=>{
- try{window._manualSave();}catch(e){console.error('동기화 중 오류:',e);}
- setTimeout(()=>{
+ setTimeout(async()=>{
+ let ok=true;
+ try{await window._manualSave();}catch(e){ok=false;console.error('동기화 중 오류:',e);}
  restoreSaveBtns();
- showToast(' 수동 저장 완료!');
- },1500);
+ showToast(ok?' 수동 저장 완료!':'⚠️ 저장 실패! 네트워크를 확인하고 다시 시도해주세요.');
  },150);
  }else{
  restoreSaveBtns();
@@ -9385,9 +9388,15 @@ const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(type
  SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
 p._savedAt=Date.now();
  _isSaving=true;
- fetch(`${SUPA_URL}/rest/v1/kosick_data?on_conflict=user_id`,{method:'POST',headers:{...SUPA_HEADERS,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{user_id:SUPA_USER,data:p}])})
+ /* fetch를 그냥 던지고 끝내면(await 없이) 호출한 쪽은 실제 서버 응답을 기다리지
+ 않고 "일단 시작은 했다"는 것만 알 수 있다 — manualSave()의 "수동 저장 완료!"가
+ 실제 네트워크 성공 여부와 무관하게 고정된 타이머로만 뜨던 사고(모바일 회선이
+ 불안정할 때 저장이 실패했는데도 완료로 표시됨)의 원인이었다. 이제 이 promise를
+ 그대로 반환해서, 호출자가 진짜 성공/실패를 기다렸다가 알 수 있게 한다. 15초가
+ 지나도 응답이 없으면(회선이 아예 멈춘 경우) 타임아웃으로 실패 처리한다. */
+ return fetch(`${SUPA_URL}/rest/v1/kosick_data?on_conflict=user_id`,{method:'POST',headers:{...SUPA_HEADERS,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{user_id:SUPA_USER,data:p}]),signal:AbortSignal.timeout(15000)})
  .then(res=>{if(!res.ok)throw new Error('save failed');if(p._savedAt>=Number(localStorage.getItem('_savedAt')||0))localStorage.setItem('_savedAt',p._savedAt);_isSaving=false;if(!isManual){clearTimeout(_saveToastTimer);_saveToastTimer=setTimeout(()=>showToast(' 자동 저장 완료'),200);}})
- .catch(e=>{console.error('저장 실패:',e);showToast(' 저장 실패! 네트워크를 확인해주세요.');_isSaving=false;});
+ .catch(e=>{console.error('저장 실패:',e);_isSaving=false;if(!isManual)showToast(' 저장 실패! 네트워크를 확인해주세요.');throw e;});
 }
 window._syncSettings=syncAll;
 function applyRemoteData(data){
