@@ -163,6 +163,11 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .adm-grade.g-c{background:#FBDDBD;color:#7A3A00;}
 .adm-grade.g-d{background:#F8D0D0;color:#7F1D1D;}
 .adm-wish{padding:0.42em 0;border-bottom:1px solid var(--border);}
+.adm-cutoff-ref{font-size:0.78em;color:var(--primary);background:rgba(31,107,91,0.08);border-radius:0.6em;padding:0.25em 0.6em;margin-top:0.3em;display:inline-block;}
+.adm-cutoff-ref.loose{color:#92400E;background:rgba(217,119,6,0.14);}
+.adm-wish-flag{display:inline-flex;align-items:center;justify-content:center;width:1.3em;height:1.3em;border-radius:50%;font-size:0.8em;font-style:normal;cursor:help;flex-shrink:0;}
+.adm-wish-flag.loose{background:#FDE68A;color:#78350F;}
+.adm-wish-flag.warn{background:#E5E7EB;color:#4B5563;}
 .adm-wish:last-child{border-bottom:none;}
 .adm-wish-top{display:flex;align-items:center;justify-content:space-between;gap:0.6em;}
 .adm-wish-main{font-weight:800;font-size:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
@@ -172,6 +177,9 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .adm-badge.b-up{background:#F6EBC5;color:#6B4E00;}
 .adm-badge.b-fit{background:#D2EFD9;color:#14532D;}
 .adm-badge.b-down{background:#DCEBFA;color:#1E3A5F;}
+.adm-badge.b-safe{background:#E2E8F0;color:#334155;}
+.adm-badge.auto{border:1px dashed currentColor;}
+.adm-badge.auto i{font-style:normal;font-weight:600;font-size:0.85em;margin-left:0.35em;opacity:0.75;}
 /* ═══ 좌측 사이드바 내비게이션 (데스크톱) ═══ */
 .app-sidebar{position:fixed;top:16px;left:16px;bottom:16px;width:188px;background:var(--primary);border-radius:28px;box-shadow:0 16px 40px rgba(31,107,91,0.28);display:flex;flex-direction:column;z-index:150;padding:22px 10px;}
 .sidebar-brand{display:flex;align-items:center;gap:10px;padding:4px 10px 22px;flex-shrink:0;}
@@ -4255,6 +4263,50 @@ const ADM_GRADE_CUT_COUNT=8; /* 1~8등급컷 원점수 — 9등급은 8등급컷
 /* 영어·한국사는 절대평가라 시험 난이도와 무관하게 원점수 기준이 고정돼 있다
  (국어·수학·사회·과학은 상대평가라 회차마다 컷이 달라 직접 입력해야 함). */
 const ADM_ABSOLUTE_GRADE_CUTS={eng:[90,80,70,60,50,40,30,20],hist:[40,35,30,25,20,15,10,5]};
+/* 대학어디가(adiga.kr)/전문대학포털(procollege.kr)에서 확인한 실제 입결 참고자료.
+ 학교·전형마다 점수 체계가 달라서(등급/환산점수/백분위 등) 억지로 통일하지 않고
+ 원래 척도를 그대로 담아둔다 — 아직 검증 중인 시범 데이터라 소수 대학만 들어있다.
+ (원본은 Kosick dashboard/admission-data/cutoffs.json에 더 자세히 정리돼 있음) */
+const ADM_CUTOFF_REF={
+ "한양대학교":{"경영학부":{track:"학생부종합",year:2024,scale:"등급",avg:1.81,cut70:2.76},"연극영화학과(영화전공)":{track:"학생부종합",year:2024,scale:"등급",avg:2.19,cut70:2.22},"화학공학과":{track:"학생부종합",year:2024,scale:"등급",avg:1.58,cut70:1.60}},
+ "건국대학교":{"경영학과":{track:"학생부종합",year:2024,scale:"등급",avg:2.22,cut70:2.31}},
+ "서울예술대학교":{"영화전공":{track:"실기(일반전형)",year:2026,scale:"등급",avg:4.0,cutLowest:5.5,source:"procollege"}}
+};
+/* 학생이 적은 학과 표기가 실제 명칭과 다를 수 있어(괄호·학과/학부 어미·띄어쓰기),
+ 세 단계로 매칭한다: exact(그대로 일치) → loose(괄호·"학과/학부/전공" 어미를 뗀
+ 뒤에 일치 — 진짜 같은 학과일 확률이 높지만 사람이 한 번 확인하는 게 안전) →
+ none-in-univ(그 대학 참고자료는 있는데 이 학과만 못 찾음). 대학 자체가 참고자료에
+ 아예 없으면(no-data) 조용히 아무것도 표시하지 않는다 — 아직 안 모은 것뿐이라
+ 매번 알림을 띄우면 잡음만 늘어난다. */
+function _admNormalizeDept(name){
+ return(name||'').replace(/\([^)]*\)/g,'').replace(/(학과|학부|전공|학전공)$/,'').trim();
+}
+function _admMatchWish(university,department){
+ const byUniv=ADM_CUTOFF_REF[(university||'').trim()];
+ if(!byUniv)return{status:'no-data'};
+ const dep=(department||'').trim();
+ if(dep&&byUniv[dep])return{status:'exact',key:dep,ref:byUniv[dep]};
+ const norm=_admNormalizeDept(dep);
+ if(norm){
+ const found=Object.keys(byUniv).find(k=>_admNormalizeDept(k)===norm);
+ if(found)return{status:'loose',key:found,ref:byUniv[found],reason:`학생 기록의 학과명 "${dep}"과 실제 등록된 학과명 "${found}"이 달라요`};
+ }
+ return{status:'none-in-univ'};
+}
+function _admCutoffBadgeHtml(m){
+ if(m.status!=='exact'&&m.status!=='loose')return'';
+ const ref=m.ref;
+ const parts=[`${ref.year}학년도 ${escHtml(ref.track)}`,`${escHtml(ref.scale)} 평균 ${ref.avg}`];
+ if(ref.cut70!=null)parts.push(`70%컷 ${ref.cut70}`);
+ if(ref.cutLowest!=null)parts.push(`최저 ${ref.cutLowest}`);
+ const cls=m.status==='loose'?'adm-cutoff-ref loose':'adm-cutoff-ref';
+ return`<div class="${cls}" title="시범 데이터 — 정확도 확인 중">📊 참고 입결 ${parts.join(' · ')}</div>`;
+}
+function _admWishFlagHtml(m){
+ if(m.status==='loose')return`<span class="adm-wish-flag loose" title="학과명이 정확히 일치하지 않아요 — 자세히에서 확인">❕</span>`;
+ if(m.status==='none-in-univ')return`<span class="adm-wish-flag warn" title="이 대학 참고자료에서 이 학과를 못 찾았어요">❔</span>`;
+ return'';
+}
 let _admStudentId=null;
 let _admDraft=null;
 let _admWishDraft=null;
@@ -4502,7 +4554,41 @@ function _admDeltaHtml(cur,prev){
  :` · <span class="adm-delta down">▼ ${(-diff).toFixed(2)} 하락</span>`;
 }
 function _admJudgmentClass(j){
- return{'과상':'b-over','상향':'b-up','적정':'b-fit','하향':'b-down'}[j]||'';
+ return{'과상':'b-over','상향':'b-up','적정':'b-fit','하향':'b-down','과하':'b-safe'}[j]||'';
+}
+/* 참고입결(등급 기준)이 있는데 선생님이 직접 판단(적정/상향 등)을 아직 안 적어뒀으면,
+ 학생의 실제 성적과 비교해서 과상/상향/적정/하향/과하 중 하나를 잠정적으로 계산해
+ 보여준다 — 등급 척도가 아닌 학교(환산점수 등)는 단순 비교가 의미 없어 계산하지
+ 않는다. 전형(학생부종합/교과=내신, 정시=모의고사)에 맞는 성적을 사용한다. */
+function _admStudentGradeForTrack(studentId,track){
+ if(track==='학생부 종합'||track==='학생부 교과'){
+ const nae=_admNaeshinSeries(studentId);
+ return nae.length?nae.reduce((a,p)=>a+p.value,0)/nae.length:null;
+ }
+ if(track==='정시'){
+ const mock=_admMockSeries(studentId);
+ return mock.length?mock[mock.length-1].value:null;
+ }
+ return null;
+}
+function _admAutoJudgment(studentGrade,ref){
+ if(studentGrade==null||!ref||ref.scale!=='등급'||ref.avg==null||ref.cut70==null)return null;
+ const avg=ref.avg,cut=ref.cut70;
+ if(studentGrade<=avg-0.5)return'과하';
+ if(studentGrade<=avg)return'하향';
+ if(studentGrade<=cut)return'적정';
+ if(studentGrade<=cut+0.5)return'상향';
+ return'과상';
+}
+/* 판단 배지 하나를 골라 렌더링 — 선생님이 직접 적어둔 게 있으면 그걸 그대로,
+ 없고 참고입결이 있으면 자동 계산값을 "(자동)" 표시와 함께 보여준다. */
+function _admJudgmentBadgeHtml(studentId,w,m){
+ if(w.judgment)return`<span class="adm-badge ${_admJudgmentClass(w.judgment)}">${escHtml(w.judgment)}</span>`;
+ if(m.status!=='exact'&&m.status!=='loose')return'';
+ const grade=_admStudentGradeForTrack(studentId,w.track);
+ const auto=_admAutoJudgment(grade,m.ref);
+ if(!auto)return'';
+ return`<span class="adm-badge auto ${_admJudgmentClass(auto)}" title="선생님이 직접 정하지 않아서, 참고입결과 성적을 비교해 잠정 계산한 값이에요">${escHtml(auto)}<i>자동</i></span>`;
 }
 function _admSummaryCardsHtml(studentId){
  const nae=_admNaeshinSeries(studentId);
@@ -4536,7 +4622,10 @@ function renderAdmissionDetail(){
  <div id="admChartCombined"></div>
  </div>
  <div class="card adm-card adm-wish-card">
- <div class="adm-card-title">🎓 희망 진학 정보</div>
+ <div class="adm-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+ <span>🎓 희망 진학 정보</span>
+ <button type="button" class="btn btn-secondary" style="padding:0.3em 0.8em;font-size:0.8em;" onclick="openAdmissionWishDetailScreen()">자세히 ›</button>
+ </div>
  <div id="admWishView"></div>
  </div>
  </div>
@@ -4557,6 +4646,9 @@ function renderAdmissionDetail(){
  _admRefreshCharts();
  _admWatchChartWidth();
 }
+/* 담임-입시상담 탭을 열면 바로 보이는 축약형 — 대학명+전형·학과만 보여주고,
+ 참고입결 상세(척도·평균·70%컷)와 학과명 고치기 버튼은 "자세히" 팝업에서만 다룬다.
+ 여기서는 확인이 필요한 상태(느슨한 매칭/매칭 안 됨)만 작은 알림 아이콘으로 표시한다. */
 function _admRenderWishView(){
  const wrap=document.getElementById('admWishView');
  if(!wrap)return;
@@ -4567,8 +4659,50 @@ function _admRenderWishView(){
  }
  wrap.innerHTML=wishes.map(w=>{
  const sub=[w.track,w.department].filter(Boolean).map(escHtml).join(' · ');
- return`<div class="adm-wish"><div class="adm-wish-top"><span class="adm-wish-main">${escHtml(w.university||'-')}</span>${w.judgment?`<span class="adm-badge ${_admJudgmentClass(w.judgment)}">${escHtml(w.judgment)}</span>`:''}</div><div class="adm-wish-sub">${sub}${w.memo?` · ${escHtml(w.memo)}`:''}</div></div>`;
+ const m=_admMatchWish(w.university,w.department);
+ return`<div class="adm-wish"><div class="adm-wish-top"><span class="adm-wish-main">${escHtml(w.university||'-')}</span><span style="display:flex;align-items:center;gap:0.4em;flex-shrink:0;">${_admJudgmentBadgeHtml(_admStudentId,w,m)}${_admWishFlagHtml(m)}</span></div><div class="adm-wish-sub">${sub}</div></div>`;
  }).join('');
+}
+function openAdmissionWishDetailScreen(){
+ if(!_admStudentId)return;
+ _admOpenModal();
+ renderAdmissionWishDetailScreen();
+}
+function renderAdmissionWishDetailScreen(){
+ const wrap=document.getElementById('admModalBox');
+ if(!wrap)return;
+ wrap.style.maxWidth='640px';
+ const cls=_seatMyClass();
+ const stu=cls&&(cls.students||[]).find(s=>s.id===_admStudentId);
+ const wishes=_admGetStudentScores(_admStudentId).wishes||[];
+ const rows=wishes.length?wishes.map((w,idx)=>{
+ const sub=[w.track,w.department].filter(Boolean).map(escHtml).join(' · ');
+ const m=_admMatchWish(w.university,w.department);
+ const badge=_admCutoffBadgeHtml(m);
+ const reason=m.status==='loose'?`<div style="font-size:0.78em;color:var(--text-secondary);margin-top:0.3em;">${escHtml(m.reason)} — 실제 학과명으로 바꿔둘까요?</div>`:'';
+ const fixBtn=m.status==='loose'?`<button type="button" class="btn btn-secondary" style="padding:0.25em 0.7em;font-size:0.78em;margin-top:0.3em;" onclick="_admFixWishDepartment(${idx})">"${escHtml(m.key)}"로 학과명 수정</button>`:'';
+ const warnNote=m.status==='none-in-univ'?`<div style="font-size:0.78em;color:var(--text-secondary);margin-top:0.3em;">❔ 이 대학 참고자료는 있는데, 이 학과는 아직 못 찾았어요</div>`:'';
+ return`<div class="adm-wish"><div class="adm-wish-top"><span class="adm-wish-main">${escHtml(w.university||'-')}</span>${_admJudgmentBadgeHtml(_admStudentId,w,m)}</div><div class="adm-wish-sub">${sub}${w.memo?` · ${escHtml(w.memo)}`:''}</div>${badge}${reason}${fixBtn}${warnNote}</div>`;
+ }).join(''):`<div class="ank-empty-note" style="padding:8px 0;">아직 입력된 희망 진학 정보가 없어요</div>`;
+ wrap.innerHTML=`
+ <div class="modal-title">🎓 희망 진학 정보${stu?` · ${escHtml(stu.name)}`:''}</div>
+ <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">📊 초록 배지는 학과명이 정확히 일치, 주황 배지는 비슷한 이름으로 짐작한 시범 데이터예요 — 실제 학과명이 맞으면 버튼을 눌러 고쳐두면 다음부터는 바로 정확히 매칭돼요.</p>
+ ${rows}
+ <div class="modal-footer">
+ <button type="button" class="btn btn-primary" onclick="closeAdmissionModal()">닫기</button>
+ </div>`;
+}
+function _admFixWishDepartment(idx){
+ const all=_admGetAllScores();
+ const rec=all[_admStudentId];
+ if(!rec||!rec.wishes||!rec.wishes[idx])return;
+ const w=rec.wishes[idx];
+ const m=_admMatchWish(w.university,w.department);
+ if(m.status!=='loose')return;
+ w.department=m.key;
+ DB.set('admissionScores',all);
+ showToast('✅ 학과명을 수정했어요');
+ renderAdmissionWishDetailScreen();
 }
 function _admRenderNaeshinView(){
  const wrap=document.getElementById('admNaeshinViewWrap');
@@ -9491,6 +9625,21 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pageshow', (event) => {
  if (event.persisted) refreshIfNewer();
 });
+/* 예전엔 탭을 다시 보거나(visibilitychange) 페이지가 bfcache에서 복원될 때만
+ 서버 최신 데이터를 확인했다 — 그래서 컴퓨터 화면을 한 번도 안 끄고 계속 켜둔
+ 채로 있으면(다른 창으로 전환한 적도 없이), 폰에서 방금 저장한 내용이 서버에
+ 올라갔어도 컴퓨터 쪽에는 계속 예전 데이터가 남아있는 문제가 있었다. 주기적으로도
+ 확인하되, 지금 타이핑 중인 입력창이 있으면 그 순간의 새로고침으로 안 쓴 내용이
+ 날아가지 않도록 이번 주기는 건너뛰고 다음 주기에 다시 확인한다. */
+function _isEditingNow() {
+ const el = document.activeElement;
+ if (!el) return false;
+ if (el.isContentEditable) return true;
+ return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
+}
+setInterval(() => {
+ if (document.visibilityState === 'visible' && !_isEditingNow()) refreshIfNewer();
+}, 20000);
 </script>
 <!-- ── 즐겨찾기 바 ── -->
 <div class="fav-bar" id="favBar"></div>
