@@ -167,6 +167,7 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .adm-cutoff-ref.loose{color:#92400E;background:rgba(217,119,6,0.14);}
 .adm-cutoff-conv{font-size:0.74em;color:var(--text-secondary);margin-top:0.25em;display:block;}
 .adm-cutoff-conv i{font-style:normal;opacity:0.8;}
+.adm-cutoff-orig{font-size:0.74em;color:var(--text-secondary);margin-top:0.25em;display:block;}
 .adm-wish-flag.mismatch{background:#DC2626;color:#fff;font-weight:700;box-shadow:0 0 0 2px rgba(220,38,38,0.25);}
 .adm-mismatch-note{font-size:0.8em;color:#B91C1C;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.35);border-radius:0.5em;padding:0.5em 0.7em;margin-top:0.4em;font-weight:600;}
 .adm-wish-flag{display:inline-flex;align-items:center;justify-content:center;width:1.3em;height:1.3em;border-radius:50%;font-size:0.8em;font-style:normal;cursor:help;flex-shrink:0;}
@@ -4355,20 +4356,33 @@ function _admMatchWish(university,department,wishTrack){
  }
  return{status:'none-in-univ'};
 }
+/* 대학어디가 원자료(2028학년도 입시 전까지)는 전부 9등급제 기준이다. 그런데
+ 우리 학생들은 이미 2022 개정 교육과정 5등급제 대상이라 실제 입력하는 내신
+ 등급 자체가 5등급 기준 숫자다 — 그래서 화면에 보여주는 "참고 입결"의 대표값은
+ 9등급 원자료가 아니라 5등급제로 환산한 값이어야 학생 성적과 바로 비교가 된다.
+ 원자료는 출처 확인용으로 작게 같이 보여준다. (실기/정시처럼 척도가 등급이
+ 아니거나 학생부 기반이 아니면 — 즉 수능 성적 그대로인 경우 — 변환 대상이
+ 아니므로 원자료 그대로 보여준다.) */
+function _admIsNaeshinGradeRef(ref){
+ return!!(ref&&ref.scale==='등급'&&/^학생부/.test(ref.track||''));
+}
+function _admConvertRefTo5(ref){
+ if(!_admIsNaeshinGradeRef(ref))return ref;
+ return{...ref,avg:_gcConvert9to5(ref.avg),cut70:ref.cut70!=null?_gcConvert9to5(ref.cut70):null};
+}
 function _admCutoffBadgeHtml(m){
  if(m.status!=='exact'&&m.status!=='loose')return'';
  const ref=m.ref;
- const parts=[`${ref.year}학년도 ${escHtml(ref.track)}`,`${escHtml(ref.scale)} 평균 ${ref.avg}`];
- if(ref.cut70!=null)parts.push(`70%컷 ${ref.cut70}`);
+ const isNaeshin=_admIsNaeshinGradeRef(ref);
+ const shown=isNaeshin?_admConvertRefTo5(ref):ref;
+ const avgText=isNaeshin?shown.avg.toFixed(2):shown.avg;
+ const cutText=shown.cut70!=null?(isNaeshin?shown.cut70.toFixed(2):shown.cut70):null;
+ const parts=[`${ref.year}학년도 ${escHtml(ref.track)}`,`${escHtml(ref.scale)}${isNaeshin?'(5등급제 환산)':''} 평균 ${avgText}`];
+ if(cutText!=null)parts.push(`70%컷 ${cutText}`);
  if(ref.cutLowest!=null)parts.push(`최저 ${ref.cutLowest}`);
  const cls=m.status==='loose'?'adm-cutoff-ref loose':'adm-cutoff-ref';
- let conv='';
- if(ref.scale==='등급'&&/^학생부/.test(ref.track||'')){
-  const avg5=_gcConvert9to5(ref.avg).toFixed(2);
-  const cut5=ref.cut70!=null?_gcConvert9to5(ref.cut70).toFixed(2):null;
-  conv=`<div class="adm-cutoff-conv" title="5등급제 환산기(실측 보간표, 교육부 공식 환산식 아님)로 계산한 참고값">🔁 5등급제로 환산하면 약 평균 ${avg5}${cut5!=null?` · 70%컷 ${cut5}`:''} <i>(2028학년도 입시부터 내신 5등급제 적용 예정 — 지금 학생 등급은 아직 9등급제 기준)</i></div>`;
- }
- return`<div class="${cls}" title="시범 데이터 — 정확도 확인 중">📊 참고 입결 ${parts.join(' · ')}</div>${conv}`;
+ const orig=isNaeshin?`<div class="adm-cutoff-orig" title="5등급제 환산기(실측 보간표, 교육부 공식 환산식 아님)로 계산 — 대학어디가 원자료는 9등급제 기준(2028학년도 입시 전까지 발표되는 자료는 전부 9등급제)">📄 원자료(9등급제) 평균 ${ref.avg}${ref.cut70!=null?` · 70%컷 ${ref.cut70}`:''}</div>`:'';
+ return`<div class="${cls}" title="시범 데이터 — 정확도 확인 중">📊 참고 입결 ${parts.join(' · ')}</div>${orig}`;
 }
 function _admWishFlagHtml(m){
  if(m.status==='confirmed-mismatch')return`<span class="adm-wish-flag mismatch" title="${escHtml(m.reason||'')}">🚫</span>`;
@@ -4642,7 +4656,8 @@ function _admStudentGradeForTrack(studentId,track){
 }
 function _admAutoJudgment(studentGrade,ref){
  if(studentGrade==null||!ref||ref.scale!=='등급'||ref.avg==null||ref.cut70==null)return null;
- const avg=ref.avg,cut=ref.cut70;
+ const r=_admConvertRefTo5(ref);
+ const avg=r.avg,cut=r.cut70;
  if(studentGrade<=avg-0.5)return'과하';
  if(studentGrade<=avg)return'하향';
  if(studentGrade<=cut)return'적정';
