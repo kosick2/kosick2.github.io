@@ -165,6 +165,10 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .adm-wish{padding:0.42em 0;border-bottom:1px solid var(--border);}
 .adm-cutoff-ref{font-size:0.78em;color:var(--primary);background:rgba(31,107,91,0.08);border-radius:0.6em;padding:0.25em 0.6em;margin-top:0.3em;display:inline-block;}
 .adm-cutoff-ref.loose{color:#92400E;background:rgba(217,119,6,0.14);}
+.adm-cutoff-conv{font-size:0.74em;color:var(--text-secondary);margin-top:0.25em;display:block;}
+.adm-cutoff-conv i{font-style:normal;opacity:0.8;}
+.adm-wish-flag.mismatch{background:#DC2626;color:#fff;font-weight:700;box-shadow:0 0 0 2px rgba(220,38,38,0.25);}
+.adm-mismatch-note{font-size:0.8em;color:#B91C1C;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.35);border-radius:0.5em;padding:0.5em 0.7em;margin-top:0.4em;font-weight:600;}
 .adm-wish-flag{display:inline-flex;align-items:center;justify-content:center;width:1.3em;height:1.3em;border-radius:50%;font-size:0.8em;font-style:normal;cursor:help;flex-shrink:0;}
 .adm-wish-flag.loose{background:#FDE68A;color:#78350F;}
 .adm-wish-flag.warn{background:#E5E7EB;color:#4B5563;}
@@ -4268,12 +4272,49 @@ const ADM_ABSOLUTE_GRADE_CUTS={eng:[90,80,70,60,50,40,30,20],hist:[40,35,30,25,2
  원래 척도를 그대로 담아둔다 — 아직 검증 중인 시범 데이터라 소수 대학만 들어있다.
  (원본은 Kosick dashboard/admission-data/cutoffs.json에 더 자세히 정리돼 있음) */
 const ADM_CUTOFF_REF={
- "한양대학교":{"경영학부":{track:"학생부종합",year:2024,scale:"등급",avg:1.81,cut70:2.76},"연극영화학과(영화전공)":{track:"학생부종합",year:2024,scale:"등급",avg:2.19,cut70:2.22},"화학공학과":{track:"학생부종합",year:2024,scale:"등급",avg:1.58,cut70:1.60}},
- "건국대학교":{"경영학과":{track:"학생부종합",year:2024,scale:"등급",avg:2.22,cut70:2.31}},
- "서울예술대학교":{"영화전공":{track:"실기(일반전형)",year:2026,scale:"등급",avg:4.0,cutLowest:5.5,source:"procollege"}}
+ "한양대학교":{"경영학부":{track:"학생부종합(서류형)",year:2026,scale:"등급",avg:1.81,cut70:2.83},"연극영화학과(영화전공)":{track:"학생부종합(서류형)",year:2026,scale:"등급",avg:1.81,cut70:2.18},"화학공학과":{track:"학생부종합(서류형)",year:2026,scale:"등급",avg:1.77,cut70:1.77}},
+ "건국대학교":{"경영학과":{track:"학생부종합",year:2026,scale:"등급",avg:2.33,cut70:2.56}},
+ "경희대학교":{"연극영화학과":{track:"학생부종합(국제캠퍼스)",year:2026,scale:"등급",avg:3.24,cut70:5.2},"Hospitality경영학과":{track:"학생부종합(국제캠퍼스)",year:2026,scale:"등급",avg:2.4,cut70:2.67}},
+ "성균관대학교":{"경영학과":{
+  "학생부종합":{track:"학생부종합(글로벌인재전형)",year:2026,scale:"등급",avg:3.1,cut70:3.35},
+  "정시":{track:"정시(가군)",year:2026,scale:"환산점수",avg:953,cut70:951}
+ }},
+ "명지대학교":{"화학공학전공":{track:"학생부종합(명지인재면접전형)",year:2026,scale:"등급",avg:3.04,cut70:3.14}},
+ "동국대학교":{"체육교육과":{track:"정시(가군,수능+실기)",year:2026,scale:"환산점수",avg:370.07,cut70:368.57}},
+ "국민대학교":{"AI빅데이터융합경영학과":{track:"학생부종합",year:2026,scale:"등급",avg:2.67,cut70:2.84,비고:"2027학년도부터 '경영학과'가 이 이름으로 개편·통합됨"}},
+ "경기대학교":{"경영학부":{track:"학생부종합",year:2026,scale:"등급",avg:3.53,cut70:3.7}},
+ "가천대학교":{"경영학과":{track:"학생부종합",year:2026,scale:"등급",avg:3.6,cut70:3.9},"심리학과":{track:"학생부종합",year:2026,scale:"등급",avg:3.18,cut70:3.28}},
+ "가톨릭대학교":{"경영학과":{track:"학생부종합",year:2026,scale:"등급",avg:3.17,cut70:3.25}},
+ "광운대학교":{"화학공학과":{track:"학생부교과",year:2026,scale:"등급",avg:2.57,cut70:2.98}},
+ "단국대학교":{"경영학부":{track:"학생부종합",year:2026,scale:"등급",avg:2.66,cut70:2.78}},
+ "아주대학교":{"경영학과":{track:"학생부종합",year:2026,scale:"등급",avg:3.79,cut70:4.64},"화학공학과":{track:"학생부종합",year:2026,scale:"등급",avg:2.15,cut70:2.23}},
+ "안양대학교":{"글로벌경영학과":{track:"학생부종합",year:2026,scale:"등급",avg:2.42,cut70:2.58,비고:"조연송 학생이 적은 '경영학과'와 이름이 달라 자동 매칭 안 됨(안양대엔 순수 '경영학과' 없이 글로벌경영학과·관광경영학과만 있음)"}},
+ "선문대학교":{"상담심리학과":{track:"학생부종합",year:2026,scale:"등급",avg:4.23,cut70:4.37,비고:"안현서 학생이 적은 '심리학과'와 이름이 달라 자동 매칭 안 됨"}},
+ "호서대학교":{"심리학과":{track:"학생부종합",year:2026,scale:"등급",avg:3.15,cut70:3.33}},
+ "우송대학교":{"외식조리학부 외식조리전공":{track:"학생부교과",year:2026,scale:"등급",avg:1.83,cut70:2.33,비고:"최윤지 학생이 적은 '조리학과' 단일학과는 없고 외식조리학부 산하 여러 세부전공으로 나뉨 - 가장 규모가 큰 전공으로 대표 기재"}},
+ "계명대학교":{"혁신신약학과":{track:"정시(가군)",year:2026,scale:"환산점수",avg:316.1,cut70:309,비고:"문설아 학생이 적은 '약학과'가 실제로는 이 이름임"}},
+ "연세대학교":{"경영학과":{track:"정시(가군)",year:2026,scale:"환산점수",avg:674.16,cut70:670.66}},
+ "서울과학기술대학교":{"조형예술학과":{track:"정시(나군,수능+실기)",year:2026,scale:"환산점수",avg:874.7,cut70:872.2}},
+ "중앙대학교":{"경영학부(경영학전공)":{
+  "학생부종합":{track:"학생부종합",year:2026,scale:"등급",avg:1.84,cut70:1.93},
+  "정시":{track:"정시(다군)",year:2026,scale:"환산점수",avg:762.57,cut70:761.87}
+ }},
+ "서울예술대학교":{"영화전공":{track:"실기(일반전형)",year:2026,scale:"등급",avg:4.0,cutLowest:5.5,source:"procollege"}},
+ "청강문화산업대학교":{"애니메이션전공":{track:"학생부(일반전형)",year:2026,scale:"등급",avg:1.4,cutLowest:1.8,source:"procollege",비고:"한현서 학생이 적은 '만화애니학과' 단일학과는 없고 애니메이션전공/웹툰만화콘텐츠전공/만화캐릭터일러스트레이션전공 등으로 나뉨 - 수치가 공개된 애니메이션전공으로 대표 기재"}}
+};
+/* 실제로 그런 학과/전형 자체가 없는 것으로 확인된 경우("아직 데이터를 못 모은 것"과는
+ 다름) — 대학명 밑에 학생이 적은 학과명을 키로 넣거나, 그 대학 전체가 대상이면
+ "*" 하나로 적는다(해외 대학·특수목적 각종학교처럼 학과 문제가 아닌 경우).
+ 느슨한 매칭보다 훨씬 강하게, 빨간 알림으로 눈에 띄게 보여준다. */
+const ADM_CONFIRMED_MISMATCH={
+ "성균관대학교":{"연극영화과(연출과)":"성균관대에는 연극·영화 관련 학과 자체가 없어요"},
+ "건국대학교 글로컬":{"*":"만화·애니메이션 관련 학과가 없어요(디자인조형자유전공이 그나마 근접)"},
+ "유타대학교":{"*":"해외 대학이라 대학어디가 통계 대상이 아니에요"},
+ "한국예술종합학교":{"*":"특수목적 각종학교라 일반 입시통계 체계 밖이에요(대학어디가에 등록 없음)"}
 };
 /* 학생이 적은 학과 표기가 실제 명칭과 다를 수 있어(괄호·학과/학부 어미·띄어쓰기),
- 세 단계로 매칭한다: exact(그대로 일치) → loose(괄호·"학과/학부/전공" 어미를 뗀
+ 네 단계로 매칭한다: confirmed-mismatch(실제로 그런 학과/전형이 없다고 확인됨 —
+ 빨간 알림) → exact(그대로 일치) → loose(괄호·"학과/학부/전공" 어미를 뗀
  뒤에 일치 — 진짜 같은 학과일 확률이 높지만 사람이 한 번 확인하는 게 안전) →
  none-in-univ(그 대학 참고자료는 있는데 이 학과만 못 찾음). 대학 자체가 참고자료에
  아예 없으면(no-data) 조용히 아무것도 표시하지 않는다 — 아직 안 모은 것뿐이라
@@ -4281,15 +4322,36 @@ const ADM_CUTOFF_REF={
 function _admNormalizeDept(name){
  return(name||'').replace(/\([^)]*\)/g,'').replace(/(학과|학부|전공|학전공)$/,'').trim();
 }
-function _admMatchWish(university,department){
- const byUniv=ADM_CUTOFF_REF[(university||'').trim()];
- if(!byUniv)return{status:'no-data'};
+/* 같은 학과라도 전형(학생부종합/학생부교과/정시/실기)에 따라 점수 척도와 컷이
+ 완전히 다르다(예: 중앙대 경영학부는 학생부종합은 등급, 정시는 백분위 환산점수).
+ 그래서 한 학과 밑에 여러 전형 데이터가 있을 수 있고(레퍼런스 값에 scale이
+ 없고 전형명이 key로 감싸져 있는 형태), 이 경우 학생이 실제로 적은 전형(w.track)과
+ 가장 비슷한 것을 골라 쓴다 — 못 찾으면 첫 번째 것을 기본값으로 쓴다. */
+function _admPickTrackRef(entry,wishTrack){
+ if(!entry||entry.scale)return entry;
+ const wt=(wishTrack||'').replace(/\s+/g,'');
+ const keys=Object.keys(entry);
+ const found=wt&&keys.find(k=>wt.includes(k)||k.includes(wt));
+ return entry[found||keys[0]];
+}
+function _admMatchWish(university,department,wishTrack){
+ const uni=(university||'').trim();
  const dep=(department||'').trim();
- if(dep&&byUniv[dep])return{status:'exact',key:dep,ref:byUniv[dep]};
+ const mismatchByUniv=ADM_CONFIRMED_MISMATCH[uni];
+ if(mismatchByUniv){
+ if(mismatchByUniv['*'])return{status:'confirmed-mismatch',reason:mismatchByUniv['*']};
+ if(dep&&mismatchByUniv[dep])return{status:'confirmed-mismatch',reason:mismatchByUniv[dep]};
+ const norm0=_admNormalizeDept(dep);
+ const foundKey=norm0&&Object.keys(mismatchByUniv).find(k=>_admNormalizeDept(k)===norm0);
+ if(foundKey)return{status:'confirmed-mismatch',reason:mismatchByUniv[foundKey]};
+ }
+ const byUniv=ADM_CUTOFF_REF[uni];
+ if(!byUniv)return{status:'no-data'};
+ if(dep&&byUniv[dep])return{status:'exact',key:dep,ref:_admPickTrackRef(byUniv[dep],wishTrack)};
  const norm=_admNormalizeDept(dep);
  if(norm){
  const found=Object.keys(byUniv).find(k=>_admNormalizeDept(k)===norm);
- if(found)return{status:'loose',key:found,ref:byUniv[found],reason:`학생 기록의 학과명 "${dep}"과 실제 등록된 학과명 "${found}"이 달라요`};
+ if(found)return{status:'loose',key:found,ref:_admPickTrackRef(byUniv[found],wishTrack),reason:`학생 기록의 학과명 "${dep}"과 실제 등록된 학과명 "${found}"이 달라요`};
  }
  return{status:'none-in-univ'};
 }
@@ -4300,9 +4362,16 @@ function _admCutoffBadgeHtml(m){
  if(ref.cut70!=null)parts.push(`70%컷 ${ref.cut70}`);
  if(ref.cutLowest!=null)parts.push(`최저 ${ref.cutLowest}`);
  const cls=m.status==='loose'?'adm-cutoff-ref loose':'adm-cutoff-ref';
- return`<div class="${cls}" title="시범 데이터 — 정확도 확인 중">📊 참고 입결 ${parts.join(' · ')}</div>`;
+ let conv='';
+ if(ref.scale==='등급'&&/^학생부/.test(ref.track||'')){
+  const avg5=_gcConvert9to5(ref.avg).toFixed(2);
+  const cut5=ref.cut70!=null?_gcConvert9to5(ref.cut70).toFixed(2):null;
+  conv=`<div class="adm-cutoff-conv" title="5등급제 환산기(실측 보간표, 교육부 공식 환산식 아님)로 계산한 참고값">🔁 5등급제로 환산하면 약 평균 ${avg5}${cut5!=null?` · 70%컷 ${cut5}`:''} <i>(2028학년도 입시부터 내신 5등급제 적용 예정 — 지금 학생 등급은 아직 9등급제 기준)</i></div>`;
+ }
+ return`<div class="${cls}" title="시범 데이터 — 정확도 확인 중">📊 참고 입결 ${parts.join(' · ')}</div>${conv}`;
 }
 function _admWishFlagHtml(m){
+ if(m.status==='confirmed-mismatch')return`<span class="adm-wish-flag mismatch" title="${escHtml(m.reason||'')}">🚫</span>`;
  if(m.status==='loose')return`<span class="adm-wish-flag loose" title="학과명이 정확히 일치하지 않아요 — 자세히에서 확인">❕</span>`;
  if(m.status==='none-in-univ')return`<span class="adm-wish-flag warn" title="이 대학 참고자료에서 이 학과를 못 찾았어요">❔</span>`;
  return'';
@@ -4659,7 +4728,7 @@ function _admRenderWishView(){
  }
  wrap.innerHTML=wishes.map(w=>{
  const sub=[w.track,w.department].filter(Boolean).map(escHtml).join(' · ');
- const m=_admMatchWish(w.university,w.department);
+ const m=_admMatchWish(w.university,w.department,w.track);
  return`<div class="adm-wish"><div class="adm-wish-top"><span class="adm-wish-main">${escHtml(w.university||'-')}</span><span style="display:flex;align-items:center;gap:0.4em;flex-shrink:0;">${_admJudgmentBadgeHtml(_admStudentId,w,m)}${_admWishFlagHtml(m)}</span></div><div class="adm-wish-sub">${sub}</div></div>`;
  }).join('');
 }
@@ -4677,12 +4746,13 @@ function renderAdmissionWishDetailScreen(){
  const wishes=_admGetStudentScores(_admStudentId).wishes||[];
  const rows=wishes.length?wishes.map((w,idx)=>{
  const sub=[w.track,w.department].filter(Boolean).map(escHtml).join(' · ');
- const m=_admMatchWish(w.university,w.department);
+ const m=_admMatchWish(w.university,w.department,w.track);
  const badge=_admCutoffBadgeHtml(m);
  const reason=m.status==='loose'?`<div style="font-size:0.78em;color:var(--text-secondary);margin-top:0.3em;">${escHtml(m.reason)} — 실제 학과명으로 바꿔둘까요?</div>`:'';
  const fixBtn=m.status==='loose'?`<button type="button" class="btn btn-secondary" style="padding:0.25em 0.7em;font-size:0.78em;margin-top:0.3em;" onclick="_admFixWishDepartment(${idx})">"${escHtml(m.key)}"로 학과명 수정</button>`:'';
  const warnNote=m.status==='none-in-univ'?`<div style="font-size:0.78em;color:var(--text-secondary);margin-top:0.3em;">❔ 이 대학 참고자료는 있는데, 이 학과는 아직 못 찾았어요</div>`:'';
- return`<div class="adm-wish"><div class="adm-wish-top"><span class="adm-wish-main">${escHtml(w.university||'-')}</span>${_admJudgmentBadgeHtml(_admStudentId,w,m)}</div><div class="adm-wish-sub">${sub}${w.memo?` · ${escHtml(w.memo)}`:''}</div>${badge}${reason}${fixBtn}${warnNote}</div>`;
+ const mismatchNote=m.status==='confirmed-mismatch'?`<div class="adm-mismatch-note">🚫 ${escHtml(m.reason)} — 학생과 함께 희망 대학/학과를 다시 확인해 보세요</div>`:'';
+ return`<div class="adm-wish"><div class="adm-wish-top"><span class="adm-wish-main">${escHtml(w.university||'-')}</span>${_admJudgmentBadgeHtml(_admStudentId,w,m)}</div><div class="adm-wish-sub">${sub}${w.memo?` · ${escHtml(w.memo)}`:''}</div>${badge}${reason}${fixBtn}${warnNote}${mismatchNote}</div>`;
  }).join(''):`<div class="ank-empty-note" style="padding:8px 0;">아직 입력된 희망 진학 정보가 없어요</div>`;
  wrap.innerHTML=`
  <div class="modal-title">🎓 희망 진학 정보${stu?` · ${escHtml(stu.name)}`:''}</div>
@@ -4697,7 +4767,7 @@ function _admFixWishDepartment(idx){
  const rec=all[_admStudentId];
  if(!rec||!rec.wishes||!rec.wishes[idx])return;
  const w=rec.wishes[idx];
- const m=_admMatchWish(w.university,w.department);
+ const m=_admMatchWish(w.university,w.department,w.track);
  if(m.status!=='loose')return;
  w.department=m.key;
  DB.set('admissionScores',all);
@@ -9487,9 +9557,123 @@ function _guardFindDrops(checkSide,referenceSide){
  }
  return drops;
 }
-async function _guardBeforePush(p){
+/* ── 여러 기기 동시 편집 병합 ──────────────────────────────────────────
+ 두 기기가 거의 동시에(디바운스 1.5초~서버 왕복 사이) 각자 다른 항목을
+ 추가하면, 기존 방식(로컬 스냅샷을 그대로 통째로 서버에 덮어쓰기)은 나중에
+ 저장하는 쪽이 먼저 저장한 쪽이 추가한 항목을 통째로 지워버렸다 — "할 일이나
+ 메모가 자꾸 사라진다"는 신고의 실제 원인. 항목 "개수"가 줄어드는 게 아니라
+ "어떤 항목이 다른 항목으로 바뀌는" 경우라 기존 _guardFindDrops(50% 이상
+ 감소만 감지)로는 못 잡아냈다.
+ 그래서 저장 직전에 서버의 최신 상태를 다시 받아와, 이 기기가 아직 못
+ 받은(=다른 기기가 그 사이 추가한) 항목은 살려서 합치고, 이 기기가 방금
+ 지운 항목은(DB.set이 자동으로 남기는 _deletedIds 기준) 서버에 아직 남아있어도
+ 되살리지 않는다. 완전히 같은 항목을 두 기기가 서로 다르게 "수정"한 경우에는
+ 이 기기 쪽 값을 우선한다(둘 중 하나는 골라야 하고, 지금 저장하는 기기가 더
+ 최근에 사용자가 손댄 쪽일 가능성이 높다). */
+function _tombKey(collectionKey,subId){return subId==null?collectionKey:collectionKey+'/'+subId;}
+function _loadTombstones(){try{return JSON.parse(localStorage.getItem('_deletedIds')||'[]');}catch(e){return[];}}
+function _saveTombstones(list){
+ const cutoff=Date.now()-30*24*60*60*1000;
+ localStorage.setItem('_deletedIds',JSON.stringify(list.filter(t=>t.at>=cutoff)));
+}
+function _recordRemoved(collectionKey,removedIds,subId){
+ if(!removedIds||!removedIds.length)return;
+ const tomb=_loadTombstones();
+ const now=Date.now();
+ const tk=_tombKey(collectionKey,subId);
+ removedIds.forEach(id=>tomb.push({k:tk,id,at:now}));
+ _saveTombstones(tomb);
+}
+function _tombstoneSet(collectionKey,subId){
+ const tk=_tombKey(collectionKey,subId);
+ return new Set(_loadTombstones().filter(t=>t.k===tk).map(t=>t.id));
+}
+/* DB.set 직전 값과 비교해 사라진 항목/키를 자동으로 tombstone에 남긴다.
+ 컬렉션의 실제 모양(배열-of-id / 원시값 배열 / 객체 / classes의 중첩 students)에
+ 맞춰 분기한다. */
+function _trackRemovals(key,oldVal,newVal){
  try{
- const remote=await fetchRemote();
+ if(key==='classes'){
+ if(!Array.isArray(oldVal))return;
+ const newClassIds=new Set((newVal||[]).map(c=>c&&c.id));
+ _recordRemoved('classes',oldVal.filter(c=>c&&c.id!=null&&!newClassIds.has(c.id)).map(c=>c.id));
+ oldVal.forEach(oc=>{
+ if(!oc||oc.id==null)return;
+ const nc=(newVal||[]).find(c=>c&&c.id===oc.id);
+ if(!nc)return;
+ const newStuIds=new Set((nc.students||[]).map(s=>s&&s.id));
+ const removedStu=(oc.students||[]).filter(s=>s&&s.id!=null&&!newStuIds.has(s.id)).map(s=>s.id);
+ _recordRemoved('classes',removedStu,oc.id);
+ });
+ return;
+ }
+ if(Array.isArray(oldVal)&&Array.isArray(newVal)){
+ if(oldVal.length&&typeof oldVal[0]==='object'&&oldVal[0]&&oldVal[0].id!=null){
+ const newIds=new Set(newVal.map(x=>x&&x.id));
+ _recordRemoved(key,oldVal.filter(x=>x&&x.id!=null&&!newIds.has(x.id)).map(x=>x.id));
+ }else{
+ const newSet=new Set(newVal);
+ _recordRemoved(key,oldVal.filter(x=>!newSet.has(x)));
+ }
+ return;
+ }
+ if(oldVal&&typeof oldVal==='object'&&newVal&&typeof newVal==='object'){
+ _recordRemoved(key,Object.keys(oldVal).filter(k=>!(k in newVal)));
+ }
+ }catch(e){}
+}
+function _mergeArrayById(key,localArr,remoteArr){
+ if(!Array.isArray(localArr))localArr=[];
+ if(!Array.isArray(remoteArr))return localArr;
+ const dead=_tombstoneSet(key);
+ const localIds=new Set(localArr.map(x=>x&&x.id));
+ const extra=remoteArr.filter(x=>x&&x.id!=null&&!localIds.has(x.id)&&!dead.has(x.id));
+ return extra.length?localArr.concat(extra):localArr;
+}
+function _mergePrimitiveArray(key,localArr,remoteArr){
+ if(!Array.isArray(localArr))localArr=[];
+ if(!Array.isArray(remoteArr))return localArr;
+ const dead=_tombstoneSet(key);
+ const localSet=new Set(localArr);
+ const extra=remoteArr.filter(x=>!localSet.has(x)&&!dead.has(x));
+ return extra.length?localArr.concat(extra):localArr;
+}
+function _mergeDict(key,localObj,remoteObj){
+ if(!localObj||typeof localObj!=='object')localObj={};
+ if(!remoteObj||typeof remoteObj!=='object')return localObj;
+ const dead=_tombstoneSet(key);
+ let changed=false;
+ const merged={...localObj};
+ Object.keys(remoteObj).forEach(k=>{if(!(k in merged)&&!dead.has(k)){merged[k]=remoteObj[k];changed=true;}});
+ return changed?merged:localObj;
+}
+function _mergeClasses(localArr,remoteArr){
+ if(!Array.isArray(localArr))localArr=[];
+ if(!Array.isArray(remoteArr))return localArr;
+ const deadClasses=_tombstoneSet('classes');
+ const byId=new Map(localArr.filter(c=>c&&c.id!=null).map(c=>[c.id,c]));
+ let changed=false;
+ remoteArr.forEach(rc=>{
+ if(!rc||rc.id==null||deadClasses.has(rc.id))return;
+ const lc=byId.get(rc.id);
+ if(!lc){byId.set(rc.id,rc);changed=true;return;}
+ const deadStu=_tombstoneSet('classes',rc.id);
+ const localStuIds=new Set((lc.students||[]).map(s=>s&&s.id));
+ const extraStu=(rc.students||[]).filter(s=>s&&s.id!=null&&!localStuIds.has(s.id)&&!deadStu.has(s.id));
+ if(extraStu.length){lc.students=(lc.students||[]).concat(extraStu);changed=true;}
+ });
+ return changed?[...byId.values()]:localArr;
+}
+const _MERGE_DICT_KEYS=new Set(['sgibuRecords','sgibuAchievements','sgibuClassLimits','sgibuDone','seatCharts','cleaningCharts','admissionScores','mockGradeCuts','timetable']);
+function _mergeCollection(key,localVal,remoteVal){
+ if(key==='classes')return _mergeClasses(localVal,remoteVal);
+ if(key==='favBarIds')return _mergePrimitiveArray(key,localVal,remoteVal);
+ if(_MERGE_DICT_KEYS.has(key))return _mergeDict(key,localVal,remoteVal);
+ return _mergeArrayById(key,localVal,remoteVal);
+}
+async function _guardBeforePush(p,remote){
+ try{
+ if(remote===undefined)remote=await fetchRemote();
  if(!remote)return true;
  const drops=_guardFindDrops(p,remote);
  if(drops.length){
@@ -9518,7 +9702,21 @@ DK.forEach(k=>{p[k]=JSON.parse(localStorage.getItem(k)||(k==='timetable'||k==='s
 const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(typeof v==='object'&&v!==null&&Object.keys(v).length>0);});
  const _hasSettings=SK.some(k=>localStorage.getItem(k)&&localStorage.getItem(k)!=='');
  if(!_hasData&&!_hasSettings){console.warn(' 안전장치: 로컬이 비어있어 서버 덮어쓰기 차단');showToast('⚠ 데이터가 비어있어 저장이 차단되었습니다');return;}
- if(!(await _guardBeforePush(p)))return;
+ let _remoteForMerge=null;
+ try{_remoteForMerge=await fetchRemote();}catch(e){}
+ if(_remoteForMerge){
+ let _mergedAnything=false;
+ DK.forEach(k=>{
+ const merged=_mergeCollection(k,p[k],_remoteForMerge[k]);
+ if(merged!==p[k]){p[k]=merged;_mergedAnything=true;}
+ });
+ if(_mergedAnything){
+ DK.forEach(k=>localStorage.setItem(k,JSON.stringify(p[k])));
+ const activeId=document.querySelector('.section.active')?.id;
+ if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();
+ }
+ }
+ if(!(await _guardBeforePush(p,_remoteForMerge)))return;
  SK.forEach(k=>p[k]=localStorage.getItem(k)||'');
 p._savedAt=Date.now();
  _isSaving=true;
@@ -9612,7 +9810,10 @@ const _s=DB.set.bind(DB);
  _savedAt을 바로 올려두면, 아직 서버 전송이 끝나지 않았어도 다른 창이 이 시점을
  "서버보다 최신"으로 정확히 인식해 절대 덮어쓰지 않는다. */
 DB.set=(k,v)=>{
+ let _old=null;
+ if(DK.includes(k)){try{_old=JSON.parse(localStorage.getItem(k));}catch(e){}}
  _s(k,v);
+ if(DK.includes(k))_trackRemovals(k,_old,v);
  localStorage.setItem('_savedAt',Date.now());
  clearTimeout(_debounceTimer);
  _debounceTimer=setTimeout(syncAll,1500);
