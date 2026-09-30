@@ -168,6 +168,11 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .adm-cutoff-conv{font-size:0.74em;color:var(--text-secondary);margin-top:0.25em;display:block;}
 .adm-cutoff-conv i{font-style:normal;opacity:0.8;}
 .adm-cutoff-orig{font-size:0.74em;color:var(--text-secondary);margin-top:0.25em;display:block;}
+.adm-ac-wrap{position:relative;display:inline-block;}
+.adm-ac-list{position:absolute;top:100%;left:0;z-index:80;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:180px;overflow-y:auto;min-width:140px;box-shadow:0 4px 14px rgba(0,0,0,0.18);display:none;margin-top:2px;}
+.adm-ac-list.show{display:block;}
+.adm-ac-item{padding:6px 10px;cursor:pointer;font-size:0.82rem;color:var(--text);white-space:nowrap;}
+.adm-ac-item:hover{background:var(--surface2);}
 .adm-wish-flag.mismatch{background:#DC2626;color:#fff;font-weight:700;box-shadow:0 0 0 2px rgba(220,38,38,0.25);}
 .adm-mismatch-note{font-size:0.8em;color:#B91C1C;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.35);border-radius:0.5em;padding:0.5em 0.7em;margin-top:0.4em;font-weight:600;}
 .adm-wish-flag{display:inline-flex;align-items:center;justify-content:center;width:1.3em;height:1.3em;border-radius:50%;font-size:0.8em;font-style:normal;cursor:help;flex-shrink:0;}
@@ -5256,6 +5261,99 @@ function _admSaveMockEntry(){
  showToast('✅ 모의고사 성적이 저장되었습니다');
  closeAdmissionModal();
 }
+/* ── 희망 대학/학과 자동완성 ──────────────────────────────────────────
+ 선생님이 직접 타이핑하면 실제 등록된 이름과 살짝 달라서(예: "경영학과" vs
+ "경영학부") 참고 입결이 자동으로 안 이어지는 경우가 많았다. 그래서 아예
+ 입력 단계에서 실제 데이터에 있는 이름을 골라 쓸 수 있게 한다 — 대학은
+ 전국 배치표 파일(admission-data/univ2026-*.json, 지역별로 늘어날 예정)과
+ ADM_CUTOFF_REF에 있는 대학명을 합쳐서, 학과는 그중 선택된(또는 입력 중인)
+ 대학의 학과 목록에서 골라 쓴다. 용량 문제로 이 파일들은 index.html에
+ 박아두지 않고 필요할 때(이 화면을 열 때) fetch로 가져와 메모리에 캐싱한다. */
+const ADM_PLACEMENT_MANIFEST=[
+ 'admission-data/univ2026-seoul-placement.json',
+ 'admission-data/univ2026-incheon-placement.json',
+ 'admission-data/univ2026-gyeonggi-placement.json',
+ 'admission-data/univ2026-daejeon-sejong-chungbuk-placement.json',
+ 'admission-data/univ2026-chungnam-gwangju-jeonbuk-placement.json',
+ 'admission-data/univ2026-jeonnam-gangwon-jeju-daegu-placement.json',
+ 'admission-data/univ2026-gyeongbuk-ulsan-gyeongnam-placement.json',
+ 'admission-data/univ2026-busan-placement.json'
+];
+let _admPlacementIndex=null;
+let _admPlacementLoading=null;
+async function _admLoadPlacementIndex(){
+ if(_admPlacementIndex)return _admPlacementIndex;
+ if(_admPlacementLoading)return _admPlacementLoading;
+ _admPlacementLoading=(async()=>{
+ const idx={};
+ Object.keys(ADM_CUTOFF_REF).forEach(univ=>{
+ idx[univ]=idx[univ]||new Set();
+ Object.keys(ADM_CUTOFF_REF[univ]).forEach(d=>idx[univ].add(d));
+ });
+ for(const file of ADM_PLACEMENT_MANIFEST){
+ try{
+ const res=await fetch(file);
+ if(!res.ok)continue;
+ const data=await res.json();
+ const unis=data.universities||{};
+ Object.keys(unis).forEach(univ=>{
+ idx[univ]=idx[univ]||new Set();
+ (unis[univ].departments||[]).forEach(d=>{if(d&&d.학과)idx[univ].add(d.학과);});
+ });
+ }catch(e){}
+ }
+ const result={};
+ Object.keys(idx).forEach(u=>{result[u]=[...idx[u]].sort();});
+ _admPlacementIndex=result;
+ return result;
+ })();
+ return _admPlacementLoading;
+}
+/* 앞부분이 일치하는 것을 먼저, 중간에 포함되는 것을 그 다음으로 보여준다
+ (예: "서울"을 치면 "서울대학교"가 "한국외국어대학교(서울)"보다 먼저 나옴). */
+function _admAcFilter(list,query,limit){
+ const q=(query||'').trim();
+ if(!q)return[];
+ const starts=list.filter(x=>x.startsWith(q));
+ const contains=list.filter(x=>!x.startsWith(q)&&x.includes(q));
+ return[...starts,...contains].slice(0,limit);
+}
+function _admHideAc(i,which){
+ const box=document.getElementById('admAc'+which+'_'+i);
+ if(box){box.classList.remove('show');box.innerHTML='';}
+}
+async function _admShowUnivSuggestions(i,value){
+ const box=document.getElementById('admAcUniv_'+i);
+ if(!box)return;
+ if(!value||!value.trim()){_admHideAc(i,'Univ');return;}
+ const idx=await _admLoadPlacementIndex();
+ const matches=_admAcFilter(Object.keys(idx),value,8);
+ if(!matches.length){_admHideAc(i,'Univ');return;}
+ box.innerHTML=matches.map(n=>`<div class="adm-ac-item" onmousedown="event.preventDefault();_admPickUniv(${i},'${n.replace(/'/g,"\\'")}')">${escHtml(n)}</div>`).join('');
+ box.classList.add('show');
+}
+async function _admShowDeptSuggestions(i,value){
+ const box=document.getElementById('admAcDept_'+i);
+ if(!box)return;
+ if(!value||!value.trim()){_admHideAc(i,'Dept');return;}
+ const idx=await _admLoadPlacementIndex();
+ const univ=(_admWishDraft[i]&&_admWishDraft[i].university||'').trim();
+ const pool=(univ&&idx[univ])?idx[univ]:[...new Set(Object.values(idx).flat())];
+ const matches=_admAcFilter(pool,value,8);
+ if(!matches.length){_admHideAc(i,'Dept');return;}
+ box.innerHTML=matches.map(n=>`<div class="adm-ac-item" onmousedown="event.preventDefault();_admPickDept(${i},'${n.replace(/'/g,"\\'")}')">${escHtml(n)}</div>`).join('');
+ box.classList.add('show');
+}
+function _admPickUniv(i,name){
+ if(!_admWishDraft[i])return;
+ _admWishDraft[i].university=name;
+ _admRenderWishRows();
+}
+function _admPickDept(i,name){
+ if(!_admWishDraft[i])return;
+ _admWishDraft[i].department=name;
+ _admRenderWishRows();
+}
 function openAdmissionWishEntryScreen(){
  if(!_admStudentId)return;
  const existing=_admGetStudentScores(_admStudentId);
@@ -5263,6 +5361,7 @@ function openAdmissionWishEntryScreen(){
  if(!_admWishDraft.length)_admWishDraft.push({university:'',track:'',department:'',judgment:'',memo:''});
  renderAdmissionWishEntryScreen();
  _admOpenModal();
+ _admLoadPlacementIndex();
 }
 function renderAdmissionWishEntryScreen(){
  const wrap=document.getElementById('admModalBox');
@@ -5285,12 +5384,18 @@ function _admRenderWishRows(){
  if(!wrap)return;
  wrap.innerHTML=_admWishDraft.map((row,i)=>{
  return`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
- <input type="text" placeholder="희망 대학" value="${escHtml(row.university)}" style="flex-shrink:0;width:96px;" oninput="_admWishInput(${i},'university',this.value)">
+ <div class="adm-ac-wrap">
+ <input type="text" placeholder="희망 대학" value="${escHtml(row.university)}" style="flex-shrink:0;width:96px;" oninput="_admWishInput(${i},'university',this.value);_admShowUnivSuggestions(${i},this.value)" onfocus="_admShowUnivSuggestions(${i},this.value)" onblur="setTimeout(()=>_admHideAc(${i},'Univ'),150)">
+ <div class="adm-ac-list" id="admAcUniv_${i}"></div>
+ </div>
  <select onchange="_admWishInput(${i},'track',this.value)" style="flex-shrink:0;width:130px;">
  <option value=""${row.track?'':' selected'}>전형 선택</option>
  ${ADM_TRACK_OPTIONS.map(opt=>`<option value="${opt}"${row.track===opt?' selected':''}>${opt}</option>`).join('')}
  </select>
- <input type="text" placeholder="학과" value="${escHtml(row.department)}" style="flex-shrink:0;width:96px;" oninput="_admWishInput(${i},'department',this.value)">
+ <div class="adm-ac-wrap">
+ <input type="text" placeholder="학과" value="${escHtml(row.department)}" style="flex-shrink:0;width:96px;" oninput="_admWishInput(${i},'department',this.value);_admShowDeptSuggestions(${i},this.value)" onfocus="_admShowDeptSuggestions(${i},this.value)" onblur="setTimeout(()=>_admHideAc(${i},'Dept'),150)">
+ <div class="adm-ac-list" id="admAcDept_${i}"></div>
+ </div>
  <select onchange="_admWishInput(${i},'judgment',this.value)" style="flex-shrink:0;width:110px;">
  <option value=""${row.judgment?'':' selected'}>종합판단</option>
  ${ADM_JUDGMENT_OPTIONS.map(opt=>`<option value="${opt}"${row.judgment===opt?' selected':''}>${opt}</option>`).join('')}
