@@ -845,15 +845,6 @@ textarea{resize:vertical;min-height:80px;}
 .notepad-content-input{flex:1;width:100%;background:transparent;border:none;color:var(--text);font-size:0.95rem;line-height:1.85;outline:none;resize:none;padding:0 20px 20px;font-family:inherit;overflow-y:auto;word-break:break-word;}
 .notepad-content-input::placeholder{color:var(--text-secondary);opacity:0.45;}
 .notepad-content-input[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-secondary);opacity:0.45;pointer-events:none;display:block;}
-.note-toolbar{position:fixed;z-index:250;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 24px rgba(0,0,0,0.14);padding:6px;right:18px;top:50%;transform:translateY(-50%);}
-.note-toolbar-btn{width:34px;height:34px;border-radius:12px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;font-family:inherit;}
-.note-toolbar-btn:hover{background:var(--surface2);color:var(--text);}
-.note-toolbar-btn:active{background:var(--primary);color:#fff;}
-.note-toolbar-sep{width:18px;height:1px;background:var(--border);margin:5px auto;flex-shrink:0;}
-.note-symbol-popup{position:fixed;z-index:260;display:none;grid-template-columns:repeat(4,1fr);gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:8px;width:176px;right:64px;top:50%;transform:translateY(-50%);}
-.note-symbol-popup.open{display:grid;}
-.note-symbol-btn{width:36px;height:36px;border-radius:10px;border:none;background:transparent;color:var(--text);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;font-family:inherit;}
-.note-symbol-btn:hover{background:var(--surface2);}
 .note-checkitem-box{display:inline-flex;align-items:center;vertical-align:middle;user-select:none;margin-right:5px;}
 .note-checkitem-box input[type=checkbox]{width:15px;height:15px;margin:0;cursor:pointer;}
 #noticeContent[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-secondary);opacity:0.45;pointer-events:none;display:block;}
@@ -866,10 +857,7 @@ textarea{resize:vertical;min-height:80px;}
  .notepad-sidebar{display:none;}
  .notepad-editor-area{flex:none;height:calc(100dvh - 200px);}
  .notepad-mobile-fab{display:flex;}
- .note-toolbar{left:50%;right:auto;top:auto;bottom:88px;transform:translateX(-50%);flex-direction:row;justify-content:center;padding:6px;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,0.18);opacity:0;pointer-events:none;transition:bottom 0.15s,opacity 0.15s;}
- .note-toolbar-sep{width:1px;height:18px;margin:auto 5px;}
- .note-symbol-popup{left:50%;right:auto;top:auto;bottom:140px;transform:translateX(-50%);}
- .notepad-content-input{padding-bottom:150px;}
+ .notepad-content-input{padding-bottom:24px;}
 }
 @media(min-width:769px){
  #notepadSubNav{display:none;}
@@ -2809,6 +2797,20 @@ function initTimetableWidgetMode(){
  document.addEventListener('click',(e)=>{
  const popup=document.getElementById('ttWidgetMenuPopup');
  if(popup&&popup.classList.contains('show')&&!e.target.closest('.tt-widget-menu-wrap'))popup.classList.remove('show');
+ });
+ /* 창 자체는 리사이즈 가능한 사각형이지만 실제 보이는 건 가운데 정렬된
+ .tt-widget-row뿐이라, 메인 프로세스는 기본 클릭 통과 상태로 열어둔다(main.js).
+ 여기서 실제 칩·메뉴·드래그 손잡이 위에 마우스가 있을 때만 클릭을 받게
+ 켜준다 — .tt-widget-row는 3초마다 다시 그려지므로 매번 새로 붙이지 않도록
+ document에 위임해서 듣는다. */
+ document.addEventListener('mouseover',e=>{
+ if(window.kosickWidget&&e.target.closest('.tt-widget-row'))window.kosickWidget.setIgnoreMouse(false);
+ });
+ document.addEventListener('mouseout',e=>{
+ if(!window.kosickWidget)return;
+ const leaving=e.target.closest('.tt-widget-row');
+ const entering=e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('.tt-widget-row');
+ if(leaving&&!entering)window.kosickWidget.setIgnoreMouse(true);
  });
 }
 if(_isTimetableWidgetMode())initTimetableWidgetMode();
@@ -8382,53 +8384,38 @@ function loadNoteIntoEditor(noteId){
  const notes=DB.get('noteItems'),note=notes.find(n=>n.id===noteId);if(!note)return;
  const ea=document.getElementById('notepadEditorArea');if(!ea)return;
  const updStr=note.updatedAt?new Date(note.updatedAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
- ea.innerHTML=`<div class="notepad-editor-topbar"><button onclick="closeNoteEditorMobile()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:600;">← 목록</button><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"> 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div><div class="note-toolbar" id="noteToolbar"><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatBold()" title="굵게"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h5.5a3.5 3.5 0 0 1 0 7H6z"></path><path d="M6 11h6.5a3.5 3.5 0 0 1 0 7H6z"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteFormatHighlight()" title="하이라이트"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"></path><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></svg></button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteInsertCheckbox()" title="체크박스"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 2.5 2.5L16 9"></path></svg></button><div class="note-toolbar-sep"></div><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(2)" title="글자 크게" style="font-size:1.05rem;font-weight:700;">가</button><button class="note-toolbar-btn" onmousedown="event.preventDefault()" onclick="noteChangeFontSize(-2)" title="글자 작게" style="font-size:0.7rem;font-weight:700;">가</button><div class="note-toolbar-sep"></div><button class="note-toolbar-btn" id="noteSymbolBtn" onmousedown="event.preventDefault()" onclick="toggleSymbolPopup()" title="특수문자" style="font-size:1rem;">※</button></div><div class="note-symbol-popup" id="noteSymbolPopup"></div>`;
+ ea.innerHTML=`<div class="notepad-editor-topbar"><button onclick="closeNoteEditorMobile()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:600;">← 목록</button><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"> 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div>`;
  const _nc=document.getElementById('noteContentInput');
  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
- _adjustNoteToolbarForKeyboard();
+ _adjustNoteKeyboardUi();
 }
 /* interactive-widget=resizes-content가 붙어있어도, 실제로 그걸 지원/적용하는지는
  브라우저·OS 버전마다 다르다. 지원 안 되는 기기에서는 window.innerHeight(레이아웃
  뷰포트)가 키보드가 떠도 그대로라, 그 값만 보는 방식으로는 키보드가 떴는지 절대
- 못 알아챈다 — 그래서 툴바도 안 움직이고 FAB도 안 숨어버림. 두 신호를 같이 본다:
+ 못 알아챈다 — 그래서 FAB(저장 버튼·하단 탭바 등)가 키보드 위에 안 숨어버림.
+ 두 신호를 같이 본다:
  1) window.innerHeight가 기존 최대치보다 줄었으면(resizes-content가 실제로 먹힌
- 기기) → 이미 레이아웃이 키보드 위까지 줄어든 것이므로 6px만 더하면 된다.
+ 기기) → 이미 레이아웃이 키보드 위까지 줄어든 것.
  2) visualViewport.height가 window.innerHeight보다 작으면(resizes-content가 안
- 먹혀 레이아웃은 그대로고 "보이는 영역"만 줄어든 기기) → 그 차이(vv gap)만큼 직접
- 띄워야 한다.
+ 먹혀 레이아웃은 그대로고 "보이는 영역"만 줄어든 기기) → 그 차이(vv gap)로 판단.
  'resize' 이벤트만 듣고 'scroll'은 듣지 않아서(visualViewport pan은 일반 스크롤 중
  에도 계속 발생해 드래그 중 뒤늦게 따라오는 원인이었다) 드래그 중엔 아무 것도
  재계산하지 않는다. */
-let _noteToolbarRAF=null,_noteKbVisible=false,_noteKbConfirmTimer=null,_noteMaxViewportHeight=window.innerHeight;
-function _adjustNoteToolbarForKeyboard(){
- if(_noteToolbarRAF)cancelAnimationFrame(_noteToolbarRAF);
- _noteToolbarRAF=requestAnimationFrame(_applyNoteToolbarForKeyboard);
+let _noteKbRAF=null,_noteKbVisible=false,_noteKbConfirmTimer=null,_noteMaxViewportHeight=window.innerHeight;
+function _adjustNoteKeyboardUi(){
+ if(_noteKbRAF)cancelAnimationFrame(_noteKbRAF);
+ _noteKbRAF=requestAnimationFrame(_applyNoteKeyboardUi);
 }
-/* 이 키보드 회피 로직(툴바 이동, FAB 숨김)은 전부 모바일의 하단 고정 툴바 레이아웃
- (.note-toolbar가 bottom:88px로 붙는 @media(max-width:768px) 케이스) 전용이다. 웹
- (데스크톱)에서는 툴바가 화면 오른쪽 중앙에 세로로 떠 있는 별개의 레이아웃이다. */
+/* 모바일에서만 적용 — 데스크톱은 화면 키보드가 뜨지 않아 해당 없음. */
 function _isNoteMobileLayout(){return window.innerWidth<=768;}
-function _applyNoteToolbarForKeyboard(){
- _noteToolbarRAF=null;
- const toolbar=document.getElementById('noteToolbar');
- if(!toolbar)return;
- if(!_isNoteMobileLayout()){
- toolbar.style.bottom='';
- toolbar.style.opacity='';
- toolbar.style.pointerEvents='';
- return;
- }
+function _applyNoteKeyboardUi(){
+ _noteKbRAF=null;
+ if(!_isNoteMobileLayout())return;
  if(window.innerHeight>_noteMaxViewportHeight)_noteMaxViewportHeight=window.innerHeight;
  const heightShrink=_noteMaxViewportHeight-window.innerHeight;
  const vv=window.visualViewport;
  const vvGap=vv?Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop)):0;
  const keyboardVisible=heightShrink>120||vvGap>80;
- const bottomPx=vvGap>80?(vvGap+6):6;
- toolbar.style.bottom=keyboardVisible?bottomPx+'px':'';
- /* 평소엔 숨겨두고, 작성을 위해 키보드를 불러왔을 때만 도구 바를 보여준다
- (하단 탭바와는 반대 방향 — 탭바는 입력 중엔 숨고, 이 도구 바는 입력 중에만 뜬다). */
- toolbar.style.opacity=keyboardVisible?'1':'0';
- toolbar.style.pointerEvents=keyboardVisible?'':'none';
  _scheduleNoteFabVisibility(keyboardVisible);
 }
 /* 키보드 애니메이션 중이나 iOS 주소창이 접혔다 펼쳐질 때 window.innerHeight가 잠깐씩
@@ -8450,22 +8437,22 @@ function _scheduleNoteFabVisibility(keyboardVisible){
  });
  },120);
 }
-window.addEventListener('resize',_adjustNoteToolbarForKeyboard);
+window.addEventListener('resize',_adjustNoteKeyboardUi);
 if(window.visualViewport){
- window.visualViewport.addEventListener('resize',_adjustNoteToolbarForKeyboard);
+ window.visualViewport.addEventListener('resize',_adjustNoteKeyboardUi);
 }
 /* visualViewport 이벤트만으로는 타이밍이 어긋나 가끔 반영이 안 될 때가 있어,
  메모 입력창/제목에 포커스가 들고 날 때도 지연 후 한 번 더 확인한다 */
 document.addEventListener('focusin',e=>{
  if(e.target&&(e.target.id==='noteContentInput'||e.target.id==='noteTitleInput')){
- setTimeout(_adjustNoteToolbarForKeyboard,50);
- setTimeout(_adjustNoteToolbarForKeyboard,350);
+ setTimeout(_adjustNoteKeyboardUi,50);
+ setTimeout(_adjustNoteKeyboardUi,350);
  }
 });
 document.addEventListener('focusout',e=>{
  if(e.target&&(e.target.id==='noteContentInput'||e.target.id==='noteTitleInput')){
- setTimeout(_adjustNoteToolbarForKeyboard,50);
- setTimeout(_adjustNoteToolbarForKeyboard,350);
+ setTimeout(_adjustNoteKeyboardUi,50);
+ setTimeout(_adjustNoteKeyboardUi,350);
  }
 });
 /* 누가기록 채팅 입력창도 메모 툴바와 같은 방식으로 키보드를 피해 움직인다: 평소엔
@@ -8587,49 +8574,6 @@ document.addEventListener('mousedown',e=>{
  e.preventDefault();
  }
 });
-function noteFormatBold(){
- document.getElementById('noteContentInput')?.focus();
- document.execCommand('bold');
- if(_currentNoteId)scheduleNoteSave(_currentNoteId);
-}
-/* document.queryCommandValue('hiliteColor')는 선택 범위 중 한 지점(주로 시작 경계)의
- 값만 보는데, 그 경계가 하필 하이라이트 span의 시작/끝과 겹치면 브라우저마다 안/밖
- 어느 쪽 값을 주는지 달라져서 이미 하이라이트된 부분을 드래그로 재선택해도 "하이라이트
- 없음"으로 잘못 판단하는 경우가 있었다(그러면 지워야 할 때 오히려 다시 칠함). 선택
- 범위 안의 텍스트 노드를 전부 순회해 실제 배경색을 직접 확인하는 방식이 더 확실하다. */
-function _isSelectionFullyHighlighted(range){
- /* commonAncestorContainer가 텍스트 노드 자체인 경우(선택 범위가 노드 하나 안에 통째로
- 들어있는 흔한 경우) TreeWalker를 그 노드 자신에 rooting하면 자식이 없어 nextNode()가
- 곧장 null을 반환해 아무 것도 못 찾는다. 이때는 부모 요소를 root로 올려준다. */
- const root=range.commonAncestorContainer.nodeType===3?range.commonAncestorContainer.parentNode:range.commonAncestorContainer;
- const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
- acceptNode(node){
- if(!node.nodeValue||!node.nodeValue.trim())return NodeFilter.FILTER_SKIP;
- const nodeRange=document.createRange();
- nodeRange.selectNodeContents(node);
- const before=range.compareBoundaryPoints(Range.START_TO_END,nodeRange)<=0;
- const after=range.compareBoundaryPoints(Range.END_TO_START,nodeRange)>=0;
- return(!before&&!after)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP;
- }
- });
- let sawText=false,n;
- while(n=walker.nextNode()){
- sawText=true;
- const bg=n.parentElement?getComputedStyle(n.parentElement).backgroundColor:'';
- if(!bg||bg==='transparent'||bg==='rgba(0, 0, 0, 0)')return false;
- }
- return sawText;
-}
-function noteFormatHighlight(){
- document.getElementById('noteContentInput')?.focus();
- const sel=window.getSelection();
- const range=sel&&sel.rangeCount?sel.getRangeAt(0):null;
- const isHighlighted=!!(range&&!range.collapsed&&_isSelectionFullyHighlighted(range));
- if(!document.execCommand('hiliteColor',false,isHighlighted?'transparent':'#FFF59D')){
- document.execCommand('backColor',false,isHighlighted?'transparent':'#FFF59D');
- }
- if(_currentNoteId)scheduleNoteSave(_currentNoteId);
-}
 /* contenteditable="false"인 체크박스 라벨은 캐럿이 그 안으로 들어갈 수 없는 원자 노드라,
  줄의 시작 위치에 도착하는 경로에 따라 캐럿이 라벨의 "바로 뒤"(같은 줄 안에서 backward
  lineboundary로 이동해온 경우)에 멈추기도 하고 "바로 앞"(옆 줄에서 forward로 넘어온
@@ -8705,49 +8649,6 @@ function noteInsertCheckboxAtCaret(range){
  sel.addRange(range);
  return checkboxNode;
 }
-function _isAtOrAfterMarker(range,marker){
- if(range.startContainer===marker)return true;
- return !!(marker.compareDocumentPosition(range.startContainer)&Node.DOCUMENT_POSITION_FOLLOWING);
-}
-/* 툴바의 체크박스 버튼: 캐럿만 있으면 그 줄에 1개, 여러 줄이 드래그 선택돼 있으면
- 선택된 각 줄의 맨 앞에 하나씩 체크박스를 삽입한다(아이폰 메모 앱과 동일한 동작). */
-function noteInsertCheckbox(){
- const ed=document.getElementById('noteContentInput');
- if(!ed)return;
- ed.focus();
- const sel=window.getSelection();
- if(!sel||!sel.rangeCount)return;
- if(sel.isCollapsed){
- noteInsertCheckboxAtCaret();
- if(_currentNoteId)scheduleNoteSave(_currentNoteId);
- return;
- }
- const origRange=sel.getRangeAt(0).cloneRange();
- const endMarker=document.createElement('span');
- const endRange=origRange.cloneRange();
- endRange.collapse(false);
- endRange.insertNode(endMarker);
- const startRange=origRange.cloneRange();
- startRange.collapse(true);
- sel.removeAllRanges();
- sel.addRange(startRange);
- sel.modify('move','backward','lineboundary');
- let guard=0;
- while(guard++<500){
- const lineStartRange=sel.getRangeAt(0).cloneRange();
- if(_isAtOrAfterMarker(lineStartRange,endMarker))break;
- noteInsertCheckboxAtCaret(lineStartRange);
- sel.modify('move','forward','lineboundary');
- const before=sel.getRangeAt(0);
- const beforeNode=before.startContainer,beforeOffset=before.startOffset;
- sel.modify('move','forward','character');
- const after=sel.getRangeAt(0);
- if(beforeNode===after.startContainer&&beforeOffset===after.startOffset)break;
- if(_isAtOrAfterMarker(sel.getRangeAt(0),endMarker))break;
- }
- endMarker.remove();
- if(_currentNoteId)scheduleNoteSave(_currentNoteId);
-}
 /* Enter: 체크박스가 있는 줄이면 다음 줄에도 자동으로 체크박스를 이어서 만든다.
  단, 내용 없이 체크박스만 있는 줄에서 Enter를 누르면(빈 항목) 목록에서 빠져나온다.
  Backspace: 캐럿이 체크박스 바로 뒤(줄의 실질적 시작)에 있으면 체크박스만 지운다. */
@@ -8796,43 +8697,6 @@ document.addEventListener('change',e=>{
  if(t.checked)t.setAttribute('checked','');else t.removeAttribute('checked');
  if(_currentNoteId)scheduleNoteSave(_currentNoteId);
 });
-function noteChangeFontSize(delta){
- const ed=document.getElementById('noteContentInput');
- ed?.focus();
- const sel=window.getSelection();
- if(!sel||!sel.rangeCount||sel.isCollapsed){showToast('⚠️ 먼저 글자를 선택해주세요');return;}
- const range=sel.getRangeAt(0);
- const node=range.commonAncestorContainer;
- const el=node.nodeType===3?node.parentElement:node;
- const curSize=parseFloat(getComputedStyle(el).fontSize)||16;
- const newSize=Math.max(10,Math.min(48,curSize+delta));
- document.execCommand('fontSize',false,'7');
- (ed||document).querySelectorAll('font[size="7"]').forEach(f=>{
- f.removeAttribute('size');
- f.style.fontSize=newSize+'px';
- });
- if(_currentNoteId)scheduleNoteSave(_currentNoteId);
-}
-const NOTE_SYMBOLS=['→','←','↑','↓','⇒','⇐','★','☆','•','·','▶','▷','○','●','□','■','◇','◆','✓','✗','※'];
-function toggleSymbolPopup(){
- const popup=document.getElementById('noteSymbolPopup');
- if(!popup)return;
- if(!popup.classList.contains('open')){
- popup.innerHTML=NOTE_SYMBOLS.map(s=>`<button class="note-symbol-btn" onmousedown="event.preventDefault()" onclick="insertNoteSymbol('${s}')">${s}</button>`).join('');
- }
- popup.classList.toggle('open');
-}
-function closeSymbolPopup(){
- document.getElementById('noteSymbolPopup')?.classList.remove('open');
-}
-function insertNoteSymbol(sym){
- const ed=document.getElementById('noteContentInput');
- if(!ed)return;
- ed.focus();
- document.execCommand('insertText',false,sym);
- if(_currentNoteId)scheduleNoteSave(_currentNoteId);
-}
-
 function scheduleNoteSave(noteId){
  clearTimeout(_noteSaveTimer);
  _noteSaveTimer=setTimeout(()=>saveCurrentNote(noteId),700);
@@ -9542,12 +9406,15 @@ function onSgibuInput(classId,studentId,el){
 document.addEventListener('keydown',function(e){
  const el=e.target;
  const isCtrl=e.ctrlKey||e.metaKey;
- /* contenteditable: data-text-id / data-id 는 별도 핸들러에서 처리 */
+ /* contenteditable: data-text-id / data-id 는 별도 핸들러에서 처리.
+ noteContentInput(독립 메모장)은 굵게·하이라이트 기능 자체를 없앴으므로
+ 여기서도 그 단축키만 제외한다(Tab 들여쓰기는 그대로 유지). */
  if(el.isContentEditable&&!el.dataset.textId&&!el.dataset.id){
- if(isCtrl&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');return;}
- if(isCtrl&&e.key.toLowerCase()==='u'){e.preventDefault();document.execCommand('underline');return;}
- if(isCtrl&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');return;}
- if(isCtrl&&e.key.toLowerCase()==='h'){e.preventDefault();_toggleHighlight();return;}
+ const isNote=el.id==='noteContentInput';
+ if(!isNote&&isCtrl&&e.key.toLowerCase()==='b'){e.preventDefault();document.execCommand('bold');return;}
+ if(!isNote&&isCtrl&&e.key.toLowerCase()==='u'){e.preventDefault();document.execCommand('underline');return;}
+ if(!isNote&&isCtrl&&e.key.toLowerCase()==='x'){e.preventDefault();document.execCommand('strikeThrough');return;}
+ if(!isNote&&isCtrl&&e.key.toLowerCase()==='h'){e.preventDefault();_toggleHighlight();return;}
  if(e.key==='Tab'&&!isCtrl&&!e.shiftKey){e.preventDefault();document.execCommand('insertText',false,'\u00a0\u00a0\u00a0\u00a0');return;}
  }
  /* textarea: TAB 들여쓰기 */
@@ -9652,7 +9519,6 @@ function closeTabFab(){
 document.addEventListener('click',e=>{
  if(_tabFabOpen&&!e.target.closest('#tabFabWrap'))closeTabFab();
  if(!e.target.closest('.sgibu-level-badge')&&!e.target.closest('.sgibu-level-popup'))closeSgibuLevelPopup();
- if(!e.target.closest('#noteSymbolPopup')&&!e.target.closest('#noteSymbolBtn'))closeSymbolPopup();
 });
 /* ── 즐겨찾기 바 ── */
 function getFavBarIds(){return DB.get('favBarIds');}
