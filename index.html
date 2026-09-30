@@ -4861,6 +4861,15 @@ function renderAdmissionWishDetailScreen(){
  const cls=_seatMyClass();
  const stu=cls&&(cls.students||[]).find(s=>s.id===_admStudentId);
  const wishes=_admGetStudentScores(_admStudentId).wishes||[];
+ /* 참고 입결과 바로 비교해볼 수 있도록, 학생의 지금까지 내신 평균을 맨 위에
+ 먼저 보여준다(학기별 평균의 단순 평균 — _admStudentGradeForTrack이 판단에
+ 쓰는 값과 동일한 계산). 학생들은 이미 5등급제 기준으로 입력하므로 별도
+ 환산 없이 그대로 보여주면 된다. */
+ const naeshinSeries=_admNaeshinSeries(_admStudentId);
+ const naeshinAvg=naeshinSeries.length?naeshinSeries.reduce((a,p)=>a+p.value,0)/naeshinSeries.length:null;
+ const naeshinSummary=naeshinAvg!=null
+ ?`<div style="font-size:0.9rem;font-weight:600;background:var(--surface2);border-radius:0.6em;padding:0.5em 0.8em;margin-bottom:10px;display:inline-block;">📐 현재 내신 평균 <span style="color:var(--primary);">${naeshinAvg.toFixed(2)}등급</span><span style="font-weight:400;color:var(--text-secondary);"> (${naeshinSeries.length}개 학기 기준)</span></div>`
+ :`<div class="ank-empty-note" style="padding:6px 0;margin-bottom:6px;">아직 내신 성적이 입력되지 않았어요 — 입력해두면 참고 입결과 바로 비교할 수 있어요</div>`;
  const rows=wishes.length?wishes.map((w,idx)=>{
  const sub=[w.track,w.department].filter(Boolean).map(escHtml).join(' · ');
  const m=_admMatchWish(w.university,w.department,w.track);
@@ -4873,6 +4882,7 @@ function renderAdmissionWishDetailScreen(){
  }).join(''):`<div class="ank-empty-note" style="padding:8px 0;">아직 입력된 희망 진학 정보가 없어요</div>`;
  wrap.innerHTML=`
  <div class="modal-title">🎓 희망 진학 정보${stu?` · ${escHtml(stu.name)}`:''}</div>
+ ${naeshinSummary}
  <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">📊 초록 배지는 학과명이 정확히 일치, 주황 배지는 비슷한 이름으로 짐작한 시범 데이터예요 — 실제 학과명이 맞으면 버튼을 눌러 고쳐두면 다음부터는 바로 정확히 매칭돼요.</p>
  ${rows}
  <div class="modal-footer">
