@@ -1663,6 +1663,33 @@ body.has-fav-bar .main{padding-bottom:100px;}
 <div class="toast-container"><div class="toast" id="toast1"></div><div class="toast" id="toast2"></div></div>
 <div class="ank-mention-popup" id="globalMentionPopup"></div>
 <script>
+/* ── 저장 공간 부족 대비 ──
+ 자동 백업이 localStorage에 전체 데이터 사본을 여러 개(최신 1 + 날짜별) 쌓아두는데, 아이폰
+ Safari처럼 localStorage 한도가 작은 곳에서는 데이터가 조금만 커져도 한도를 넘어 실제
+ 데이터를 쓰는 setItem이 QuotaExceededError로 실패했고, 그 오류가 "서버 연결 실패"로
+ 표시되며 폰에 새 내용이 영영 안 들어왔다. 백업이 아닌 키를 쓰다 한도에 걸리면 백업을
+ 먼저 지워 공간을 만들고(날짜별 → 최신 순) 한 번 더 시도한다. 백업 자신은 공간을
+ 빼앗지 않도록 실패하면 그냥 포기한다(백업 쓰기는 호출부에서 try/catch). */
+(function(){
+ const orig=Storage.prototype.setItem;
+ const isQuota=e=>!!e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);
+ const isBackup=k=>typeof k==='string'&&k.indexOf('_kosick_autobackup')===0;
+ Storage.prototype.setItem=function(k,v){
+ try{return orig.call(this,k,v);}
+ catch(e){
+ if(this!==window.localStorage||!isQuota(e)||isBackup(k))throw e;
+ const daily=[];
+ for(let i=0;i<this.length;i++){const key=this.key(i);if(key&&key.indexOf('_kosick_autobackup_')===0)daily.push(key);}
+ daily.sort();
+ for(const key of daily){
+ this.removeItem(key);
+ try{return orig.call(this,k,v);}catch(e2){if(!isQuota(e2))throw e2;}
+ }
+ this.removeItem('_kosick_autobackup');
+ return orig.call(this,k,v);
+ }
+ };
+})();
 /* ── 유틸 ── */
 function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function _getLocalTodayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -1823,7 +1850,7 @@ function _pruneDailyBackups(){
  if(k&&k.startsWith(_AUTOBACKUP_DAILY_PREFIX))dailyKeys.push(k);
  }
  dailyKeys.sort();
- while(dailyKeys.length>7){localStorage.removeItem(dailyKeys.shift());}
+ while(dailyKeys.length>3){localStorage.removeItem(dailyKeys.shift());}
 }
 function exportAllData(){
  const snap=_snapshotAllData();
@@ -10003,6 +10030,7 @@ function refreshIfNewer(){
  fetchRemote().then(data=>{
  _refreshFailCount=0;
  if(!data)return;
+ try{
  const localTime=Number(localStorage.getItem('_savedAt')||0);
  const remoteTime=Number(data._savedAt||0);
  if(remoteTime>localTime){
@@ -10027,6 +10055,11 @@ function refreshIfNewer(){
  _rerenderHrSubTab();
  showToast(' 다른 기기에서 추가한 내용을 가져왔어요');
  clearTimeout(_debounceTimer);_debounceTimer=setTimeout(syncAll,1500);
+ }
+ }catch(e){
+ console.error('새 데이터 처리 실패:',e);
+ window._lastLoadError=String(e&&e.stack||e);
+ showToast('⚠ 서버 데이터를 이 기기에서 처리하지 못했어요 ('+((e&&e.name)||'오류')+')');
  }
  }).catch(()=>{
  _refreshFailCount++;
@@ -10055,6 +10088,10 @@ async function loadData(){
  showToast(' 데이터 불러오기 완료');
  }catch(e){
  console.error('불러오기 실패:',e);
+ window._lastLoadError=String(e&&e.stack||e);
+ /* 서버에서 받는 것 자체는 성공했는데 이 기기에서 처리하다 난 오류(저장 공간 부족 등)를
+ "서버 연결 실패"라고 잘못 알리면 원인을 영영 못 찾는다 — 구분해서 보여준다. */
+ if(_dbReady){showToast('⚠ 서버 데이터는 받았지만 이 기기에서 처리하지 못했어요 ('+((e&&e.name)||'오류')+')');return;}
  showToast('⚠ 서버 연결 실패. 5초 후 재시도합니다...');
  setTimeout(()=>{
  fetchRemote().then(data=>{
