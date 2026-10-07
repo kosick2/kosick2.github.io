@@ -54,6 +54,7 @@ body.tt-locked .tt-widget-container{-webkit-app-region:no-drag;}
 .tt-widget-resize-grip{position:absolute;top:0;right:0;width:13px;height:13px;cursor:nesw-resize;z-index:11;-webkit-app-region:no-drag;opacity:0;transition:opacity .15s;background:rgba(31,43,37,0.82);border-radius:0 11px 0 8px;}
 .tt-widget-resize-grip::after{content:'';position:absolute;top:3px;right:3px;width:5px;height:5px;border-top:2px solid #fff;border-right:2px solid #fff;border-radius:0 2px 0 0;}
 .tt-widget-menu-wrap:hover .tt-widget-resize-grip,.tt-widget-resize-grip.active{opacity:1;}
+body.tt-locked .tt-widget-resize-grip{display:none;}
 .tt-widget-menu-popup{position:absolute;bottom:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.28);padding:6px;display:none;flex-direction:column;gap:2px;min-width:132px;-webkit-app-region:no-drag;z-index:10;}
 .tt-widget-menu-popup.show{display:flex;}
 .tt-widget-menu-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;border:none;background:none;color:var(--text);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left;font-family:inherit;}
@@ -2766,7 +2767,7 @@ function _ttWidgetMenuHtml(){
 let _ttResizing=false,_ttScale=1,_ttDrag=null;
 function _ttApplyScale(s){_ttScale=s;document.documentElement.style.setProperty('--ttz',s);}
 function _ttResizeStart(e){
- if(!window.kosickWidget||!window.kosickWidget.setScale)return;
+ if(!window.kosickWidget||!window.kosickWidget.setScale||document.body.classList.contains('tt-locked'))return;
  e.preventDefault();e.stopPropagation();
  const box=document.querySelector('.tt-widget-container').getBoundingClientRect();
  /* 본체는 창 오른쪽 아래에 붙어 있어서 아래쪽 가장자리는 그대로이고, 손잡이(오른쪽 위)가
