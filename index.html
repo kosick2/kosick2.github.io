@@ -32,8 +32,8 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFo
  재사용). */
 body.widget-mode > :not(#timetableWidget){display:none !important;}
 body.widget-mode{background:transparent;}
-body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:4px;align-items:center;justify-content:center;}
-.tt-widget-container{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;-webkit-app-region:drag;}
+body.widget-mode #timetableWidget{display:flex;position:fixed;inset:0;padding:4px;align-items:flex-end;justify-content:flex-end;}
+.tt-widget-container{position:relative;display:flex;align-items:center;justify-content:center;width:384px;flex-shrink:0;-webkit-app-region:drag;zoom:var(--ttz,1);}
 .tt-widget-row{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:nowrap;width:100%;overflow:hidden;}
 body.tt-locked .tt-widget-container{-webkit-app-region:no-drag;}
 /* 창 너비가 좁아지면 로고 메뉴/드래그 핸들(유일하게 클릭 가능한 조작부)은 항상
@@ -2759,27 +2759,39 @@ const TT_WIDGET_SECTIONS=[
 function _ttWidgetMenuHtml(){
  return `<div class="tt-widget-menu-wrap">
  <div class="tt-widget-chip tt-widget-menu-btn" onclick="_ttWidgetMenuBtnClick(event)"><img src="logo.png" alt=""></div>
- <div class="tt-widget-resize-grip" title="위로 올리면 커지고 아래로 내리면 작아져요" onpointerdown="_ttResizeStart(event)" onpointerup="_ttResizeEnd()" onpointercancel="_ttResizeEnd()" onlostpointercapture="_ttResizeEnd()"></div>
+ <div class="tt-widget-resize-grip" title="위로 올리면 커지고 아래로 내리면 작아져요" onpointerdown="_ttResizeStart(event)" onpointermove="_ttResizeMove(event)" onpointerup="_ttResizeEnd()" onpointercancel="_ttResizeEnd()" onlostpointercapture="_ttResizeEnd()"></div>
  <div class="tt-widget-menu-popup" id="ttWidgetMenuPopup">${TT_WIDGET_SECTIONS.map(s=>`<button class="tt-widget-menu-item" onclick="_ttWidgetGoto('${s.id}')"><span>${s.emoji}</span><span>${s.label}</span></button>`).join('')}</div>
  </div>`;
 }
-let _ttResizing=false;
+let _ttResizing=false,_ttScale=1,_ttDrag=null;
+function _ttApplyScale(s){_ttScale=s;document.documentElement.style.setProperty('--ttz',s);}
 function _ttResizeStart(e){
- if(!window.kosickWidget||!window.kosickWidget.resizeStart)return;
+ if(!window.kosickWidget||!window.kosickWidget.setScale)return;
  e.preventDefault();e.stopPropagation();
+ const box=document.querySelector('.tt-widget-container').getBoundingClientRect();
+ /* 본체는 창 오른쪽 아래에 붙어 있어서 아래쪽 가장자리는 그대로이고, 손잡이(오른쪽 위)가
+ 커서를 세로로 따라오게 높이를 정한 뒤 비율(고정)에 맞춰 배율을 구한다. */
+ _ttDrag={bottom:box.bottom,baseH:box.height/_ttScale,baseW:box.width/_ttScale,grab:e.clientY-box.top};
  _ttResizing=true;
  try{e.currentTarget.setPointerCapture(e.pointerId);}catch(_){}
  e.currentTarget.classList.add('active');
  window.kosickWidget.setIgnoreMouse(false);
- window.kosickWidget.resizeStart();
+}
+function _ttResizeMove(e){
+ if(!_ttResizing||!_ttDrag)return;
+ const h=_ttDrag.bottom-(e.clientY-_ttDrag.grab);
+ const maxByWidth=(innerWidth-8)/_ttDrag.baseW;
+ const s=Math.min(2,maxByWidth,Math.max(0.5,h/_ttDrag.baseH));
+ if(Math.abs(s-_ttScale)>0.004)_ttApplyScale(s);
 }
 function _ttResizeEnd(){
  if(!_ttResizing)return;
- _ttResizing=false;
- window.kosickWidget.resizeEnd();
+ _ttResizing=false;_ttDrag=null;
+ window.kosickWidget.setScale(_ttScale);
  renderTimetableWidget();
  setTimeout(()=>{if(window.kosickWidget&&!document.querySelector('.tt-widget-row:hover'))window.kosickWidget.setIgnoreMouse(true);},60);
 }
+window._ttApplyScale=_ttApplyScale;
 function renderTimetableWidget(){
  if(_ttResizing)return;
  const el=document.getElementById('timetableWidget');
