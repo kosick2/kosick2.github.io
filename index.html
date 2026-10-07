@@ -286,6 +286,8 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .bm-card-edit{position:absolute;top:-5px;left:-5px;width:18px;height:18px;border-radius:50%;background:#818CF8;border:2px solid var(--surface);color:white;font-size:0.55rem;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;font-weight:700;z-index:2;}
 .bm-card:hover .bm-card-edit{display:flex;}
 .bm-drop-hint{width:100%;text-align:center;padding:12px 0;color:var(--text-secondary);font-size:0.78rem;pointer-events:none;}
+/* 모바일은 한 줄에 4개씩 — 위의 기본 규칙(flex + 78px)보다 뒤에 와야 덮어쓴다 */
+@media(max-width:768px){.bm-group-body{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}.bm-group-body .bm-card{width:auto;padding:10px 2px 8px;}.bm-group-body .bm-drop-hint{grid-column:1/-1;}}
 .class-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;cursor:grab;font-size:0.85rem;font-weight:600;transition:all 0.2s;user-select:none;}
 .class-chip:hover{border-color:var(--primary-light);background:rgba(79,70,229,0.15);}
 .eval-drop-zone{border:1.5px dashed var(--border);border-radius:8px;padding:10px;text-align:center;font-size:0.78rem;color:var(--text-secondary);margin-top:8px;transition:all 0.2s;}
@@ -562,6 +564,9 @@ textarea{resize:vertical;min-height:80px;}
 .timetable-cell.empty-cell{color:var(--text-secondary);opacity:0.45;font-size:1.1rem;font-weight:300;background:transparent;border:1.5px dashed var(--border);}
 .timetable-cell.empty-cell:hover{opacity:0.9;border-color:var(--primary-light);color:var(--primary-light);}
 .timetable-period{background:transparent;border-radius:999px;padding:10px 4px;text-align:center;font-size:0.76rem;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;}
+.timetable-period.tp-click{flex-direction:column;gap:1px;cursor:pointer;transition:background .15s;}
+.timetable-period.tp-click:hover{background:var(--surface2);}
+.timetable-period .tp-t{font-size:0.55rem;font-weight:600;opacity:.75;line-height:1.15;}
 .class-name{font-weight:800;font-size:0.83rem;line-height:1.2;text-align:center;}
 .class-room{font-size:0.68rem;color:var(--text-secondary);opacity:0.85;text-align:center;}
 .timetable-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
@@ -615,6 +620,7 @@ textarea{resize:vertical;min-height:80px;}
  .timetable-cell{padding:4px 2px;min-height:44px;font-size:0.64rem;gap:0px;border-radius:12px;}
  .timetable-cell.empty-cell{font-size:0.85rem;}
  .timetable-period{padding:5px 2px;font-size:0.6rem;border-radius:999px;}
+ .timetable-period .tp-t{display:none;}
  .class-name{font-size:0.62rem;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
  .class-room{display:block;font-size:0.56rem;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
  .cal-day{height:78px;}
@@ -1320,6 +1326,23 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <button class="btn btn-secondary tt-modal-btn" onclick="setNoClassPeriod()">없음</button>
  <button class="btn btn-danger tt-modal-btn" onclick="clearTimetableCell()">삭제</button>
  <button class="btn btn-primary tt-modal-btn" onclick="saveTimetableCell()">저장</button>
+ </div>
+ </div>
+</div>
+<!-- 모달: 교시 시간 설정 -->
+<div class="modal-overlay" id="periodTimeModal">
+ <div class="modal" style="max-width:340px;">
+ <div class="modal-title" id="periodTimeTitle">교시 시간</div>
+ <input type="hidden" id="periodTimePeriod">
+ <div class="form-row">
+ <div class="form-group"><label class="form-label">시작</label><input type="time" id="periodTimeStart"></div>
+ <div class="form-group"><label class="form-label">끝</label><input type="time" id="periodTimeEnd"></div>
+ </div>
+ <p style="font-size:0.75rem;color:var(--text-secondary);margin:0 0 4px;">시간표 위젯의 '지금 수업' 표시가 이 시간을 따라가요.</p>
+ <div class="modal-footer" style="flex-wrap:nowrap;gap:6px;">
+ <button class="btn btn-secondary" onclick="closeModal('periodTimeModal')">취소</button>
+ <button class="btn btn-secondary" onclick="resetPeriodTime()">기본값</button>
+ <button class="btn btn-primary" onclick="savePeriodTime()">저장</button>
  </div>
  </div>
 </div>
@@ -2642,9 +2665,8 @@ function buildHomeStats(){
  if(ps.length){
  lessonValue=String(ps.length);
  lessonSub=`${ps[0].p}~${ps[ps.length-1].p}교시`;
- const START={1:9,2:10,3:11,4:12,5:14,6:15,7:16,8:17};
- const h=new Date().getHours();
- const cur=ps.find(x=>START[x.p]!=null&&h>=START[x.p]&&h<START[x.p]+1);
+ const _cp=currentPeriodNow();
+ const cur=ps.find(x=>x.p===_cp);
  if(cur)lessonSub=`지금 ${cur.p}교시 ${escHtml(cur.cell.room||cur.cell.name)}`;
  }else lessonSub='오늘 등록된 수업이 없어요';
  }
@@ -2709,10 +2731,8 @@ function renderMiniTimetable(){
  const periods=[];
  for(let p=1;p<=8;p++){const cell=tt[`${todayDi}_${p}`];if(cell&&cell.name&&!cell.isNoClass)periods.push({p,cell});}
  if(!periods.length){c.innerHTML=`<div style="text-align:center;color:var(--text-secondary);font-size:0.9em;padding:0.9em 0;">오늘 등록된 수업이 없어요</div>`;return;}
- const PERIOD_START_HOUR={1:9,2:10,3:11,4:12,5:14,6:15,7:16,8:17};
- const nowHour=new Date().getHours();
- let currentPeriod=null;
- periods.forEach(({p})=>{const sh=PERIOD_START_HOUR[p];if(sh!=null&&nowHour>=sh&&nowHour<sh+1)currentPeriod=p;});
+ let currentPeriod=currentPeriodNow();
+ if(!periods.some(x=>x.p===currentPeriod))currentPeriod=null;
  c.innerHTML=`<div style="display:flex;gap:8px;">${periods.map(({p,cell})=>{
  const isFree=cell.isFree||cell.name==='공강';
  const isCurrent=p===currentPeriod;
@@ -2741,10 +2761,8 @@ function _ttWidgetToday(){
  const cell=tt[`${todayDi}_${p}`];
  periods.push({p,cell:(cell&&cell.name&&!cell.isNoClass)?cell:null});
  }
- const PERIOD_START_HOUR={1:9,2:10,3:11,4:12,5:14,6:15,7:16};
- const nowHour=now.getHours();
- let currentPeriod=null;
- periods.forEach(({p})=>{const sh=PERIOD_START_HOUR[p];if(sh!=null&&nowHour>=sh&&nowHour<sh+1)currentPeriod=p;});
+ let currentPeriod=currentPeriodNow(now);
+ if(!periods.some(x=>x.p===currentPeriod))currentPeriod=null;
  return{periods,currentPeriod,noSchoolToday:false};
 }
 const TT_WIDGET_SECTIONS=[
@@ -7265,6 +7283,51 @@ function updateScoreStats(evalId,classId,sessionId){
  stats.innerHTML=html;
 }
 
+/* ── 교시별 시간 ──
+ 저장 위치: 이미 서버와 동기화되는 'timetable' 데이터 안의 period_N 키({start:'09:00',end:'09:50'}).
+ 입력하지 않은 교시는 예전과 똑같이 정시(9시, 10시…)부터 1시간으로 본다. */
+function _periodTimeDefaults(){return{1:['09:00','10:00'],2:['10:00','11:00'],3:['11:00','12:00'],4:['12:00','13:00'],5:['14:00','15:00'],6:['15:00','16:00'],7:['16:00','17:00'],8:['17:00','18:00']};}
+function _hmToMin(s){const m=/^(\d{1,2}):(\d{2})$/.exec(s||'');return m?Number(m[1])*60+Number(m[2]):null;}
+function getPeriodTimes(){
+ const tt=DB.get('timetable'),d=_periodTimeDefaults(),out={};
+ for(let p=1;p<=8;p++){
+ const c=tt['period_'+p],s=c?_hmToMin(c.start):null,e=c?_hmToMin(c.end):null;
+ out[p]=(s!=null&&e!=null&&e>s)?{start:c.start,end:c.end,custom:true}:{start:d[p][0],end:d[p][1],custom:false};
+ }
+ return out;
+}
+/* 지금 진행 중인 교시. 쉬는 시간(20분 이내)에는 곧 시작하는 교시를 현재로 본다. */
+function currentPeriodNow(now){
+ now=now||new Date();
+ const m=now.getHours()*60+now.getMinutes(),t=getPeriodTimes();
+ for(let p=1;p<=8;p++){if(m>=_hmToMin(t[p].start)&&m<_hmToMin(t[p].end))return p;}
+ for(let p=2;p<=8;p++){const s=_hmToMin(t[p].start),prevEnd=_hmToMin(t[p-1].end);if(m>=prevEnd&&m<s&&s-m<=20)return p;}
+ return null;
+}
+function openPeriodTimeEdit(p){
+ const t=getPeriodTimes()[p];
+ document.getElementById('periodTimePeriod').value=p;
+ document.getElementById('periodTimeTitle').textContent=`${p}교시 시간`;
+ document.getElementById('periodTimeStart').value=t.start;
+ document.getElementById('periodTimeEnd').value=t.end;
+ openModal('periodTimeModal');
+}
+function savePeriodTime(){
+ const p=Number(document.getElementById('periodTimePeriod').value);
+ const start=document.getElementById('periodTimeStart').value,end=document.getElementById('periodTimeEnd').value;
+ const s=_hmToMin(start),e=_hmToMin(end);
+ if(s==null||e==null){showToast(' 시작과 끝 시간을 모두 입력해주세요');return;}
+ if(e<=s){showToast(' 끝나는 시간이 시작 시간보다 늦어야 해요');return;}
+ const tt=DB.get('timetable');tt['period_'+p]={start,end};DB.set('timetable',tt);
+ closeModal('periodTimeModal');_afterPeriodTimeChange();showToast(` ${p}교시 시간이 저장되었어요`);
+}
+function resetPeriodTime(){
+ const p=Number(document.getElementById('periodTimePeriod').value);
+ const tt=DB.get('timetable');delete tt['period_'+p];DB.set('timetable',tt);
+ closeModal('periodTimeModal');_afterPeriodTimeChange();showToast(` ${p}교시 시간을 기본값으로 되돌렸어요`);
+}
+function _afterPeriodTimeChange(){renderTimetable();renderMiniTimetable();if(typeof buildHomeStats==='function')buildHomeStats();}
+
 /* ── 시간표 ── */
 const DAYS=['월','화','수','목','금'],PERIODS=[1,2,3,4,5,6,7],SUBJECT_COLORS=['#FFFFFF','#818CF8','#60A5FA','#34D399','#F87171','#FBBF24','#F472B6','#A78BFA','#2DD4BF','#FB923C'];
 let selectedCellColor='#818CF8';
@@ -7279,7 +7342,8 @@ function renderTimetable(){
  html+=`<div class="timetable-header${isToday?' today':''}">${d}</div>`;
  });
  PERIODS.forEach(p=>{
- html+=`<div class="timetable-period">${p}</div>`;
+ const _pt=getPeriodTimes()[p];
+ html+=`<div class="timetable-period tp-click" onclick="openPeriodTimeEdit(${p})" title="${p}교시 시간 설정 (${_pt.start}~${_pt.end})"><span class="tp-n">${p}</span><span class="tp-t">${_pt.start}</span><span class="tp-t">${_pt.end}</span></div>`;
  DAYS.forEach((d,di)=>{
  const cell=tt[`${di}_${p}`];
  if(cell&&cell.name){
@@ -9861,7 +9925,7 @@ const _hasData=DK.some(k=>{const v=p[k];return Array.isArray(v)?v.length>0:(type
  if(_mergedAnything){
  DK.forEach(k=>localStorage.setItem(k,JSON.stringify(p[k])));
  const activeId=document.querySelector('.section.active')?.id;
- if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();
+ if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();_rerenderHrSubTab();
  }
  }
  if(!(await _guardBeforePush(p,_remoteForMerge)))return;
@@ -9887,7 +9951,7 @@ DK.forEach(k=>{if(data[k]!==undefined){let _v=data[k];if((k==='sgibuRecords'||k=
  initHeaderTitle();initColors();initPinnedTabs();
  renderFavBar();
  const activeId=document.querySelector('.section.active')?.id;
- if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();
+ if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();_rerenderHrSubTab();
 }
 async function fetchRemote(){
  const res=await fetch(`${SUPA_URL}/rest/v1/kosick_data?user_id=eq.${SUPA_USER}&select=data`,{headers:SUPA_HEADERS});
@@ -9895,9 +9959,21 @@ async function fetchRemote(){
  const rows=await res.json();
  return rows[0]?.data||null;
 }
+/* 담임 탭의 하위 화면(오늘의 안내사항·프로그램·입시)은 renderHomeroomSection이 다시 그려주지
+ 않아서, 서버에서 새 데이터를 받아도 그 화면이 열려 있으면 예전 목록이 그대로 남아 있었다. */
+function _rerenderHrSubTab(){
+ try{
+ if(document.querySelector('.section.active')?.id!=='homeroom'||_isEditingNow())return;
+ if(_activeHrTab==='hrNoticeTab')renderNoticeTab();
+ else if(_activeHrTab==='hrProgramTab')renderProgramTab();
+ else if(_activeHrTab==='hrAdmissionTab')renderAdmissionTab();
+ }catch(e){}
+}
+let _refreshFailCount=0,_lastRefreshFailToast=0;
 function refreshIfNewer(){
  if(!_dbReady||_isSaving)return;
  fetchRemote().then(data=>{
+ _refreshFailCount=0;
  if(!data)return;
  const localTime=Number(localStorage.getItem('_savedAt')||0);
  const remoteTime=Number(data._savedAt||0);
@@ -9905,8 +9981,32 @@ function refreshIfNewer(){
  if(!_guardBeforeApplyRemote(data))return;
  applyRemoteData(data);
  showToast(' 최신 데이터로 갱신되었습니다');
+ return;
  }
- }).catch(()=>{});
+ /* 이 기기의 저장 시각이 서버보다 앞서 있어도(예: 폰이 서버와 통신이 안 되는 사이 로컬에
+ 뭔가 저장됨) 다른 기기가 새로 추가한 항목은 받아온다 — 안 그러면 시각 비교만 믿다가
+ 컴퓨터에서 쓴 내용이 폰에 영영 안 들어오는 상태가 된다. */
+ let changed=false;
+ DK.forEach(k=>{
+ let cur;try{cur=JSON.parse(localStorage.getItem(k)||'null');}catch(e){return;}
+ if(cur===null)cur=_MERGE_DICT_KEYS.has(k)?{}:[];
+ const merged=_mergeCollection(k,cur,data[k]);
+ if(merged!==cur){localStorage.setItem(k,JSON.stringify(merged));changed=true;}
+ });
+ if(changed){
+ const activeId=document.querySelector('.section.active')?.id;
+ if(activeId)({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection}[activeId])?.();
+ _rerenderHrSubTab();
+ showToast(' 다른 기기에서 추가한 내용을 가져왔어요');
+ clearTimeout(_debounceTimer);_debounceTimer=setTimeout(syncAll,1500);
+ }
+ }).catch(()=>{
+ _refreshFailCount++;
+ if(_refreshFailCount>=2&&Date.now()-_lastRefreshFailToast>300000){
+ _lastRefreshFailToast=Date.now();
+ showToast('⚠ 서버에 연결되지 않아 최신 내용을 받아오지 못하고 있어요');
+ }
+ });
 }
 async function loadData(){
  try{
