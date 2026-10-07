@@ -10069,6 +10069,37 @@ function refreshIfNewer(){
  }
  });
 }
+/* ── 저장 공간 경고 ──
+ 폰/웹의 localStorage는 한도가 작다(아이폰 Safari는 약 250만 글자로 가정). 백업은 모자라면
+ 자동으로 정리되지만 "진짜 데이터"가 한도에 다가가면 그건 못 지우니, 오류가 나기 전에
+ 미리 알려준다. 하루에 한 번만 띄운다. */
+const _STORAGE_ASSUMED_LIMIT=2500000,_STORAGE_WARN=1200000,_STORAGE_DANGER=1800000;
+const _STORAGE_NAMES={dailyNotices:'안내사항',noteItems:'메모장',sgibuRecords:'생기부',admissionScores:'입시상담',counselings:'누가기록',memoItems:'할 일',classes:'학급·학생',attendanceRecords:'출결',evaluations:'수행평가',schedules:'일정',bookmarks:'즐겨찾기',seatCharts:'자리배치',timetable:'시간표'};
+function _storageUsage(){
+ let live=0,backup=0;const sizes=[];
+ for(let i=0;i<localStorage.length;i++){
+ const k=localStorage.key(i),n=k.length+(localStorage.getItem(k)||'').length;
+ if(k.indexOf('_kosick_autobackup')===0)backup+=n;else{live+=n;if(DK.includes(k))sizes.push([k,n]);}
+ }
+ sizes.sort((a,b)=>b[1]-a[1]);
+ return{live,backup,top:sizes.slice(0,3)};
+}
+window.kosickStorageInfo=_storageUsage;
+function _checkStorageHealth(){
+ try{
+ const u=_storageUsage();
+ if(u.live<_STORAGE_WARN)return;
+ const today=new Date().toISOString().slice(0,10);
+ if(localStorage.getItem('_storageWarnDay')===today)return;
+ localStorage.setItem('_storageWarnDay',today);
+ const kb=n=>Math.round(n/1024)+'KB';
+ const topText=u.top.map(([k,n])=>(_STORAGE_NAMES[k]||k)+' '+kb(n)).join(', ');
+ const pct=Math.min(99,Math.round(u.live/_STORAGE_ASSUMED_LIMIT*100));
+ showToast(u.live>=_STORAGE_DANGER
+ ?'⚠ 이 기기 저장 공간이 거의 찼어요 (약 '+pct+'%). 가장 큰 데이터: '+topText+' — 오래된 항목을 정리해 주세요'
+ :' 이 기기 저장 공간을 꽤 쓰고 있어요 (약 '+pct+'%). 가장 큰 데이터: '+topText);
+ }catch(e){}
+}
 async function loadData(){
  try{
  const data=await fetchRemote();
@@ -10086,6 +10117,7 @@ async function loadData(){
  initHeaderTitle();initColors();
  updateHome();
  showToast(' 데이터 불러오기 완료');
+ setTimeout(_checkStorageHealth,4500);
  }catch(e){
  console.error('불러오기 실패:',e);
  window._lastLoadError=String(e&&e.stack||e);
