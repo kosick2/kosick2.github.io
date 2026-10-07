@@ -4251,69 +4251,93 @@ function renderProgramTab(){
  <button class="hr-program-card" onclick="openGradeConverter()"><div class="hr-program-icon">🔄</div><div class="hr-program-name">5등급제 환산기</div><div class="hr-program-desc">5등급제 ↔ 9등급제 상호 변환</div></button>
  </div>`;
 }
-/* ── 5등급제 ↔ 9등급제 환산기 (참고용 추정치, 구간별 보간) ──
- 1.0~4.0을 0.1 간격으로 촘촘하게 준 실측 대응표를 그대로 쓴다. 직선 하나로
- 맞춰봤더니(이전 버전) 원래 9개 점 사이/바깥 값에서 실제와 어긋나는 걸 확인했다 —
- 즉 이 관계는 완전한 직선이 아니라서, 구간마다 주어진 값을 그대로 잇는 보간이
- 더 정확하다. 표 범위(1.0~4.0) 밖은 가장 가까운 끝 구간의 기울기로 외삽한다. */
-const GRADE_CONVERTER_ANCHORS=[
- {five:1.0,nine:1.10},{five:1.1,nine:1.44},{five:1.2,nine:1.83},{five:1.3,nine:2.05},
- {five:1.4,nine:2.22},{five:1.5,nine:2.33},{five:1.6,nine:2.49},{five:1.7,nine:2.70},
- {five:1.8,nine:2.86},{five:1.9,nine:3.06},{five:2.0,nine:3.25},{five:2.1,nine:3.47},
- {five:2.2,nine:3.69},{five:2.3,nine:3.87},{five:2.4,nine:4.03},{five:2.5,nine:4.18},
- {five:2.6,nine:4.32},{five:2.7,nine:4.49},{five:2.8,nine:4.67},{five:2.9,nine:4.89},
- {five:3.0,nine:5.02},{five:3.1,nine:5.17},{five:3.2,nine:5.41},{five:3.3,nine:5.58},
- {five:3.4,nine:5.76},{five:3.5,nine:5.87},{five:3.6,nine:6.01},{five:3.7,nine:6.16},
- {five:3.8,nine:6.27},{five:3.9,nine:6.48},{five:4.0,nine:6.64},
+/* ── 5등급제 ↔ 9등급제 환산기 ──
+ 대진대학교 입학팀 「2028학년도 대입제도 개편에 따른 내신 등급 변환표」(2025년 고교교육
+ 기여대학 지원사업 자율-개별연구, 2028학년도 고교학점제 대비 전형 개선 연구)를 그대로 쓴다.
+ 표본: 2025학년도 전국 23개 고등학교 고3 6,087명. 원점수 기반 중간석차 백분위(과목별 누적
+ 비율)로 등급을 다시 산출한 값이라, 같은 평균이라도 학생마다 상(좋은 쪽)~하(나쁜 쪽) 범위가
+ 있어서 [상, 평균, 하] 세 값을 준다. 표 사이 값은 선형 보간한다.
+ - GC_9TO5: 9등급 평균 1.0~9.0(0.1 간격) → 5등급 [상,평균,하]
+ - GC_5TO9: 5등급 평균 1.00~5.00(0.05 간격) → 9등급 [상,평균,하]
+ (원본 PDF에는 상/하 열에 아주 작은 역전이 3곳 있다 — 9등급 7.9→8.0, 8.2→8.3, 5등급 1.45→1.5,
+ 4.40→4.45 — 아래 _gcBuild가 누적 최댓값으로 정리해서 단조 증가를 보장한다. 평균 열은 원본 그대로.) */
+const GC_9TO5=[
+ [1,1,1],[1,1.01,1.03],[1,1.01,1.04],[1,1.05,1.07],[1,1.06,1.13],[1.03,1.09,1.17],[1.11,1.15,1.19],[1.13,1.17,1.24],[1.17,1.22,1.29],
+ [1.22,1.27,1.32],[1.27,1.33,1.39],[1.31,1.38,1.46],[1.39,1.45,1.5],[1.4,1.5,1.59],[1.46,1.54,1.61],[1.54,1.6,1.68],[1.6,1.67,1.77],[1.64,1.72,1.81],
+ [1.7,1.76,1.82],[1.74,1.82,1.9],[1.81,1.89,1.97],[1.83,1.93,2.03],[1.89,1.98,2.07],[1.93,2.03,2.11],[2,2.09,2.18],[2.07,2.15,2.23],[2.12,2.21,2.29],
+ [2.17,2.25,2.34],[2.21,2.31,2.4],[2.29,2.37,2.47],[2.35,2.43,2.52],[2.39,2.49,2.6],[2.46,2.56,2.65],[2.53,2.62,2.71],[2.59,2.68,2.75],[2.63,2.73,2.83],
+ [2.69,2.78,2.87],[2.77,2.85,2.93],[2.83,2.91,3],[2.88,2.97,3.07],[2.93,3.03,3.12],[3,3.09,3.17],[3.06,3.14,3.23],[3.12,3.21,3.29],[3.17,3.26,3.35],
+ [3.25,3.32,3.4],[3.3,3.38,3.48],[3.35,3.45,3.54],[3.41,3.49,3.58],[3.47,3.55,3.64],[3.55,3.63,3.72],[3.59,3.69,3.79],[3.67,3.74,3.83],[3.74,3.81,3.89],
+ [3.79,3.86,3.96],[3.83,3.91,4],[3.89,3.97,4.04],[3.96,4.03,4.1],[4,4.08,4.16],[4.04,4.11,4.18],[4.11,4.19,4.25],[4.17,4.25,4.33],[4.25,4.31,4.38],
+ [4.29,4.36,4.45],[4.34,4.41,4.5],[4.37,4.47,4.55],[4.41,4.51,4.61],[4.52,4.57,4.63],[4.56,4.62,4.69],[4.63,4.69,4.77],[4.62,4.72,4.83],[4.69,4.76,4.83],
+ [4.75,4.81,4.87],[4.74,4.81,4.88],[4.84,4.89,4.96],[4.86,4.91,4.96],[4.89,4.92,4.97],[4.92,4.96,5],[4.93,4.97,5],[5,5,5],[5,5,5]
 ];
-const GRADE_CONVERTER_RANGE={min:1.0,max:4.0};
-/* anchors는 keyX 기준 오름차순 정렬돼 있어야 한다(9등급 값도 같은 순서로 오름차순이라
- keyX를 'nine'으로 줘도 그대로 쓸 수 있음). 범위 밖 입력은 양 끝 구간의 기울기로 외삽한다. */
-function _gcInterp(anchors,x,keyX,keyY){
- let a=anchors[0],b=anchors[1];
- if(x>anchors[anchors.length-1][keyX]){a=anchors[anchors.length-2];b=anchors[anchors.length-1];}
- else{
- for(let i=0;i<anchors.length-1;i++){
- if(x<=anchors[i+1][keyX]){a=anchors[i];b=anchors[i+1];break;}
- }
- }
- return a[keyY]+(x-a[keyX])/(b[keyX]-a[keyX])*(b[keyY]-a[keyY]);
+const GC_5TO9=[
+ [1,1.18,1.38],[1.19,1.36,1.52],[1.39,1.51,1.62],[1.48,1.63,1.76],[1.59,1.73,1.88],[1.76,1.85,1.96],[1.83,1.95,2.08],[1.94,2.05,2.19],[2.03,2.14,2.29],
+ [2.15,2.25,2.38],[2.1,2.34,2.46],[2.32,2.42,2.55],[2.34,2.48,2.61],[2.52,2.61,2.73],[2.55,2.69,2.83],[2.63,2.79,2.93],[2.69,2.82,3.03],[2.84,2.97,3.13],
+ [2.91,3.06,3.25],[2.97,3.15,3.29],[3.07,3.21,3.38],[3.15,3.33,3.5],[3.24,3.4,3.57],[3.39,3.53,3.69],[3.46,3.6,3.75],[3.54,3.68,3.83],[3.64,3.77,3.93],
+ [3.72,3.86,4],[3.83,3.97,4.14],[3.87,4.03,4.18],[3.93,4.11,4.24],[4.04,4.2,4.33],[4.13,4.27,4.44],[4.24,4.38,4.54],[4.29,4.45,4.57],[4.39,4.54,4.67],
+ [4.52,4.62,4.78],[4.57,4.71,4.83],[4.64,4.78,4.92],[4.7,4.86,5.04],[4.83,4.94,5.07],[4.87,5.04,5.18],[5,5.14,5.28],[5.07,5.21,5.36],[5.14,5.3,5.43],
+ [5.23,5.37,5.52],[5.31,5.46,5.61],[5.38,5.52,5.68],[5.5,5.63,5.79],[5.54,5.7,5.85],[5.68,5.8,5.93],[5.68,5.84,6.03],[5.77,5.96,6.1],[5.89,6.05,6.2],
+ [6,6.11,6.21],[6.07,6.2,6.33],[6.11,6.27,6.42],[6.22,6.37,6.52],[6.33,6.48,6.58],[6.41,6.56,6.71],[6.54,6.65,6.79],[6.59,6.74,6.89],[6.69,6.84,7],
+ [6.78,6.91,7.04],[6.89,7.01,7.12],[6.97,7.1,7.21],[7.07,7.2,7.32],[7.17,7.31,7.48],[7.22,7.38,7.56],[7.29,7.42,7.53],[7.37,7.51,7.64],[7.46,7.6,7.72],
+ [7.58,7.75,8],[7.73,7.9,8.03],[7.83,7.96,8.1],[7.88,8.07,8.27],[7.93,8.14,8.33],[8.04,8.25,8.45],[8.29,8.49,8.69],[8.42,8.64,8.8],[8.59,8.74,8.88]
+];
+function _gcBuild(rows,start,step){
+ let lo=0,hi=0;
+ return{start,step,rows:rows.map(r=>{lo=Math.max(lo,r[0]);hi=Math.max(hi,r[2]);return{lo,mid:r[1],hi:Math.max(hi,r[1])};})};
 }
-function _gcConvert5to9(five){return _gcInterp(GRADE_CONVERTER_ANCHORS,five,'five','nine');}
-function _gcConvert9to5(nine){return _gcInterp(GRADE_CONVERTER_ANCHORS,nine,'nine','five');}
+const GC_T9TO5=_gcBuild(GC_9TO5,1,0.1);
+const GC_T5TO9=_gcBuild(GC_5TO9,1,0.05);
+/* 표 범위를 벗어난 입력은 가장 가까운 끝 값으로 자른다(5등급은 1~5, 9등급은 1~9 밖은 의미가 없다). */
+function _gcLookup(t,x){
+ const max=t.start+t.step*(t.rows.length-1);
+ const cx=Math.min(Math.max(x,t.start),max);
+ const p=(cx-t.start)/t.step,i=Math.min(Math.floor(p+1e-9),t.rows.length-2),f=p-i;
+ const a=t.rows[i],b=t.rows[i+1];
+ return{lo:a.lo+(b.lo-a.lo)*f,mid:a.mid+(b.mid-a.mid)*f,hi:a.hi+(b.hi-a.hi)*f,clamped:cx!==x};
+}
+function _gcConvert5to9Range(five){return _gcLookup(GC_T5TO9,five);}
+function _gcConvert9to5Range(nine){return _gcLookup(GC_T9TO5,nine);}
+function _gcConvert5to9(five){return _gcConvert5to9Range(five).mid;}
+function _gcConvert9to5(nine){return _gcConvert9to5Range(nine).mid;}
 function openGradeConverter(){
  const wrap=document.getElementById('hrProgramContent');
  if(!wrap)return;
  wrap.innerHTML=`
  <div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">5등급제 ↔ 9등급제 환산기</span></div>
  <div class="card">
- <div class="form-group"><label class="form-label">5등급제 평균등급</label><input type="number" id="gcFive" step="0.01" min="1" max="5" placeholder="예: 2.01" oninput="_gcOnFiveInput()"></div>
+ <div class="form-group"><label class="form-label">5등급제 평균등급</label><input type="number" id="gcFive" step="0.01" min="1" max="5" placeholder="예: 2.01" oninput="_gcOnFiveInput()"><div id="gcFiveRange" style="font-size:0.78rem;color:var(--text-secondary);min-height:1.2em;margin-top:4px;"></div></div>
  <div style="text-align:center;color:var(--text-secondary);font-size:1.1rem;margin:2px 0;">⇅</div>
- <div class="form-group"><label class="form-label">9등급제 환산 평균등급</label><input type="number" id="gcNine" step="0.01" min="1" max="9" placeholder="예: 3.26" oninput="_gcOnNineInput()"></div>
+ <div class="form-group"><label class="form-label">9등급제 환산 평균등급</label><input type="number" id="gcNine" step="0.01" min="1" max="9" placeholder="예: 3.26" oninput="_gcOnNineInput()"><div id="gcNineRange" style="font-size:0.78rem;color:var(--text-secondary);min-height:1.2em;margin-top:4px;"></div></div>
  <div id="gcResultNote" style="font-size:0.8rem;color:var(--text-secondary);min-height:1.2em;margin-top:4px;"></div>
- <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">⚠ 이 환산기는 1.0~4.0 구간을 0.1 간격으로 제공된 실측 대응표를 구간별로 보간한 <b>참고용 추정치</b>예요. 교육부가 공식 발표한 9등급제-5등급제 환산 공식은 존재하지 않으며, 실제 해석에는 세부능력특기사항 등 다른 요소도 함께 고려해야 해요.</div>
+ <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">대진대학교 입학팀이 공개한 <b>「2028학년도 대입제도 개편에 따른 내신 등급 변환표」</b>(2025학년도 전국 23개 고교 고3 6,087명 표본, 원점수 기반 백분위로 등급 재산출) 기준이에요. 같은 평균이라도 학생마다 달라서 <b>상~하 범위</b>를 함께 보여줍니다. 교육부가 공식 발표한 환산식이 아니라 한 대학 연구 결과인 <b>참고용 추정치</b>이니, 실제 해석에는 세부능력특기사항 등 다른 요소도 함께 고려해야 해요.</div>
  </div>`;
 }
-function _gcUpdateNote(five){
+function _gcRangeText(r,digits){return `상 ${r.lo.toFixed(digits)} ~ 하 ${r.hi.toFixed(digits)}`;}
+function _gcUpdateNote(clamped,label){
  const note=document.getElementById('gcResultNote');
- const{min,max}=GRADE_CONVERTER_RANGE;
- const outOfRange=five<min||five>max;
- note.innerHTML=outOfRange?`<span style="color:#F59E0B;">⚠ 실측 범위(${min}~${max}) 밖 — 추세 외삽값</span>`:'실측 구간 내 보간값';
+ note.innerHTML=clamped?`<span style="color:#F59E0B;">⚠ ${label} 표 범위(${label==='5등급'?'1~5':'1~9'}) 밖이라 가장 가까운 끝 값으로 계산했어요</span>`:'';
 }
 function _gcOnFiveInput(){
  const fiveEl=document.getElementById('gcFive'),nineEl=document.getElementById('gcNine');
  const five=parseFloat(fiveEl.value);
- if(isNaN(five)){nineEl.value='';document.getElementById('gcResultNote').textContent='';return;}
- nineEl.value=_gcConvert5to9(five).toFixed(2);
- _gcUpdateNote(five);
+ document.getElementById('gcFiveRange').textContent='';
+ if(isNaN(five)){nineEl.value='';document.getElementById('gcNineRange').textContent='';document.getElementById('gcResultNote').textContent='';return;}
+ const r=_gcConvert5to9Range(five);
+ nineEl.value=r.mid.toFixed(2);
+ document.getElementById('gcNineRange').textContent=_gcRangeText(r,2);
+ _gcUpdateNote(r.clamped,'5등급');
 }
 function _gcOnNineInput(){
  const fiveEl=document.getElementById('gcFive'),nineEl=document.getElementById('gcNine');
  const nine=parseFloat(nineEl.value);
- if(isNaN(nine)){fiveEl.value='';document.getElementById('gcResultNote').textContent='';return;}
- const five=_gcConvert9to5(nine);
- fiveEl.value=five.toFixed(2);
- _gcUpdateNote(five);
+ document.getElementById('gcNineRange').textContent='';
+ if(isNaN(nine)){fiveEl.value='';document.getElementById('gcFiveRange').textContent='';document.getElementById('gcResultNote').textContent='';return;}
+ const r=_gcConvert9to5Range(nine);
+ fiveEl.value=r.mid.toFixed(2);
+ document.getElementById('gcFiveRange').textContent=_gcRangeText(r,2);
+ _gcUpdateNote(r.clamped,'9등급');
 }
 const ADM_NAESHIN_SUBJECTS=[{id:'kor',label:'국어'},{id:'eng',label:'영어'},{id:'math',label:'수학'},{id:'social',label:'사회'},{id:'sci',label:'과학'}];
 const ADM_MOCK_SUBJECTS=[{id:'kor',label:'국어'},{id:'math',label:'수학'},{id:'eng',label:'영어'},{id:'hist',label:'한국사'},{id:'social',label:'사회'},{id:'sci',label:'과학'}];
@@ -4530,7 +4554,7 @@ function _admCutoffBadgeHtml(m){
  착각하지 않도록. */
  if(m.source==='univ'){
  const g=isNaeshin?shown.avg.toFixed(2):Math.round(shown.avg*100)/100;
- const orig=isNaeshin?`<div class="adm-cutoff-orig" title="5등급제 환산기(실측 보간표, 교육부 공식 환산식 아님)로 계산 — 유니브 원자료는 9등급제 기준">📄 원자료(9등급제) 배치등급 ${ref.raw}</div>`:'';
+ const orig=isNaeshin?`<div class="adm-cutoff-orig" title="대진대학교 변환표(참고용, 교육부 공식 환산식 아님)로 계산 — 유니브 원자료는 9등급제 기준">📄 원자료(9등급제) 배치등급 ${ref.raw}</div>`:'';
  return`<div class="${cls}" title="유니브(학원가) 배치표 기준 참고값이에요 — 대학어디가처럼 실제 합격자 통계가 아니라 학원가 자체 추정치입니다">🏫 유니브 배치표 · ${escHtml(ref.track)}${isNaeshin?' · 5등급제 환산':''} 배치등급 약 ${g}</div>${orig}`;
  }
  const avgText=isNaeshin?shown.avg.toFixed(2):shown.avg;
@@ -4538,7 +4562,7 @@ function _admCutoffBadgeHtml(m){
  const parts=[`${ref.year}학년도 ${escHtml(ref.track)}`,`${escHtml(ref.scale)}${isNaeshin?'(5등급제 환산)':''} 평균 ${avgText}`];
  if(cutText!=null)parts.push(`70%컷 ${cutText}`);
  if(ref.cutLowest!=null)parts.push(`최저 ${ref.cutLowest}`);
- const orig=isNaeshin?`<div class="adm-cutoff-orig" title="5등급제 환산기(실측 보간표, 교육부 공식 환산식 아님)로 계산 — 대학어디가 원자료는 9등급제 기준(2028학년도 입시 전까지 발표되는 자료는 전부 9등급제)">📄 원자료(9등급제) 평균 ${ref.avg}${ref.cut70!=null?` · 70%컷 ${ref.cut70}`:''}</div>`:'';
+ const orig=isNaeshin?`<div class="adm-cutoff-orig" title="대진대학교 변환표(참고용, 교육부 공식 환산식 아님)로 계산 — 대학어디가 원자료는 9등급제 기준(2028학년도 입시 전까지 발표되는 자료는 전부 9등급제)">📄 원자료(9등급제) 평균 ${ref.avg}${ref.cut70!=null?` · 70%컷 ${ref.cut70}`:''}</div>`:'';
  return`<div class="${cls}" title="시범 데이터 — 정확도 확인 중">📊 참고 입결 ${parts.join(' · ')}</div>${orig}`;
 }
 function _admWishFlagHtml(m){
