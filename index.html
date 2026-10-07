@@ -454,6 +454,10 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 @media(max-width:700px){.memo-grid{grid-template-columns:repeat(2,1fr);}}
 .memo-lists-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch;}
 @media(max-width:600px){.memo-lists-grid{grid-template-columns:1fr;}}
+/* 할 일 '전체' 탭 — 넓은 화면에서는 목록 카드를 한 줄에 2개씩 */
+.memo-lists-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;}
+.memo-lists-grid>.card{margin-bottom:0;min-width:0;}
+@media(max-width:900px){.memo-lists-grid{grid-template-columns:1fr;}}
 .memo-grid-card{background:var(--surface);border-radius:var(--radius);padding:10px 14px;border:1px solid var(--border);transition:all 0.2s;position:relative;overflow:hidden;}
 .memo-grid-card.drag-over-item{outline:2px dashed var(--primary-light);}
 .memo-grid-add{border-radius:var(--radius);padding:10px 14px;border:2px dashed var(--border);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--text-secondary);font-size:0.82rem;background:transparent;}
@@ -3357,7 +3361,7 @@ return `<div class="priority-item" style="background:rgba(96,165,250,0.08);borde
  if(!lists.length){
  body=`<div class="card"><div class="empty-state"><div class="empty-icon"></div><p><strong>+ 새 목록</strong>을 눌러 시작해보세요!</p></div></div>`;
  }else if(_memoActiveTab==='all'){
- body=lists.map(list=>{
+ body='<div class="memo-lists-grid">'+lists.map(list=>{
  const li=items.filter(i=>i.listId===list.id&&!i.completed);
  const _ctc=list.fillStyle==='fill'?_getContrastColor(list.color):'var(--text)';
  const _ctcs=list.fillStyle==='fill'?_getContrastColor(list.color):'var(--text-secondary)';
@@ -3378,7 +3382,7 @@ ${li.length?li.map(item=>memoItemHtml(item,list.color,false,list.fillStyle)).joi
  <div class="memo-add-input" contenteditable="true" spellcheck="false" id="newMemoItemInput_${list.id}" data-placeholder="새 항목 추가... (@이름으로 학생 지정)" style="color:${_ctcs};" oninput="handleMentionInput(this,document.getElementById('globalMentionPopup'),_ankAllStudents,document.getElementById('newMemoTags_${list.id}'))" onkeydown="handleMentionKeydown(event,_ankAllStudents);if(event.key==='Enter'){event.preventDefault();addMemoItemToList(${list.id},this);}" onblur="addMemoItemToList(${list.id},this)"></div>
  </div>
  </div>`;
- }).join('');
+ }).join('')+'</div>';
  }else if(_memoActiveTab==='completed'){
  const ci=items.filter(i=>i.completed);
  if(!ci.length){
