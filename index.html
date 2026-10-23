@@ -737,12 +737,18 @@ textarea{resize:vertical;min-height:80px;}
 .seat-rule-row .seat-toggle-btn{flex:1 1 auto;padding:6px 8px;font-size:0.72rem;border-radius:8px;text-align:center;}
 .seat-wizard-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
 .seat-pick-list{display:flex;flex-wrap:wrap;gap:6px;max-height:340px;overflow-y:auto;padding:2px;}
-.pm-doc{white-space:pre-wrap;word-break:break-word;font-size:0.92rem;line-height:1.9;user-select:text;}
-.pm-slot{border-bottom:2px dashed var(--primary-light);padding:0 2px;border-radius:4px;cursor:pointer;}
-.pm-slot.empty{background:rgba(129,140,248,0.14);color:var(--text-secondary);border-bottom-style:solid;}
-.pm-rm{color:var(--text-secondary);opacity:.55;cursor:pointer;margin-left:8px;font-size:0.8em;user-select:none;}
-.pm-rm:hover{opacity:1;color:#EF4444;}
-.pm-slot.cur{background:rgba(129,140,248,0.32);color:var(--text);outline:2px solid var(--primary);outline-offset:1px;}
+.cd-box{display:flex;align-items:center;gap:8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.35);border-radius:12px;padding:9px 12px;margin-bottom:16px;}
+.cd-label{font-size:0.86rem;font-weight:700;color:#3B82F6;white-space:nowrap;flex-shrink:0;}
+.cd-names{flex:1;min-width:0;display:flex;align-items:center;gap:6px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;}
+.cd-names::-webkit-scrollbar{display:none;}
+.cd-chip{display:inline-block;background:var(--surface);border:1px solid rgba(59,130,246,0.35);border-radius:999px;padding:3px 10px;font-size:0.84rem;font-weight:600;flex-shrink:0;}
+.cd-chip.warn{border-color:#F59E0B;color:#B45309;}
+.cd-empty{font-size:0.8rem;color:var(--text-secondary);}
+.cd-btn{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(59,130,246,0.35);background:var(--surface);color:var(--text);border-radius:8px;padding:5px 9px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.cd-btn:hover{background:rgba(59,130,246,0.15);}
+.cd-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.cd-stepper{display:flex;align-items:center;gap:12px;}
+@media(max-width:600px){.cd-long{display:none;}.cd-box{padding:8px;gap:6px;}.cd-btn{padding:5px 7px;}}
 .seat-pick-chip{padding:7px 12px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface2);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text);}
 .seat-pick-chip.on{background:var(--primary);color:#fff;border-color:var(--primary);}
 .ank-picker-chip-class{background:rgba(31,107,91,0.12);border-color:var(--primary);color:var(--primary);}
@@ -1356,6 +1362,8 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  </div>
 </div>
+<!-- 모달: 청소당번 설정 -->
+<div class="modal-overlay" id="cleanDutyModal"><div class="modal" id="cleanDutyBody" style="max-width:520px;"></div></div>
 <!-- 모달: 타이틀 편집 -->
 <div class="modal-overlay" id="titleEditorModal">
  <div class="modal" style="max-width:380px;">
@@ -2819,7 +2827,21 @@ function _ttWidgetMenuHtml(){
  <div class="tt-widget-menu-popup" id="ttWidgetMenuPopup">${TT_WIDGET_SECTIONS.map(s=>`<button class="tt-widget-menu-item" onclick="_ttWidgetGoto('${s.id}')"><span>${s.emoji}</span><span>${s.label}</span></button>`).join('')}</div>
  </div>`;
 }
-let _ttResizing=false,_ttScale=1,_ttDrag=null;
+let _ttResizing=false,_ttScale=1,_ttDrag=null,_ttLastMouse=null,_ttIgnoreState=null;
+/* 클릭 통과 전환. 새 exe(mainManagesHover)는 메인 프로세스가 커서 위치로 직접 정하고, 예전 exe를 위해
+ 여기서는 마우스 "이동" 위치로 판단한다 — 들어옴/나감 이벤트는 화면을 다시 그리거나 크기를 바꾸는
+ 도중에 놓칠 수 있어서, 놓치면 위젯 주변 클릭이 계속 막혔다. */
+function _ttSetIgnore(v){
+ if(_ttIgnoreState===v)return;
+ _ttIgnoreState=v;
+ if(window.kosickWidget&&window.kosickWidget.setIgnoreMouse)window.kosickWidget.setIgnoreMouse(v);
+}
+function _ttSyncIgnore(){
+ if(!window.kosickWidget||window.kosickWidget.mainManagesHover||_ttResizing)return;
+ if(!_ttLastMouse){_ttSetIgnore(true);return;}
+ const el=document.elementFromPoint(_ttLastMouse.x,_ttLastMouse.y);
+ _ttSetIgnore(!(el&&el.closest&&el.closest('.tt-widget-row')));
+}
 function _ttApplyScale(s){_ttScale=s;document.documentElement.style.setProperty('--ttz',s);}
 function _ttResizeStart(e){
  if(!window.kosickWidget||!window.kosickWidget.setScale||document.body.classList.contains('tt-locked'))return;
@@ -2831,7 +2853,8 @@ function _ttResizeStart(e){
  _ttResizing=true;
  try{e.currentTarget.setPointerCapture(e.pointerId);}catch(_){}
  e.currentTarget.classList.add('active');
- window.kosickWidget.setIgnoreMouse(false);
+ if(window.kosickWidget.setResizing)window.kosickWidget.setResizing(true);
+ _ttSetIgnore(false);
 }
 function _ttResizeMove(e){
  if(!_ttResizing||!_ttDrag)return;
@@ -2845,7 +2868,7 @@ function _ttResizeEnd(){
  _ttResizing=false;_ttDrag=null;
  window.kosickWidget.setScale(_ttScale);
  renderTimetableWidget();
- setTimeout(()=>{if(window.kosickWidget&&!document.querySelector('.tt-widget-row:hover'))window.kosickWidget.setIgnoreMouse(true);},60);
+ setTimeout(_ttSyncIgnore,60);
 }
 window._ttApplyScale=_ttApplyScale;
 function renderTimetableWidget(){
@@ -2866,6 +2889,7 @@ function renderTimetableWidget(){
  }).join('');
  }
  el.innerHTML=`<div class="tt-widget-container"><div class="tt-widget-row"><div class="tt-widget-chips">${bodyHtml}</div>${_ttWidgetMenuHtml()}<div class="tt-widget-drag-handle" title="드래그해서 위치 이동"></div></div></div>`;
+ _ttSyncIgnore();
 }
 function _ttWidgetMenuBtnClick(e){
  if(e)e.stopPropagation();
@@ -2894,15 +2918,8 @@ function initTimetableWidgetMode(){
  여기서 실제 칩·메뉴·드래그 손잡이 위에 마우스가 있을 때만 클릭을 받게
  켜준다 — .tt-widget-row는 3초마다 다시 그려지므로 매번 새로 붙이지 않도록
  document에 위임해서 듣는다. */
- document.addEventListener('mouseover',e=>{
- if(window.kosickWidget&&e.target.closest('.tt-widget-row'))window.kosickWidget.setIgnoreMouse(false);
- });
- document.addEventListener('mouseout',e=>{
- if(!window.kosickWidget||_ttResizing)return;
- const leaving=e.target.closest('.tt-widget-row');
- const entering=e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('.tt-widget-row');
- if(leaving&&!entering)window.kosickWidget.setIgnoreMouse(true);
- });
+ document.addEventListener('mousemove',e=>{_ttLastMouse={x:e.clientX,y:e.clientY};_ttSyncIgnore();},true);
+ document.documentElement.addEventListener('mouseleave',()=>{_ttLastMouse=null;_ttSyncIgnore();});
 }
 if(_isTimetableWidgetMode())initTimetableWidgetMode();
 
@@ -4286,7 +4303,6 @@ function renderProgramTab(){
  <button class="hr-program-card" onclick="openSeatProgram()"><div class="hr-program-icon">🪑</div><div class="hr-program-name">자리 바꾸기</div><div class="hr-program-desc">랜덤으로 자리를 배치해요</div></button>
  <button class="hr-program-card" onclick="openCleaningProgram()"><div class="hr-program-icon">🧹</div><div class="hr-program-name">청소 당번 뽑기</div><div class="hr-program-desc">기간별로 당번을 배정해요</div></button>
  <button class="hr-program-card" onclick="openGradeConverter()"><div class="hr-program-icon">🔄</div><div class="hr-program-name">5등급제 환산기</div><div class="hr-program-desc">5등급제 ↔ 9등급제 상호 변환</div></button>
- <button class="hr-program-card" onclick="openPumuiBot()"><div class="hr-program-icon">📝</div><div class="hr-program-name">품의 봇</div><div class="hr-program-desc">품의 본문을 자동으로 써줘요</div></button>
  </div>`;
 }
 /* ── 5등급제 ↔ 9등급제 환산기 ──
@@ -4376,318 +4392,6 @@ function _gcOnNineInput(){
  fiveEl.value=r.mid.toFixed(2);
  document.getElementById('gcFiveRange').textContent=_gcRangeText(r,2);
  _gcUpdateNote(r.clamped,'9등급');
-}
-/* ══════════════════ 품의 봇 ══════════════════
- 에듀파인에 붙여넣을 "기안문 본문"을 자동으로 만들어 준다. 폼을 한꺼번에 펼치지 않고, 문서를
- 화면에 두고 빈칸을 하나씩 채워 가며 글을 완성하는 방식이다 — 현재 칸이 강조되고, 아래 패널에서
- 질문에 답하거나 보기를 고르면 문서에 바로 들어간다. 제목은 자동으로 쓴다(문서의 제목 줄을
- 눌러 고칠 수도 있다). 틀은 선생님이 쓰던 예시(물품 구입 5건, 프로그램 구입 1건)를 따른다:
- 제목 → (근거 공문) 관련 → "…을 아래와 같이 구입하고자 합니다." → 가나다 항목 → 붙임·끝.
- 금액은 "금87,020원", 날짜는 "2026.9.28."로 통일한다. 에듀파인에 직접 올리지는 않고,
- 복사해서 붙여넣는 초안 도우미다. 저장한 품의는 'pumuiRecords'로 서버와 동기화된다. */
-const PM_TYPES={class:'학급 운영 물품 구입',goods:'일반 물품 구입',service:'프로그램·용역 구입'};
-const PM_ATTACH=['견적서','품의명세서','지출(지급)품의서','지출내역'];
-const PM_SUB=['가','나','다','라','마','바','사','아'];
-const PM_BUILTIN={what:['학급 운영 물품','학급 공용 물품'],purpose:['학급 운영'],vendor:['쿠팡','지마켓'],topic:[],svcSentence:[]};
-const PM_OPTIONAL=['rel','purpose','vendor','attach'];
-let _pm=null,_pmSug={};
-function _pmSchoolYear(){const d=new Date();return d.getMonth()>=2?d.getFullYear():d.getFullYear()-1;}
-function _pmClassLabel(){
- let cls=null;try{cls=_seatMyClass();}catch(e){}
- const sy=_pmSchoolYear();
- return cls?`${sy}학년도 ${cls.grade}학년 ${cls.classNum}반 학급 운영`:`${sy}학년도 학급 운영`;
-}
-const PM_REMOVABLE=['what','purpose','items','calc','vendor','svcName','amount'];
-function _pmAllSlots(p){return p.type==='service'?['rel','svcSentence','svcName','vendor','amount','attach']:['rel','topic','what','purpose','items','calc','vendor','attach'];}
-/* 뺀 줄의 단계는 건너뛴다. 단, 품목 입력(items)은 소요예산 줄을 빼도 산출내역이 쓰니까 둘 다 뺐을 때만 없앤다. */
-function _pmSlots(p){const r=p.removed||{};return _pmAllSlots(p).filter(k=>k==='items'?!(r.items&&r.calc):(k==='rel'||k==='attach')?true:!r[k]);}
-function _pmNew(type){
- const recs=DB.get('pumuiRecords'),last=recs[recs.length-1];
- return{id:null,type,title:'',titleEdited:false,topic:type==='class'?_pmClassLabel():'',sentenceMode:'related',
- useRel:null,relNo:'',relDate:'',prefix:(last&&last.prefix)||'신동고',
- what:type==='class'?'학급 운영 물품':'',purpose:type==='class'?'학급 운영':'',vendor:'',vendorLabel:'구입처',
- items:[{name:'',spec:'',qty:1,price:''}],amountManual:'',calcMode:'first',calcUnit:'건',calcCustom:'',refSheet:type==='goods',
- attach:{'견적서':type==='class','품의명세서':false,'지출(지급)품의서':false,'지출내역':false},attachOther:'',attachDone:false,
- svcSentence:'',svcLabel:'프로그램명',svcName:'',removed:{},_cur:'rel'};
-}
-function _pmWon(n){return Number(n||0).toLocaleString('ko-KR');}
-function _pmItemsTotal(p){return p.items.reduce((a,i)=>a+(Number(i.qty)||0)*(Number(i.price)||0),0);}
-function _pmAmount(p){const t=_pmItemsTotal(p);return t>0?t:(Number(String(p.amountManual).replace(/,/g,''))||0);}
-function _pmJosa(w,a,b){const c=(w||'').trim().slice(-1).charCodeAt(0);if(!(c>=0xAC00&&c<=0xD7A3))return b;return (c-0xAC00)%28?a:b;}
-function _pmRelDate(d){const [y,m,dd]=(d||'').split('-');return(y&&m&&dd)?`${y}.${Number(m)}.${Number(dd)}.`:'';}
-function _pmItemLabel(i){const q=Number(i.qty)||0;return[i.name.trim(),(i.spec||'').trim()].filter(Boolean).join(', ')+(q>1?`, ${q}개`:'');}
-function _pmCalc(p){
- const its=p.items.filter(i=>i.name.trim());
- let s='';
- if(p.calcMode==='custom')s=p.calcCustom.trim();
- else if(its.length)s=p.calcMode==='all'?its.map(_pmItemLabel).join(', '):_pmItemLabel(its[0])+(its.length>1?` 외 ${its.length-1}${p.calcUnit==='개'?'개':'건'}`:'');
- if(p.refSheet&&s)s+='(품의명세서 참조)';
- return s;
-}
-function _pmTitle(p){
- if(p.titleEdited&&p.title.trim())return p.title.trim();
- if(p.type==='service')return p.svcSentence.trim()?p.svcSentence.trim()+' 구입':'';
- return p.topic.trim()?(p.type==='class'?`${p.topic.trim()} 물품 구입`:`${p.topic.trim()} 관련 물품 구입`):'물품 구입';
-}
-function _pmAttachText(p){
- const at=PM_ATTACH.filter(k=>p.attach[k]).map(k=>k+' 1부');
- if(p.attachOther.trim())at.push(p.attachOther.trim());
- if(!at.length)return '';
- return at.length===1?`${at[0]}.  끝.`:at.map((a,i)=>`${i+1}. ${a}${i===at.length-1?'.  끝.':'.'}`).join('\n      ');
-}
-/* 문서를 줄 단위로 만든다. 한 줄은 문자열 또는 {slot,text,ph}(빈칸/값)로 이뤄져서, 같은 구조를
- 복사용 글(_pmBuild)과 화면용 빈칸 문서(_pmDocHtml) 둘 다에 쓴다. 번호(1. 2. …)와 가나다는
- 실제로 들어가는 줄 기준으로 매겨서, 건너뛴 항목이 있어도 번호가 비지 않는다. */
-function _pmLines(p){
- const S=(slot,text,ph)=>({slot,text,ph});
- const L=[],amount=_pmAmount(p);
- L.push({kind:'plain',segs:['제목: ',S('title',_pmTitle(p),'제목')]});
- const R=k=>!!(p.removed&&p.removed[k]);
- if(p.useRel){
-  const d=_pmRelDate(p.relDate),v=p.relNo.trim()?`${p.prefix.trim()}-${p.relNo.trim()}${d?`(${d})`:''}`:'';
-  L.push({kind:'num',rm:'rel',segs:['관련: ',S('rel',v,'신동고-문서번호(날짜)')],omitCopy:!v});
- }
- if(p.type==='service'){
-  const s=p.svcSentence.trim();
-  L.push({kind:'num',segs:[S('svcSentence',s,'○○'),(s?_pmJosa(s,'을','를'):'를')+' 구입하고자 합니다.']});
-  if(!R('svcName'))L.push({kind:'num',rm:'svcName',segs:[(p.svcLabel.trim()||'품명')+': ',S('svcName',p.svcName.trim(),'○○')],omitCopy:!p.svcName.trim()});
-  if(!R('vendor'))L.push({kind:'num',rm:'vendor',segs:['업체: ',S('vendor',p.vendor.trim(),'○○')],omitCopy:!p.vendor.trim()});
-  if(!R('amount'))L.push({kind:'num',rm:'amount',segs:['금액: ',S('amount',amount?_pmWon(amount)+'원':'','○○원')],omitCopy:!amount});
- }else{
-  const tp=p.topic.trim();
-  const rest=p.sentenceMode==='direct'&&tp?(_pmJosa(tp,'을','를')+' 아래와 같이 구입하고자 합니다.'):' 관련 물품을 아래와 같이 구입하고자 합니다.';
-  L.push({kind:'num',segs:[S('topic',tp,'○○'),{text:tp?rest:rest.trim(),htmlText:rest}]});
-  const sub=(label,slot,val,ph)=>{if(!R(slot))L.push({kind:'sub',rm:slot,segs:[label+': ',S(slot,val,ph)],omitCopy:!val});};
-  sub('내역','what',p.what.trim(),'내역');
-  sub('용도','purpose',p.purpose.trim(),'용도');
-  sub('소요예산','items',amount?`금${_pmWon(amount)}원`:'','금○○원');
-  sub('산출내역','calc',_pmCalc(p),'산출내역');
-  sub(p.vendorLabel,'vendor',p.vendor.trim(),p.vendorLabel);
- }
- const at=_pmAttachText(p);
- L.push({kind:'plain',rm:'attach',segs:['붙임  ',S('attach',at,'○○ 1부.  끝.')],omitCopy:!at,hideHtml:p.attachDone&&!at});
- return L;
-}
-function _pmRenderLines(p,html){
- const out=[];let n=0,k=0;
- const lines=_pmLines(p).filter(l=>html?!l.hideHtml:!l.omitCopy);
- const hasAttach=lines.some(l=>l.segs[0]==='붙임  ');
- lines.forEach((l,idx)=>{
-  let prefix='';
-  if(l.kind==='num'){n++;k=0;prefix=`${n}. `;}
-  else if(l.kind==='sub'){prefix=`  ${PM_SUB[k++]}. `;}
-  let text=prefix,hasHtml=prefix?escHtml(prefix):'';
-  l.segs.forEach(sg=>{
-   if(typeof sg==='string'){text+=sg;hasHtml+=escHtml(sg);return;}
-   if(sg.slot){
-    text+=sg.text;
-    if(html){
-     const cls='pm-slot'+(sg.text?'':' empty')+(_pm&&_pm._cur===sg.slot?' cur':'');
-     hasHtml+=`<span class="${cls}" onclick="_pmGo('${sg.slot}')">${escHtml(sg.text||sg.ph)}</span>`;
-    }
-    return;
-   }
-   text+=(html&&sg.htmlText!==undefined)?sg.htmlText:sg.text;
-   hasHtml+=escHtml((html&&sg.htmlText!==undefined)?sg.htmlText:sg.text);
-  });
-  if(!hasAttach&&idx===lines.length-1){const end=text.slice(-1)==='.'?'  끝.':'.  끝.';text+=end;hasHtml+=html?end:'';}
-  if(html&&l.rm)hasHtml+=`<span class="pm-rm" onclick="_pmRemove('${l.rm}')" title="이 줄 빼기">✕</span>`;
-  out.push(html?hasHtml:text);
- });
- return out.join('\n');
-}
-function _pmBuild(p){return _pmRenderLines(p,false);}
-function _pmDocHtml(p){return _pmRenderLines(p,true);}
-function _pmItemsTsv(p){
- const its=p.items.filter(i=>i.name.trim());
- const rows=[['번호','품명','규격','수량','단가','금액']];
- its.forEach((i,k)=>{const q=Number(i.qty)||0,pr=Number(i.price)||0;rows.push([k+1,i.name.trim(),(i.spec||'').trim(),q,pr,q*pr]);});
- rows.push(['','','','','합계',_pmItemsTotal(p)]);
- return rows.map(r=>r.join('\t')).join('\n');
-}
-function _pmCopy(text,msg){
- const done=()=>showToast(' '+msg);
- if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>_pmCopyFallback(text,done));}
- else _pmCopyFallback(text,done);
-}
-function _pmCopyFallback(text,done){
- const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:0;';
- document.body.appendChild(ta);ta.select();
- try{document.execCommand('copy');done();}catch(e){showToast('⚠ 복사하지 못했어요. 문서를 길게 눌러 직접 복사해 주세요');}
- ta.remove();
-}
-function openPumuiBot(){
- const wrap=document.getElementById('hrProgramContent');
- if(!wrap)return;
- _pm=null;
- const recs=DB.get('pumuiRecords').slice().reverse().slice(0,10);
- const typeBtns=Object.keys(PM_TYPES).map(t=>`<button class="hr-program-card" style="padding:18px 12px;" onclick="_pmOpenForm('${t}')"><div class="hr-program-name">${PM_TYPES[t]}</div></button>`).join('');
- const hist=recs.length?recs.map(r=>`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);">
- <div style="flex:1;min-width:0;"><div style="font-size:0.88rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(r.titleResolved||'(제목 없음)')}</div><div style="font-size:0.72rem;color:var(--text-secondary);">${escHtml(PM_TYPES[r.type]||'')} · ${escHtml(r.savedDate||'')}</div></div>
- <button class="btn btn-secondary" style="padding:5px 10px;font-size:0.78rem;" onclick="_pmOpenRecord(${r.id},false)">열기</button>
- <button class="btn btn-secondary" style="padding:5px 10px;font-size:0.78rem;" onclick="_pmOpenRecord(${r.id},true)" title="내용은 그대로 두고 새 품의로 복사해요">복제</button>
- <button class="btn-icon" onclick="_pmDelete(${r.id})" title="삭제" style="color:var(--text-secondary);">✕</button></div>`).join(''):'<div style="font-size:0.82rem;color:var(--text-secondary);padding:8px 0;">아직 저장한 품의가 없어요.</div>';
- wrap.innerHTML=`<div class="seat-back-row"><button class="seat-back-btn" onclick="renderProgramTab()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">품의 봇</span></div>
- <div class="card"><div style="font-size:0.85rem;font-weight:700;margin-bottom:10px;">새 품의 쓰기</div><div class="hr-program-list" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;">${typeBtns}</div></div>
- <div class="card"><div style="font-size:0.85rem;font-weight:700;margin-bottom:4px;">최근 품의</div>${hist}</div>`;
-}
-function _pmOpenForm(type){_pm=_pmNew(type);_pmRenderForm();}
-function _pmOpenRecord(id,asCopy){
- const r=DB.get('pumuiRecords').find(x=>x.id===id);if(!r)return;
- _pm={..._pmNew(r.type),...JSON.parse(JSON.stringify(r)),id:asCopy?null:r.id,_cur:'done'};
- delete _pm.titleResolved;delete _pm.savedDate;
- _pmRenderForm();
-}
-function _pmDelete(id){
- if(!confirm('이 품의 기록을 삭제할까요?'))return;
- DB.set('pumuiRecords',DB.get('pumuiRecords').filter(x=>x.id!==id));
- openPumuiBot();
-}
-function _pmSave(){
- const recs=DB.get('pumuiRecords');
- const rec={...JSON.parse(JSON.stringify(_pm)),titleResolved:_pmTitle(_pm),savedDate:_getLocalTodayStr()};
- delete rec._cur;
- if(!_pm.id)_pm.id=Date.now();
- rec.id=_pm.id;
- const i=recs.findIndex(x=>x.id===rec.id);
- if(i>=0)recs[i]=rec;else recs.push(rec);
- DB.set('pumuiRecords',recs);
- showToast(' 저장했어요');
-}
-/* ── 단계 이동 ── */
-function _pmBack(){_pmGo(_pm._last||'done');}
-function _pmGo(slot){if(slot==='title'&&_pm._cur!=='title')_pm._last=_pm._cur;_pm._cur=slot;_pmRenderDoc();_pmRenderPanel();const el=document.getElementById('pmPanel');if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest',behavior:'smooth'});}
-function _pmNext(){
- const s=_pmSlots(_pm),i=s.indexOf(_pm._cur);
- if(_pm._cur==='attach')_pm.attachDone=true;
- _pmGo(i<0||i>=s.length-1?'done':s[i+1]);
-}
-function _pmPrev(){
- const s=_pmSlots(_pm),i=_pm._cur==='done'?s.length:s.indexOf(_pm._cur);
- if(i>0)_pmGo(s[i-1]);
-}
-function _pmSkip(){const k=_pm._cur;if(k==='attach'){_pmAttachNone();return;}_pmRemove(k);}
-function _pmRowLabel(k){const p=_pm;return{what:'내역',purpose:'용도',items:'소요예산',calc:'산출내역',vendor:p.type==='service'?'업체':p.vendorLabel,svcName:(p.svcLabel||'품명'),amount:'금액',rel:'관련 공문',attach:'붙임'}[k]||k;}
-/* 줄 빼기 — 문서의 ✕, 또는 패널의 "이 줄 빼기". 값은 지우지 않고 숨기기만 해서 "+ ○○"로 다시 넣을 수 있다. */
-function _pmRemove(key){
- const p=_pm;
- if(key==='rel'){p.useRel=false;p.relNo='';}
- else if(key==='attach'){PM_ATTACH.forEach(k=>{p.attach[k]=false;});p.attachOther='';p.attachDone=true;}
- else p.removed[key]=true;
- const all=_pmAllSlots(p),left=_pmSlots(p);
- if(p._cur!=='done'&&p._cur!=='title'&&!left.includes(p._cur)){
-  let next='done';
-  for(let i=all.indexOf(p._cur)+1;i<all.length;i++){if(left.includes(all[i])){next=all[i];break;}}
-  p._cur=next;
- }
- _pmRenderDoc();_pmRenderPanel();
-}
-function _pmRestore(key){
- const p=_pm;
- if(key==='rel'){p.useRel=true;if(!p.relDate)p.relDate=_getLocalTodayStr();}
- else if(key==='attach')p.attachDone=false;
- else delete p.removed[key];
- _pmGo(key);
-}
-/* ── 값 바꾸기 ── */
-function _pmSet(k,v){_pm[k]=v;if(k==='attachOther')_pm.attachDone=true;_pmRenderDoc();}
-function _pmSetR(k,v){_pmSet(k,v);_pmRenderPanel();}
-function _pmSetTitle(v){_pm.title=v;_pm.titleEdited=v.trim()!=='';_pmRenderDoc();}
-function _pmTitleAuto(){_pm.title='';_pm.titleEdited=false;_pmRenderDoc();_pmRenderPanel();}
-function _pmSetAttach(k,v){_pm.attach[k]=v;_pm.attachDone=true;_pmRenderDoc();}
-function _pmAttachNone(){PM_ATTACH.forEach(k=>{_pm.attach[k]=false;});_pm.attachOther='';_pm.attachDone=true;_pmNext();}
-function _pmItemSet(i,k,v){_pm.items[i][k]=v;_pmRenderDoc();_pmUpdateTotal();}
-function _pmAddItem(){_pm.items.push({name:'',spec:'',qty:1,price:''});_pmRenderItems();}
-function _pmDelItem(i){if(_pm.items.length>1)_pm.items.splice(i,1);else _pm.items=[{name:'',spec:'',qty:1,price:''}];_pmRenderItems();_pmRenderDoc();_pmUpdateTotal();}
-function _pmSetRel(v){
- _pm.useRel=v;
- if(v&&!_pm.relDate)_pm.relDate=_getLocalTodayStr();
- if(v){_pmRenderDoc();_pmRenderPanel();}else{_pm.relNo='';_pmNext();}
-}
-function _pmPick(slot,idx){const v=(_pmSug[slot]||[])[idx];if(v===undefined)return;_pmSetR(slot,v);}
-function _pmSuggest(field){
- const seen=new Set(),out=[];
- const add=v=>{v=(v||'').trim();if(v&&!seen.has(v)&&out.length<6){seen.add(v);out.push(v);}};
- DB.get('pumuiRecords').slice().reverse().forEach(r=>add(r[field]));
- (PM_BUILTIN[field]||[]).forEach(add);
- return out.filter(v=>v!==(_pm[field]||'').trim());
-}
-/* ── 화면 ── */
-function _pmUpdateTotal(){
- const am=document.getElementById('pmAmountView');if(!am)return;
- const t=_pmItemsTotal(_pm);
- am.textContent=t>0?`합계 ${_pmWon(t)}원`:'단가를 넣으면 합계가 계산돼요';
-}
-function _pmRenderDoc(){
- const d=document.getElementById('pmDoc');if(d)d.innerHTML=_pmDocHtml(_pm);
- const rb=document.getElementById('pmRestore');
- if(rb){
-  const keys=[...Object.keys(_pm.removed||{}).filter(k=>_pm.removed[k]&&PM_REMOVABLE.includes(k)),...(_pm.useRel!==true?['rel']:[]),...((_pm.attachDone&&!_pmAttachText(_pm))?['attach']:[])];
-  rb.innerHTML=keys.length?'<span style="font-size:0.74rem;color:var(--text-secondary);">빠진 줄 다시 넣기</span>'+keys.map(k=>`<button type="button" class="seat-pick-chip" onclick="_pmRestore('${k}')">+ ${escHtml(_pmRowLabel(k))}</button>`).join(''):'';
- }
-}
-function _pmRenderItems(){
- const box=document.getElementById('pmItems');if(!box)return;
- box.innerHTML=_pm.items.map((it,i)=>`<div style="border:1px solid var(--border);border-radius:10px;padding:8px;margin-bottom:8px;">
- <div style="display:flex;gap:6px;margin-bottom:6px;"><input type="text" spellcheck="false" placeholder="품명" value="${escHtml(it.name)}" oninput="_pmItemSet(${i},'name',this.value)" style="flex:1;min-width:0;"><button class="btn-icon" onclick="_pmDelItem(${i})" title="이 품목 삭제" style="flex-shrink:0;">✕</button></div>
- <div style="display:flex;gap:6px;"><input type="text" spellcheck="false" placeholder="규격(선택)" value="${escHtml(it.spec||'')}" oninput="_pmItemSet(${i},'spec',this.value)" style="flex:2;min-width:0;"><input type="number" min="0" placeholder="수량" value="${escHtml(String(it.qty))}" oninput="_pmItemSet(${i},'qty',this.value)" style="flex:1;min-width:0;"><input type="number" min="0" placeholder="단가" value="${escHtml(String(it.price))}" oninput="_pmItemSet(${i},'price',this.value)" style="flex:1.4;min-width:0;"></div></div>`).join('');
- _pmUpdateTotal();
-}
-function _pmChips(slot,field){
- _pmSug[slot]=_pmSuggest(field);
- if(!_pmSug[slot].length)return'';
- return`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${_pmSug[slot].map((v,i)=>`<button type="button" class="seat-pick-chip" onclick="_pmPick('${slot}',${i})">${escHtml(v)}</button>`).join('')}</div>`;
-}
-function _pmChoice(label,on,fn){return`<button type="button" class="seat-pick-chip${on?' on':''}" onclick="${fn}">${label}</button>`;}
-function _pmTextIn(key,ph,extra){return`<input type="text" spellcheck="false" placeholder="${escHtml(ph)}" value="${escHtml(_pm[key])}" oninput="_pmSet('${key}',this.value)" ${extra||''}>`;}
-function _pmPanelBody(slot){
- const p=_pm;
- switch(slot){
- case'rel':return{q:'근거가 되는 공문이 있나요?',html:`<div style="display:flex;gap:8px;flex-wrap:wrap;">${_pmChoice('없어요',p.useRel===false,'_pmSetRel(false)')}${_pmChoice('있어요',p.useRel===true,'_pmSetRel(true)')}</div>
-  ${p.useRel?`<div style="display:flex;gap:6px;margin-top:10px;"><input type="text" spellcheck="false" placeholder="접두어" value="${escHtml(p.prefix)}" oninput="_pmSet('prefix',this.value)" style="flex:1;min-width:0;"><input type="text" spellcheck="false" placeholder="문서번호 (예: 13082)" value="${escHtml(p.relNo)}" oninput="_pmSet('relNo',this.value)" style="flex:1.4;min-width:0;"><input type="date" value="${escHtml(p.relDate)}" onchange="_pmSet('relDate',this.value)" style="flex:1.4;min-width:0;"></div><div style="font-size:0.74rem;color:var(--text-secondary);margin-top:6px;">날짜는 그 공문을 받은 날이에요 (처음엔 오늘로 들어가요).</div>`:''}`};
- case'topic':return{q:p.type==='class'?'어떤 물품이에요? (문장 맨 앞에 들어가요)':'무엇과 관련된 물품이에요?',html:`${_pmTextIn('topic',p.type==='class'?'예: 2026학년도 1학년 3반 학급 운영':'예: 학생주도 프로젝트 봉사활동')}${_pmChips('topic','topic')}
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">${_pmChoice('○○ 관련 물품을',p.sentenceMode!=='direct','_pmSetR(\'sentenceMode\',\'related\')')}${_pmChoice('○○를 (물품 이름을 직접 쓸 때)',p.sentenceMode==='direct','_pmSetR(\'sentenceMode\',\'direct\')')}</div>`};
- case'what':return{q:'내역을 한 줄로 적어주세요',html:`${_pmTextIn('what','예: 학급 운영 물품')}${_pmChips('what','what')}`};
- case'purpose':return{q:'용도가 있나요?',html:`${_pmTextIn('purpose','예: 학급 운영')}${_pmChips('purpose','purpose')}`};
- case'items':return{q:'무엇을 얼마에 사나요? (수량×단가가 합계가 돼요)',html:`<div id="pmItems"></div><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.82rem;" onclick="_pmAddItem()">+ 품목 추가</button>
-  <div id="pmAmountView" style="font-size:0.84rem;color:var(--primary-light);margin:8px 0 10px;font-weight:600;"></div>
-  <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px;">품목 없이 금액만 쓰려면</div><input type="number" min="0" placeholder="금액 직접 입력 (예: 105840)" value="${escHtml(String(p.amountManual))}" oninput="_pmSet('amountManual',this.value)">`};
- case'calc':return{q:'산출내역은 어떻게 쓸까요?',html:`<div style="display:flex;gap:8px;flex-wrap:wrap;">${_pmChoice('첫 품목 외 N건',p.calcMode==='first'&&p.calcUnit!=='개','_pmCalcMode(\'first\',\'건\')')}${_pmChoice('첫 품목 외 N개',p.calcMode==='first'&&p.calcUnit==='개','_pmCalcMode(\'first\',\'개\')')}${_pmChoice('전체 나열',p.calcMode==='all','_pmCalcMode(\'all\')')}${_pmChoice('직접 쓸게요',p.calcMode==='custom','_pmCalcMode(\'custom\')')}</div>
-  ${p.calcMode==='custom'?`<div style="margin-top:8px;">${_pmTextIn('calcCustom','산출내역을 직접 써 주세요')}</div>`:''}
-  <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;margin-top:10px;cursor:pointer;"><input type="checkbox" ${p.refSheet?'checked':''} onchange="_pmSet('refSheet',this.checked)"> 끝에 "(품의명세서 참조)" 붙이기</label>`};
- case'vendor':return{q:p.type==='service'?'업체는 어디예요?':'어디서 사나요?',html:`${p.type==='service'?'':`<div style="display:flex;gap:8px;margin-bottom:8px;">${_pmChoice('구입처',p.vendorLabel==='구입처','_pmSetR(\'vendorLabel\',\'구입처\')')}${_pmChoice('구매처',p.vendorLabel==='구매처','_pmSetR(\'vendorLabel\',\'구매처\')')}</div>`}${_pmTextIn('vendor','예: 쿠팡')}${_pmChips('vendor','vendor')}`};
- case'svcSentence':return{q:'무엇을 구입하나요? (…을 구입하고자 합니다)',html:`${_pmTextIn('svcSentence','예: 2027학년도 고교학점제 운영을 위한 학급편성 프로그램')}${_pmChips('svcSentence','svcSentence')}`};
- case'svcName':return{q:'이름을 적어주세요',html:`<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">${['프로그램명','품명','용역명'].map(l=>_pmChoice(l,p.svcLabel===l,`_pmSetR('svcLabel','${l}')`)).join('')}</div>${_pmTextIn('svcName','예: 비와이소프트 학급편성 프로그램')}`};
- case'amount':return{q:'금액은 얼마예요? (원)',html:`<input type="number" min="0" placeholder="예: 1200000" value="${escHtml(String(p.amountManual))}" oninput="_pmSet('amountManual',this.value)">`};
- case'attach':return{q:'붙임 서류를 골라 주세요',html:`<div style="display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px;">${PM_ATTACH.map(k=>`<label style="display:flex;align-items:center;gap:5px;font-size:0.86rem;cursor:pointer;"><input type="checkbox" ${p.attach[k]?'checked':''} onchange="_pmSetAttach('${k}',this.checked)">${k}</label>`).join('')}</div>${_pmTextIn('attachOther','그 밖의 붙임 (예: 교복견적서 1부)')}<div style="margin-top:8px;"><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.82rem;" onclick="_pmAttachNone()">붙임 없음</button></div>`};
- case'title':return{q:'제목을 직접 고치려면 적어주세요',html:`<input id="pmTitleInput" type="text" spellcheck="false" placeholder="${escHtml(_pmTitle({...p,titleEdited:false}))}" value="${escHtml(p.titleEdited?p.title:'')}" oninput="_pmSetTitle(this.value)"><div style="margin-top:8px;"><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.82rem;" onclick="_pmTitleAuto()">자동 제목으로 되돌리기</button></div>`};
- }
- return{q:'',html:''};
-}
-function _pmCalcMode(mode,unit){_pm.calcMode=mode;if(unit)_pm.calcUnit=unit;_pmRenderDoc();_pmRenderPanel();}
-function _pmRenderPanel(){
- const el=document.getElementById('pmPanel');if(!el)return;
- const p=_pm,slots=_pmSlots(p);
- if(p._cur==='done'){
-  el.innerHTML=`<div style="font-size:0.95rem;font-weight:800;margin-bottom:6px;">다 됐어요 🎉</div><div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px;">문서에서 고치고 싶은 밑줄 친 부분을 누르면 다시 고칠 수 있어요. 금액·근거 공문·붙임은 꼭 확인하고 에듀파인에 올려 주세요.</div>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;"><button class="btn btn-primary" onclick="_pmCopy(_pmBuild(_pm),'본문을 복사했어요')">본문 복사</button>${p.type==='service'?'':`<button class="btn btn-secondary" onclick="_pmCopy(_pmItemsTsv(_pm),'품목표를 복사했어요 (엑셀·한글 표에 붙여넣기)')">품목표 복사</button>`}<button class="btn btn-secondary" onclick="_pmSave()">저장</button><button class="btn btn-secondary" onclick="_pmPrev()">← 마지막 항목 고치기</button></div>`;
-  return;
- }
- const idx=slots.indexOf(p._cur),b=_pmPanelBody(p._cur);
- const optional=PM_OPTIONAL.includes(p._cur);
- const filled={rel:p.useRel!==null,purpose:p.purpose.trim(),vendor:p.vendor.trim(),attach:_pmAttachText(p)}[p._cur];
- const nextLabel=optional&&!filled&&p._cur!=='rel'?'건너뛰기':(idx>=slots.length-1?'완료':'다음 →');
- el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div style="font-size:0.92rem;font-weight:800;">${escHtml(b.q)}</div>${idx>=0?`<div style="font-size:0.72rem;color:var(--text-secondary);">${idx+1}/${slots.length}</div>`:''}</div>${b.html}
- ${PM_REMOVABLE.includes(p._cur)?`<div style="margin-top:10px;"><button class="btn btn-secondary" style="padding:5px 10px;font-size:0.76rem;" onclick="_pmRemove('${p._cur}')">이 줄 빼기</button></div>`:''}
- ${p._cur==='title'?`<div style="margin-top:12px;"><button class="btn btn-primary" onclick="_pmBack()">확인</button></div>`:`<div style="display:flex;gap:8px;margin-top:14px;justify-content:space-between;"><button class="btn btn-secondary" onclick="_pmPrev()" ${idx<=0?'disabled style="opacity:.4;"':''}>← 이전</button><button class="btn btn-primary" onclick="${nextLabel==='건너뛰기'?'_pmSkip()':'_pmNext()'}">${nextLabel}</button></div>`}`;
- if(p._cur==='items')_pmRenderItems();
-}
-function _pmRenderForm(){
- const wrap=document.getElementById('hrProgramContent');if(!wrap)return;
- wrap.innerHTML=`<div class="seat-back-row"><button class="seat-back-btn" onclick="openPumuiBot()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button><span class="seat-entry-title">품의 봇 · ${PM_TYPES[_pm.type]}</span></div>
- <div class="card"><div id="pmDoc" class="pm-doc"></div><div id="pmRestore" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;"></div></div>
- <div class="card" id="pmPanel"></div>`;
- _pmRenderDoc();_pmRenderPanel();
 }
 const ADM_NAESHIN_SUBJECTS=[{id:'kor',label:'국어'},{id:'eng',label:'영어'},{id:'math',label:'수학'},{id:'social',label:'사회'},{id:'sci',label:'과학'}];
 const ADM_MOCK_SUBJECTS=[{id:'kor',label:'국어'},{id:'math',label:'수학'},{id:'eng',label:'영어'},{id:'hist',label:'한국사'},{id:'social',label:'사회'},{id:'sci',label:'과학'}];
@@ -8538,6 +8242,121 @@ function scheduleMidnightCarryOver(){
  },msUntilMidnight);
 }
 scheduleMidnightCarryOver();
+/* ══════════════ 오늘의 청소당번 (담임 > 오늘의 안내사항) ══════════════
+ 매일 도는 시간표가 아니라 "다음 버튼을 누를 때만" 순번이 넘어가는 한 줄짜리 당번판이다.
+ - 순번은 번호순이고, '청소 제외'로 지정한 학생은 순번에서 아예 빠진다.
+ - 요일별 배제: 순번이 왔는데 그 요일에 배제된 학생(예: 분리수거 요일)은 이번엔 건너뛰고 '밀린 학생'으로
+   남겨 두었다가, 다음번 뽑을 때(그 요일에 배제가 아니면) 가장 먼저 배정한다.
+ - 이전 버튼은 직전 상태(순번·밀린 학생·당번)로 되돌린다. 기록은 30단계까지.
+ 저장 위치: 이미 서버와 동기화되는 cleaningCharts 안의 'duty_<학급id>' 키(기존 청소 당번 뽑기 기록과 섞이지 않는다). */
+const CD_DOW=['월','화','수','목','금'];
+let _cdEditDow=1;
+function _cdKey(cls){return 'duty_'+cls.id;}
+function _cdLoad(cls){
+ const r=DB.get('cleaningCharts')[_cdKey(cls)]||{};
+ return{count:Math.max(1,Number(r.count)||4),excluded:r.excluded||[],dayExcluded:r.dayExcluded||{},cursor:Number(r.cursor)||0,carry:r.carry||[],group:r.group||null,groupDate:r.groupDate||'',history:r.history||[]};
+}
+function _cdSave(cls,rec){const all=DB.get('cleaningCharts');all[_cdKey(cls)]=rec;DB.set('cleaningCharts',all);}
+function _cdSorted(cls){return[...cls.students].sort((a,b)=>(a.number??9999)-(b.number??9999));}
+function _cdOrder(cls,rec){return _cdSorted(cls).filter(s=>!rec.excluded.includes(s.id));}
+function _cdDayEx(rec,id,dow){return(rec.dayExcluded[String(dow)]||[]).includes(id);}
+/* 다음 당번을 뽑는다(순수 함수: 새 기록을 돌려주고 원본은 건드리지 않는다). dow는 JS 요일(0=일~6=토). */
+function _cdCompute(cls,rec,dow){
+ const order=_cdOrder(cls,rec),n=order.length;
+ const live=new Set(order.map(s=>s.id));
+ const count=Math.max(1,Math.min(rec.count,n||1));
+ const group=[],carry=[];
+ (rec.carry||[]).forEach(id=>{
+  if(!live.has(id))return;
+  if(group.length<count&&!_cdDayEx(rec,id,dow))group.push(id);else carry.push(id);
+ });
+ let i=n?rec.cursor%n:0,scanned=0;
+ while(group.length<count&&scanned<n){
+  const s=order[i%n];i++;scanned++;
+  if(group.includes(s.id)||carry.includes(s.id))continue;
+  if(_cdDayEx(rec,s.id,dow)){carry.push(s.id);continue;}
+  group.push(s.id);
+ }
+ return{...rec,group,carry,cursor:n?i%n:0};
+}
+function _cdEnsure(cls){
+ let rec=_cdLoad(cls);
+ if(!rec.group&&_cdOrder(cls,rec).length){
+  rec=_cdCompute(cls,rec,new Date().getDay());
+  rec.groupDate=_getLocalTodayStr();
+  _cdSave(cls,rec);
+ }
+ return rec;
+}
+function buildCleanDutyHtml(){
+ const cls=_seatMyClass();
+ if(!cls)return`<div class="cd-box" id="cleanDutyBox"><span class="cd-label">🧹 <span class="cd-long">오늘의 청소당번</span></span><div class="cd-names"><span class="cd-empty">담임 반을 먼저 설정하면 쓸 수 있어요</span></div></div>`;
+ const rec=_cdEnsure(cls);
+ const byId=new Map(cls.students.map(s=>[s.id,s]));
+ const dow=new Date().getDay();
+ const names=(rec.group||[]).map(id=>byId.get(id)).filter(Boolean).map(s=>{
+  const ex=_cdDayEx(rec,s.id,dow);
+  return`<span class="cd-chip${ex?' warn':''}"${ex?` title="오늘(${CD_DOW[dow-1]})은 배제 요일이에요"`:''}>${escHtml(s.name)}${ex?' ⚠':''}</span>`;
+ }).join('');
+ return`<div class="cd-box" id="cleanDutyBox"><span class="cd-label" title="${rec.groupDate?escHtml(rec.groupDate)+'에 뽑은 당번':''}">🧹 <span class="cd-long">오늘의 청소당번</span></span>
+ <div class="cd-names">${names||'<span class="cd-empty">설정에서 청소 인원을 확인해 주세요</span>'}</div>
+ <button class="cd-btn" onclick="_cdPrev()" title="이전 당번으로 되돌리기">‹ 이전</button><button class="cd-btn" onclick="_cdNext()" title="다음 당번 뽑기">다음 ›</button>
+ <button class="cd-btn cd-gear" onclick="openCleanDutySettings()" title="청소당번 설정"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button></div>`;
+}
+function _cdRerender(){const el=document.getElementById('cleanDutyBox');if(el)el.outerHTML=buildCleanDutyHtml();}
+function _cdNext(){
+ const cls=_seatMyClass();if(!cls)return;
+ let rec=_cdEnsure(cls);
+ if(!_cdOrder(cls,rec).length){showToast(' 청소할 학생이 없어요. 설정의 제외 인원을 확인해 주세요');return;}
+ const hist=[...rec.history,{cursor:rec.cursor,carry:rec.carry,group:rec.group,groupDate:rec.groupDate}].slice(-30);
+ rec=_cdCompute(cls,rec,new Date().getDay());
+ rec.history=hist;rec.groupDate=_getLocalTodayStr();
+ _cdSave(cls,rec);_cdRerender();
+}
+function _cdPrev(){
+ const cls=_seatMyClass();if(!cls)return;
+ const rec=_cdLoad(cls);
+ if(!rec.history.length){showToast(' 더 이전 기록이 없어요');return;}
+ const h=rec.history[rec.history.length-1];
+ rec.history=rec.history.slice(0,-1);rec.cursor=h.cursor;rec.carry=h.carry;rec.group=h.group;rec.groupDate=h.groupDate;
+ _cdSave(cls,rec);_cdRerender();
+}
+/* ── 설정 팝업 ── */
+function openCleanDutySettings(){
+ if(!_seatMyClass()){showToast(' 담임 반을 먼저 설정해 주세요');return;}
+ if(!(_cdEditDow>=1&&_cdEditDow<=5))_cdEditDow=1;
+ _cdRenderSettings();openModal('cleanDutyModal');
+}
+function _cdRenderSettings(){
+ const cls=_seatMyClass(),body=document.getElementById('cleanDutyBody');
+ if(!cls||!body)return;
+ const rec=_cdLoad(cls),students=_cdSorted(cls);
+ const chip=(s,on,fn)=>`<button type="button" class="seat-pick-chip${on?' on':''}" onclick="${fn}">${s.number?s.number+' ':''}${escHtml(s.name)}</button>`;
+ const dayList=rec.dayExcluded[String(_cdEditDow)]||[];
+ body.innerHTML=`<div class="modal-title">🧹 청소당번 설정 · ${cls.grade}학년 ${cls.classNum}반</div>
+ <div class="form-group"><label class="form-label">하루 청소 인원 수</label><div class="cd-stepper"><button class="btn btn-secondary" onclick="_cdSetCount(-1)">−</button><b style="min-width:3em;text-align:center;">${rec.count}명</b><button class="btn btn-secondary" onclick="_cdSetCount(1)">＋</button></div></div>
+ <div class="form-group"><label class="form-label">청소 제외 인원</label><div style="font-size:0.74rem;color:var(--text-secondary);margin-bottom:6px;">선택한 학생은 순번에서 아예 빠져요.</div><div class="cd-chips">${students.map(s=>chip(s,rec.excluded.includes(s.id),`_cdToggleExcluded(${s.id})`)).join('')||'<span class="cd-empty">학생이 없어요</span>'}</div></div>
+ <div class="form-group"><label class="form-label">요일별 청소 배제 인원</label><div style="font-size:0.74rem;color:var(--text-secondary);margin-bottom:6px;">분리수거처럼 그 요일에 할 수 없는 학생이에요. 순번이 와도 건너뛰고, 다음번 청소 때 가장 먼저 배정돼요.</div>
+ <div class="cd-chips">${CD_DOW.map((d,i)=>`<button type="button" class="seat-pick-chip${_cdEditDow===i+1?' on':''}" onclick="_cdSetDay(${i+1})">${d}${(rec.dayExcluded[String(i+1)]||[]).length?' '+(rec.dayExcluded[String(i+1)]||[]).length:''}</button>`).join('')}</div>
+ <div class="cd-chips" style="margin-top:8px;">${students.filter(s=>!rec.excluded.includes(s.id)).map(s=>chip(s,dayList.includes(s.id),`_cdToggleDay(${s.id})`)).join('')}</div></div>
+ <div class="modal-footer" style="flex-wrap:nowrap;gap:6px;"><button class="btn btn-secondary" onclick="_cdResetOrder()">순번 처음부터</button><button class="btn btn-primary" onclick="closeModal('cleanDutyModal');_cdRerender()">완료</button></div>`;
+}
+function _cdEdit(fn){const cls=_seatMyClass();if(!cls)return;const rec=_cdLoad(cls);fn(rec);_cdSave(cls,rec);_cdRenderSettings();}
+function _cdSetCount(d){_cdEdit(r=>{r.count=Math.max(1,Math.min(20,r.count+d));});}
+function _cdSetDay(d){_cdEditDow=d;_cdRenderSettings();}
+function _cdToggleExcluded(id){_cdEdit(r=>{r.excluded=r.excluded.includes(id)?r.excluded.filter(x=>x!==id):[...r.excluded,id];});}
+function _cdToggleDay(id){_cdEdit(r=>{const k=String(_cdEditDow),a=r.dayExcluded[k]||[];r.dayExcluded[k]=a.includes(id)?a.filter(x=>x!==id):[...a,id];});}
+function _cdResetOrder(){
+ if(!confirm('순번을 처음부터 다시 시작할까요? 지금 당번도 새로 뽑아요.'))return;
+ _cdEdit(r=>{r.cursor=0;r.carry=[];r.history=[];r.group=null;});
+ _cdRerender();
+}
+let _attNoticeOpen=false;
+function toggleAttNotice(el){
+ _attNoticeOpen=!_attNoticeOpen;
+ const body=el.nextElementSibling;if(body)body.style.display=_attNoticeOpen?'block':'none';
+ const ch=el.querySelector('.att-chev');if(ch)ch.textContent=_attNoticeOpen?'▾':'▸';
+}
 function buildAttUnsubmittedHtmlForNotice(dateStr){
  const classes=DB.get('classes');
  const recs=DB.get('attendanceRecords').filter(r=>
@@ -8548,10 +8367,11 @@ function buildAttUnsubmittedHtmlForNotice(dateStr){
  const overdue=recs.filter(r=>r.deadline<dateStr);
  const dueToday=recs.filter(r=>r.deadline===dateStr);
  const upcoming=recs.filter(r=>r.deadline>dateStr);
- let html=`<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
- <div style="font-size:0.88rem;font-weight:700;color:#EF4444;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
- ⚠ 출결서류 미제출 현황 <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);">${recs.length}건</span>
- </div>`;
+ let html=`<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:12px;padding:10px 14px;margin-bottom:12px;">
+ <div onclick="toggleAttNotice(this)" style="font-size:0.88rem;font-weight:700;color:#EF4444;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">
+ ⚠ 출결서류 미제출 현황 <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);">${recs.length}건</span><span class="att-chev" style="margin-left:auto;font-size:0.85rem;">${_attNoticeOpen?'▾':'▸'}</span>
+ </div>
+ <div class="att-body" style="display:${_attNoticeOpen?'block':'none'};margin-top:10px;">`;
  if(dueToday.length){
  html+=`<div style="margin-bottom:8px;"><div style="font-size:0.75rem;font-weight:700;color:#F59E0B;margin-bottom:5px;"> 오늘 마감 (${dueToday.length}건)</div>`;
  dueToday.forEach(r=>{
@@ -8610,7 +8430,7 @@ function buildAttUnsubmittedHtmlForNotice(dateStr){
  });
  html+=`</div>`;
  }
- html+=`</div>`;
+ html+=`</div></div>`;
  return html;
 }
 function renderNoticeTab(){
@@ -8630,6 +8450,7 @@ const isToday=noticeSelectedDate===_getLocalTodayStr();
  <button class="cal-nav-btn" onclick="changeNoticeDate(1)" style="width:34px;height:34px;font-size:1.1rem;flex-shrink:0;">›</button>
  </div>`;
  html+=buildAttUnsubmittedHtmlForNotice(noticeSelectedDate);
+ html+=buildCleanDutyHtml();
  if(notices.length){
  const undoneNotices=notices.filter(n=>!n.done);
  const doneNotices=notices.filter(n=>n.done);
@@ -10098,7 +9919,7 @@ const SUPA_URL='https://dfykbnlfekeqctjgkcwv.supabase.co';
 const SUPA_KEY='sb_publishable_RtJ1-wVBWkUuBGi8-71mAQ_tmX6QiGb';
 const SUPA_USER='kosick2';
 const SUPA_HEADERS={apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json'};
-const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords','favBarIds','sgibuCategories','sgibuAchievements','sgibuClassLimits','sgibuDone','seatCharts','cleaningCharts','admissionScores','mockGradeCuts','pumuiRecords'];
+const DK=['schedules','scheduleTypes','bookmarks','bookmarkGroups','memoLists','memoItems','counselings','timetable','classes','evaluations','attendanceRecords','fieldTrips','specialPrograms','dailyNotices','noteGroups','noteItems','sgibuRecords','favBarIds','sgibuCategories','sgibuAchievements','sgibuClassLimits','sgibuDone','seatCharts','cleaningCharts','admissionScores','mockGradeCuts'];
 const SK=['titleEmoji','titleName','colorPrimary','colorSecondary','homeroomMyClassId','pinnedMobileTabs','sgibuSemesterSel'];
 let _isSaving=false;
 let _dbReady=false;
@@ -10117,7 +9938,7 @@ const _GUARD_LABELS={
  fieldTrips:'체험학습 개수',specialPrograms:'특별프로그램 개수',
  sgibuRecords:'생기부 작성 항목 수',sgibuAchievements:'생기부 성취도 항목 수',
  timetable:'시간표 칸 수',seatCharts:'자리배치 저장 수',cleaningCharts:'청소당번 저장 수',
- admissionScores:'입시상담 기록 학생 수',mockGradeCuts:'모의고사 등급컷 회차 수',pumuiRecords:'품의 저장 수',
+ admissionScores:'입시상담 기록 학생 수',mockGradeCuts:'모의고사 등급컷 회차 수',
 };
 function _guardCollectionCount(val,key){
  if(key==='classes'){const arr=Array.isArray(val)?val:[];return arr.reduce((s,c)=>s+((c&&c.students)?c.students.length:0),0);}
