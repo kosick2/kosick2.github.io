@@ -752,6 +752,7 @@ textarea{resize:vertical;min-height:80px;}
 .note-photo{display:inline-block;font-size:0.9em;background:#60A5FA22;color:#60A5FA;border:1px solid #60A5FA55;border-radius:20px;padding:1px 10px;font-weight:600;cursor:pointer;user-select:none;-webkit-user-select:none;margin:0 1px;line-height:1.5;}
 .note-photo::after{content:'';display:inline-block;width:0.95em;height:0.95em;margin-left:6px;vertical-align:-0.12em;background:currentColor;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 6h18v12H3zM3 17l5-5 4 4 3-3 6 6' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 6h18v12H3zM3 17l5-5 4 4 3-3 6 6' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'/></svg>") center/contain no-repeat;}
 .note-photo:hover{background:#60A5FA33;}
+.note-url{word-break:break-all;overflow-wrap:anywhere;}
 ::highlight(np-link){color:#2563EB;text-decoration:underline;}
 #noteContentInput a[href]{color:#2563EB;text-decoration:underline;}
 .np-photo-btn{position:fixed;z-index:3000;display:none;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:none;background:#1E2B25;color:#F5F1E6;font-size:0.84rem;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,0.28);cursor:pointer;font-family:inherit;-webkit-user-select:none;user-select:none;}
@@ -8799,6 +8800,7 @@ async function _npHandleFile(file){
  if(!_npRange)return;
  const range=_npRange,text=_npSelText;_npRange=null;_npHideBtn();
  showToast(' 사진을 올리는 중…');
+ _npBusy=true;
  let path=null;
  try{
   const blob=await _npCompress(file);
@@ -8811,7 +8813,7 @@ async function _npHandleFile(file){
   console.error('사진 연결 실패:',e);
   if(path)_npDeleteFile(path);
   showToast('⚠ 사진을 올리지 못했어요 ('+((e&&e.message)||'오류')+')');
- }
+ }finally{_npBusy=false;}
 }
 function _npApplyChip(range,text,path){
  const chip=document.createElement('span');
@@ -8908,6 +8910,31 @@ document.addEventListener('input',e=>{
  const ed=_npEditor();if(!ed||!ed.contains(e.target))return;
  clearTimeout(_npLinkTimer);_npLinkTimer=setTimeout(_npRefreshLinks,200);
 });
+/* 긴 주소는 줄바꿈 때문에 "https://www.daytona-" 처럼 중간에서 끊겨 다음 줄로 통째로 넘어가 보기 불편하다.
+   주소만 span.note-url로 감싸 어디서든 줄바꿈되게(앞 글자 바로 뒤에서 시작해 한 줄을 꽉 채워 이어지게) 한다.
+   글을 쓰는 도중에는 커서가 흐트러지므로 메모를 열 때와 글 칸에서 나갈 때만 다시 감싼다. */
+let _npBusy=false;
+function _npWrapUrls(){
+ const ed=_npEditor();
+ if(!ed||_npRange||_npBusy)return;
+ ed.querySelectorAll('span.note-url').forEach(s=>s.replaceWith(...s.childNodes));
+ ed.normalize();
+ const nodes=[],w=document.createTreeWalker(ed,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.note-photo,a')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+ let n;while((n=w.nextNode()))if(/https?:\/\//.test(n.nodeValue))nodes.push(n);
+ nodes.forEach(node=>{
+  const text=node.nodeValue,found=[];let m;_NP_URL_RE.lastIndex=0;
+  while((m=_NP_URL_RE.exec(text))){const url=m[0].replace(/[.,;:!?)\]]+$/,'');if(url.length>8)found.push([m.index,m.index+url.length]);}
+  for(let i=found.length-1;i>=0;i--){
+   const rg=document.createRange();rg.setStart(node,found[i][0]);rg.setEnd(node,found[i][1]);
+   const sp=document.createElement('span');sp.className='note-url';rg.surroundContents(sp);
+  }
+ });
+ _npRefreshLinks();
+}
+document.addEventListener('focusout',e=>{
+ const ed=_npEditor();if(!ed||e.target!==ed)return;
+ setTimeout(()=>{if(document.activeElement!==ed)_npWrapUrls();},150);
+});
 let _npTouch=null;
 document.addEventListener('touchstart',e=>{
  const ed=_npEditor();
@@ -8944,6 +8971,7 @@ function loadNoteIntoEditor(noteId){
  ea.innerHTML=`<div class="notepad-editor-topbar"><button onclick="closeNoteEditorMobile()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:600;">← 목록</button><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"> 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div>`;
  const _nc=document.getElementById('noteContentInput');
  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
+ _npWrapUrls();
  _npRefreshLinks();
  _adjustNoteKeyboardUi();
 }
