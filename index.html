@@ -752,6 +752,8 @@ textarea{resize:vertical;min-height:80px;}
 .note-photo{display:inline-block;font-size:0.9em;background:#60A5FA22;color:#60A5FA;border:1px solid #60A5FA55;border-radius:20px;padding:1px 10px;font-weight:600;cursor:pointer;user-select:none;-webkit-user-select:none;margin:0 1px;line-height:1.5;}
 .note-photo::after{content:'';display:inline-block;width:0.95em;height:0.95em;margin-left:6px;vertical-align:-0.12em;background:currentColor;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 6h18v12H3zM3 17l5-5 4 4 3-3 6 6' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 6h18v12H3zM3 17l5-5 4 4 3-3 6 6' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'/></svg>") center/contain no-repeat;}
 .note-photo:hover{background:#60A5FA33;}
+::highlight(np-link){color:#2563EB;text-decoration:underline;}
+#noteContentInput a[href]{color:#2563EB;text-decoration:underline;}
 .np-photo-btn{position:fixed;z-index:3000;display:none;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:none;background:#1E2B25;color:#F5F1E6;font-size:0.84rem;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,0.28);cursor:pointer;font-family:inherit;-webkit-user-select:none;user-select:none;}
 .np-lightbox{display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;padding:16px;}
 .np-lightbox.open{display:flex;}
@@ -8883,6 +8885,29 @@ function _npLinkAt(x,y){
  }
  return null;
 }
+/* 링크로 열리는 글자만 색을 입힌다. 글자 자체는 건드리지 않고(저장 내용 그대로) CSS Highlight로만 칠한다.
+   Highlight를 지원하지 않는 오래된 브라우저에서는 색 없이 동작만 한다. */
+let _npLinkTimer=null;
+function _npRefreshLinks(){
+ if(!(window.CSS&&CSS.highlights&&window.Highlight))return;
+ const ed=_npEditor();
+ if(!ed){CSS.highlights.delete('np-link');return;}
+ const ranges=[],w=document.createTreeWalker(ed,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.note-photo,a')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+ let n;
+ while((n=w.nextNode())){
+  const text=n.nodeValue;let m;_NP_URL_RE.lastIndex=0;
+  while((m=_NP_URL_RE.exec(text))){
+   const url=m[0].replace(/[.,;:!?)\]]+$/,'');
+   if(url.length<=8)continue;
+   const rg=document.createRange();rg.setStart(n,m.index);rg.setEnd(n,m.index+url.length);ranges.push(rg);
+  }
+ }
+ CSS.highlights.set('np-link',new Highlight(...ranges));
+}
+document.addEventListener('input',e=>{
+ const ed=_npEditor();if(!ed||!ed.contains(e.target))return;
+ clearTimeout(_npLinkTimer);_npLinkTimer=setTimeout(_npRefreshLinks,200);
+});
 let _npTouch=null;
 document.addEventListener('touchstart',e=>{
  const ed=_npEditor();
@@ -8894,6 +8919,13 @@ document.addEventListener('touchend',e=>{
  if(!s||!e.changedTouches.length)return;
  const t=e.changedTouches[0];
  if(Date.now()-s.t>450||Math.hypot(t.clientX-s.x,t.clientY-s.y)>10)return;
+ /* 사진 박스: 여기서 직접 열고 기본 동작을 막아야 글자 칸에 포커스가 안 가서 키보드가 안 올라온다 */
+ const hit=document.elementFromPoint(t.clientX,t.clientY),chip=hit&&hit.closest&&hit.closest('.note-photo');
+ if(chip&&_npEditor()&&_npEditor().contains(chip)){
+  e.preventDefault();
+  const ae=document.activeElement;if(ae&&ae.blur&&_npEditor().contains(ae))ae.blur();
+  _npOpen(chip);return;
+ }
  const sel=window.getSelection();
  if(sel&&!sel.isCollapsed)return;
  const url=_npLinkAt(t.clientX,t.clientY);
@@ -8912,6 +8944,7 @@ function loadNoteIntoEditor(noteId){
  ea.innerHTML=`<div class="notepad-editor-topbar"><button onclick="closeNoteEditorMobile()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:600;">← 목록</button><span class="notepad-editor-meta">${updStr?`마지막 수정: ${updStr}`:''}</span><button onclick="deleteNote(${noteId})" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"> 삭제</button></div><input class="notepad-title-input" id="noteTitleInput" value="${escHtml(note.title||'')}" placeholder="제목을 입력하세요..." oninput="scheduleNoteSave(${noteId})"><hr style="border:none;border-top:1px solid var(--border);margin:0 20px;"><div class="notepad-content-input" id="noteContentInput" contenteditable="true" spellcheck="false" data-placeholder="내용을 자유롭게 적어보세요..." oninput="scheduleNoteSave(${noteId})"></div>`;
  const _nc=document.getElementById('noteContentInput');
  if(_nc){const _ct=note.content||'';if(/<[a-z][\s\S]*>/i.test(_ct)){_nc.innerHTML=_ct;}else{_nc.textContent=_ct;}}
+ _npRefreshLinks();
  _adjustNoteKeyboardUi();
 }
 /* interactive-widget=resizes-content가 붙어있어도, 실제로 그걸 지원/적용하는지는
