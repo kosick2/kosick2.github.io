@@ -8735,6 +8735,15 @@ function _npPositionBtn(){
  b.style.display='inline-flex';
  const bw=b.offsetWidth||110,bh=b.offsetHeight||36;
  const vv=window.visualViewport,vh=vv?vv.height:window.innerHeight;
+ /* 터치 기기: 아이폰은 선택 영역 위/아래에 자체 메뉴(복사하기 등)가 떠서 버튼이 가려진다.
+    그래서 선택한 곳에서 먼 쪽(선택이 화면 위쪽이면 아래, 아래쪽이면 위) 가장자리에 고정해 둔다. */
+ if(window.matchMedia&&matchMedia('(pointer:coarse)').matches){
+  const vo=vv?vv.offsetTop:0,kb=vv&&vv.height<window.innerHeight-80;
+  const mid=vo+vh/2,selMid=(first.top+last.bottom)/2;
+  const top=selMid<mid?vo+vh-bh-(kb?12:118):vo+(kb?10:56);
+  b.style.top=top+'px';b.style.left=Math.max(8,(window.innerWidth-bw)/2)+'px';
+  return;
+ }
  let top=last.bottom+10;
  if(top+bh>vh-8)top=Math.max(8,first.top-bh-10);
  const left=Math.min(Math.max(8,last.left+last.width/2-bw/2),window.innerWidth-bw-8);
@@ -8845,6 +8854,57 @@ document.addEventListener('click',e=>{
  if(c&&ed&&ed.contains(c)){e.preventDefault();_npOpen(c);}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')_npClose();});
+/* ── 메모 안의 링크: 폰에서는 누르면 바로 열고, PC에서는 Ctrl(⌘)+클릭으로 연다 ──
+   (그냥 클릭은 글자 수정이 되어야 하므로 PC에서는 열지 않는다) */
+const _NP_URL_RE=/https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+/g;
+function _npOpenUrl(u){
+ const a=document.createElement('a');
+ a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';
+ document.body.appendChild(a);a.click();a.remove();
+}
+/* (x,y) 지점의 글자가 링크(<a> 또는 http 주소 글자)이면 주소를, 아니면 null */
+function _npLinkAt(x,y){
+ const ed=_npEditor();if(!ed)return null;
+ const el=document.elementFromPoint(x,y),a=el&&el.closest&&el.closest('a[href]');
+ if(a&&ed.contains(a)&&/^https?:/i.test(a.href))return a.href;
+ let node=null,off=0;
+ if(document.caretRangeFromPoint){const r=document.caretRangeFromPoint(x,y);if(r){node=r.startContainer;off=r.startOffset;}}
+ else if(document.caretPositionFromPoint){const p=document.caretPositionFromPoint(x,y);if(p){node=p.offsetNode;off=p.offset;}}
+ if(!node||node.nodeType!==3||!ed.contains(node))return null;
+ const text=node.nodeValue;let m;
+ _NP_URL_RE.lastIndex=0;
+ while((m=_NP_URL_RE.exec(text))){
+  const url=m[0].replace(/[.,;:!?)\]]+$/,''),s=m.index,e=s+url.length;
+  if(off<s-1||off>e+1)continue;
+  const rg=document.createRange();rg.setStart(node,s);rg.setEnd(node,e);
+  for(const rc of rg.getClientRects()){
+   if(x>=rc.left-3&&x<=rc.right+3&&y>=rc.top-3&&y<=rc.bottom+3)return url;
+  }
+ }
+ return null;
+}
+let _npTouch=null;
+document.addEventListener('touchstart',e=>{
+ const ed=_npEditor();
+ if(!ed||e.touches.length!==1||!ed.contains(e.target)){_npTouch=null;return;}
+ const t=e.touches[0];_npTouch={x:t.clientX,y:t.clientY,t:Date.now()};
+},{passive:true});
+document.addEventListener('touchend',e=>{
+ const s=_npTouch;_npTouch=null;
+ if(!s||!e.changedTouches.length)return;
+ const t=e.changedTouches[0];
+ if(Date.now()-s.t>450||Math.hypot(t.clientX-s.x,t.clientY-s.y)>10)return;
+ const sel=window.getSelection();
+ if(sel&&!sel.isCollapsed)return;
+ const url=_npLinkAt(t.clientX,t.clientY);
+ if(url){e.preventDefault();_npOpenUrl(url);}
+},{passive:false});
+document.addEventListener('click',e=>{
+ if(!(e.ctrlKey||e.metaKey))return;
+ const ed=_npEditor();if(!ed||!ed.contains(e.target))return;
+ const url=_npLinkAt(e.clientX,e.clientY);
+ if(url){e.preventDefault();_npOpenUrl(url);}
+});
 function loadNoteIntoEditor(noteId){
  const notes=DB.get('noteItems'),note=notes.find(n=>n.id===noteId);if(!note)return;
  const ea=document.getElementById('notepadEditorArea');if(!ea)return;
