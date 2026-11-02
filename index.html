@@ -12,9 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="Kosick">
 <meta name="theme-color" id="themeColor" content="#F5F1E6">
 <script>document.documentElement.style.background='#F5F1E6';</script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"></noscript>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 button{-webkit-tap-highlight-color:transparent;}
@@ -192,8 +191,6 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .adm-badge.b-fit{background:#D2EFD9;color:#14532D;}
 .adm-badge.b-down{background:#DCEBFA;color:#1E3A5F;}
 .adm-badge.b-safe{background:#E2E8F0;color:#334155;}
-.adm-badge.auto{border:1px dashed currentColor;}
-.adm-badge.auto i{font-style:normal;font-weight:600;font-size:0.85em;margin-left:0.35em;opacity:0.75;}
 /* ═══ 좌측 사이드바 내비게이션 (데스크톱) ═══ */
 .app-sidebar{position:fixed;top:16px;left:16px;bottom:16px;width:188px;background:var(--primary);border-radius:28px;box-shadow:0 16px 40px rgba(31,107,91,0.28);display:flex;flex-direction:column;z-index:150;padding:22px 10px;}
 .sidebar-brand{display:flex;align-items:center;gap:10px;padding:4px 10px 22px;flex-shrink:0;}
@@ -633,8 +630,8 @@ textarea{resize:vertical;min-height:80px;}
 .hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);font-size:1.4rem;line-height:1;transition:background 0.2s;flex-shrink:0;}
 .hamburger-btn:hover{background:var(--surface2);}
 .mobile-tab-title{display:none;font-weight:700;font-size:1.05rem;color:var(--text);text-align:center;}
-.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1200;backdrop-filter:blur(3px);opacity:0;transition:opacity 0.3s;pointer-events:none;}
-.drawer-overlay.open{opacity:1;pointer-events:all;}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1200;backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:opacity 0.3s,visibility 0s 0.3s;pointer-events:none;}
+.drawer-overlay.open{opacity:1;visibility:visible;transition:opacity 0.3s,visibility 0s;pointer-events:all;}
 .mobile-drawer{position:fixed;top:0;right:-300px;width:280px;height:100dvh;background:var(--surface);z-index:1201;transition:right 0.32s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(0,0,0,0.35);border-radius:20px 0 0 20px;}
 .mobile-drawer.open{right:0;}
 .drawer-header{padding:22px 16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
@@ -4890,40 +4887,10 @@ function _admDeltaHtml(cur,prev){
 function _admJudgmentClass(j){
  return{'과상':'b-over','상향':'b-up','적정':'b-fit','하향':'b-down','과하':'b-safe'}[j]||'';
 }
-/* 참고입결(등급 기준)이 있는데 선생님이 직접 판단(적정/상향 등)을 아직 안 적어뒀으면,
- 학생의 실제 성적과 비교해서 과상/상향/적정/하향/과하 중 하나를 잠정적으로 계산해
- 보여준다 — 등급 척도가 아닌 학교(환산점수 등)는 단순 비교가 의미 없어 계산하지
- 않는다. 전형(학생부종합/교과=내신, 정시=모의고사)에 맞는 성적을 사용한다. */
-function _admStudentGradeForTrack(studentId,track){
- if(track==='학생부 종합'||track==='학생부 교과'){
- const nae=_admNaeshinSeries(studentId);
- return nae.length?nae.reduce((a,p)=>a+p.value,0)/nae.length:null;
- }
- if(track==='정시'){
- const mock=_admMockSeries(studentId);
- return mock.length?mock[mock.length-1].value:null;
- }
- return null;
-}
-function _admAutoJudgment(studentGrade,ref){
- if(studentGrade==null||!ref||ref.scale!=='등급'||ref.avg==null||ref.cut70==null)return null;
- const r=_admConvertRefTo5(ref);
- const avg=r.avg,cut=r.cut70;
- if(studentGrade<=avg-0.5)return'과하';
- if(studentGrade<=avg)return'하향';
- if(studentGrade<=cut)return'적정';
- if(studentGrade<=cut+0.5)return'상향';
- return'과상';
-}
-/* 판단 배지 하나를 골라 렌더링 — 선생님이 직접 적어둔 게 있으면 그걸 그대로,
- 없고 참고입결이 있으면 자동 계산값을 "(자동)" 표시와 함께 보여준다. */
+/* 판단 배지 — 선생님이 직접 적어둔 판단만 보여준다(성적과 참고입결을 비교한 자동 판단은 쓰지 않는다). */
 function _admJudgmentBadgeHtml(studentId,w,m){
  if(w.judgment)return`<span class="adm-badge ${_admJudgmentClass(w.judgment)}">${escHtml(w.judgment)}</span>`;
- if(m.status!=='exact'&&m.status!=='loose')return'';
- const grade=_admStudentGradeForTrack(studentId,w.track);
- const auto=_admAutoJudgment(grade,m.ref);
- if(!auto)return'';
- return`<span class="adm-badge auto ${_admJudgmentClass(auto)}" title="선생님이 직접 정하지 않아서, 참고입결과 성적을 비교해 잠정 계산한 값이에요">${escHtml(auto)}<i>자동</i></span>`;
+ return'';
 }
 function _admSummaryCardsHtml(studentId){
  const nae=_admNaeshinSeries(studentId);
@@ -5011,9 +4978,8 @@ function renderAdmissionWishDetailScreen(){
  const stu=cls&&(cls.students||[]).find(s=>s.id===_admStudentId);
  const wishes=_admGetStudentScores(_admStudentId).wishes||[];
  /* 참고 입결과 바로 비교해볼 수 있도록, 학생의 지금까지 내신 평균을 맨 위에
- 먼저 보여준다(학기별 평균의 단순 평균 — _admStudentGradeForTrack이 판단에
- 쓰는 값과 동일한 계산). 학생들은 이미 5등급제 기준으로 입력하므로 별도
- 환산 없이 그대로 보여주면 된다. */
+ 먼저 보여준다(학기별 평균의 단순 평균). 학생들은 이미 5등급제 기준으로
+ 입력하므로 별도 환산 없이 그대로 보여주면 된다. */
  const naeshinSeries=_admNaeshinSeries(_admStudentId);
  const naeshinAvg=naeshinSeries.length?naeshinSeries.reduce((a,p)=>a+p.value,0)/naeshinSeries.length:null;
  const naeshinSummary=naeshinAvg!=null
@@ -5719,7 +5685,24 @@ function _admFindNaeshinSheetName(wb){
  return rows[0]&&rows[0].some(c=>String(c).trim()==='교과')&&rows[0].some(c=>String(c).trim()==='과목');
  });
 }
+/* 엑셀 라이브러리(합쳐서 1.8MB)는 가져오기/내보내기를 누를 때만 필요한데, 예전엔 앱을 열 때마다
+ <head>에서 받아서 해석이 끝나야 화면이 그려졌다 — 폰에서 앱이 느리게 켜지던 큰 원인. 이제 쓸 때 불러온다. */
+const _LIB_URLS={ExcelJS:'https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js',XLSX:'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'};
+const _libPromises={};
+function _loadLib(name){
+ if(window[name])return Promise.resolve(true);
+ if(_libPromises[name])return _libPromises[name];
+ showToast(' 엑셀 도구를 불러오는 중이에요…');
+ return _libPromises[name]=new Promise(res=>{
+  const s=document.createElement('script');
+  s.src=_LIB_URLS[name];
+  s.onload=()=>res(!!window[name]);
+  s.onerror=()=>{delete _libPromises[name];s.remove();res(false);};
+  document.head.appendChild(s);
+ });
+}
 async function _admParseNaeshinXlsFile(file){
+ if(!(await _loadLib('XLSX')))throw new Error('엑셀 도구를 불러오지 못했어요');
  const buf=await file.arrayBuffer();
  return _admParseNaeshinWorkbook(XLSX.read(buf,{type:'array'}));
 }
@@ -5868,7 +5851,7 @@ function _admPredReset(){
  표시로 양식을 알아보고, 한 파일에 같은 종류 시트를 여러 개 복사해 둬도(시험/학기별) 전부 읽는다. */
 const ADM_TPL_SUBJECT_MAP={'국어':'kor','수학':'math','영어':'eng','한국사':'hist','사회':'social','과학':'sci'};
 async function downloadAdmissionTemplate(){
- if(typeof ExcelJS==='undefined'){showToast(' 라이브러리 로딩 중... 잠시 후 다시 시도해주세요');return;}
+ if(!(await _loadLib('ExcelJS'))){showToast('⚠ 엑셀 도구를 불러오지 못했어요. 인터넷 연결을 확인해주세요');return;}
  const cls=_seatMyClass();
  if(!cls)return;
  const students=[...(cls.students||[])].sort((a,b)=>(a.number??9999)-(b.number??9999));
@@ -6121,7 +6104,7 @@ async function _admHandleImportFiles(fileList){
  if(!files.length)return;
  const resultsEl=document.getElementById('admImportResults');
  if(resultsEl)resultsEl.innerHTML=`<div class="ank-empty-note">${files.length}개 파일 분석 중...</div>`;
- if(typeof XLSX==='undefined'){if(resultsEl)resultsEl.innerHTML='<div class="ank-empty-note">⚠ 엑셀 라이브러리 로딩 중... 잠시 후 다시 시도해주세요</div>';return;}
+ if(!(await _loadLib('XLSX'))){if(resultsEl)resultsEl.innerHTML='<div class="ank-empty-note">⚠ 엑셀 도구를 불러오지 못했어요. 인터넷 연결을 확인해주세요</div>';return;}
  const results=[];
  for(const file of files){
  let wb;
@@ -7340,23 +7323,27 @@ function updateScoreStats(evalId,classId,sessionId){
  const sessions=ev.sessions||[{id:'session_'+ev.id,name:'1차시',maxScore:ev.maxScore}];
  const sid=sessionId||currentScoreSessionId;
  /* 현재 차시 통계 */
- const recs=(cr.records||[]).map(r=>(r.sessionData||{})[sid]||{submitted:false,score:''});
+ /* 학급에서 삭제된 학생의 기록이 평가 안에 남아 있어도(deleteStudent는 점수 기록을 지우지 않는다) 분모/통계에서는
+ 제외한다 — 안 그러면 학생이 20명인데 "18/21명"처럼 보인다. 목록 화면은 이미 현재 학생만 센다. */
+ const _cls=DB.get('classes').find(c=>c.id===classId),_active=new Set(((_cls&&_cls.students)||[]).map(s=>s.id));
+ const crRows=(cr.records||[]).filter(r=>!_cls||_active.has(r.studentId));
+ const recs=crRows.map(r=>(r.sessionData||{})[sid]||{submitted:false,score:''});
  const scored=recs.filter(r=>r.score!==''&&r.score!==undefined);
  const submitted=recs.filter(r=>r.submitted).length;
  const avg=scored.length?(scored.reduce((s,r)=>s+Number(r.score),0)/scored.length).toFixed(1):'-';
  const max=scored.length?Math.max(...scored.map(r=>Number(r.score))):'-';
  const min=scored.length?Math.min(...scored.map(r=>Number(r.score))):'-';
- let html=` 이번 차시 — 제출 <strong>${submitted}/${(cr.records||[]).length}명</strong> &nbsp;·&nbsp; 평균 <strong>${avg}점</strong> &nbsp;·&nbsp; 최고 <strong>${max}점</strong> &nbsp;·&nbsp; 최저 <strong>${min}점</strong>`;
+ let html=` 이번 차시 — 제출 <strong>${submitted}/${crRows.length}명</strong> &nbsp;·&nbsp; 평균 <strong>${avg}점</strong> &nbsp;·&nbsp; 최고 <strong>${max}점</strong> &nbsp;·&nbsp; 최저 <strong>${min}점</strong>`;
  /* ★ 변경: 여러 차시일 때 합산 통계 추가 */
  if(sessions.length>1){
  const totalMaxScore=sessions.reduce((sum,s)=>sum+(Number(s.maxScore)||0),0);
- const combinedScores=(cr.records||[]).map(r=>{
+ const combinedScores=crRows.map(r=>{
  const sd=r.sessionData||{};
  const allFilled=sessions.every(s=>{const sc=(sd[s.id]||{}).score;return sc!==''&&sc!==undefined;});
  if(!allFilled)return null;
  return sessions.reduce((sum,s)=>sum+Number((sd[s.id]||{}).score||0),0);
  }).filter(v=>v!==null);
- const combinedSubmitted=(cr.records||[]).filter(r=>{
+ const combinedSubmitted=crRows.filter(r=>{
  const sd=r.sessionData||{};
  return sessions.every(s=>{const d=sd[s.id]||{};return d.submitted||(d.score!==''&&d.score!==undefined);});
  }).length;
@@ -8756,7 +8743,16 @@ document.addEventListener('selectionchange',()=>{
  clearTimeout(_npSelTimer);
  _npSelTimer=setTimeout(()=>{if(!_npEditor()){_npHideBtn();return;}_npEnsureUi();_npPositionBtn();},140);
 });
-window.addEventListener('scroll',()=>{if(document.getElementById('npPhotoBtn')&&document.getElementById('npPhotoBtn').style.display!=='none')_npPositionBtn();},true);
+/* 스크롤 중에는 버튼을 건드리지 않는다(스크롤 이벤트마다 선택 영역 위치를 다시 재면 폰에서 스크롤이 버벅이고
+   버튼이 손가락을 못 따라온다). 스크롤이 멈춘 뒤에 한 번만 제자리를 잡는다. 터치 기기에서는 화면 가장자리에
+   고정이라 위치가 거의 안 바뀐다. */
+let _npScrollTimer=null;
+window.addEventListener('scroll',()=>{
+ const b=document.getElementById('npPhotoBtn');
+ if(!b||b.style.display==='none')return;
+ clearTimeout(_npScrollTimer);
+ _npScrollTimer=setTimeout(_npPositionBtn,180);
+},{capture:true,passive:true});
 /* 사진 줄이기: 긴 변 1280px, JPEG 0.78 — 보통 100~250KB */
 function _npCompress(file,max,quality){
  max=max||1280;quality=quality||0.78;
@@ -9758,7 +9754,7 @@ async function callOpenAiReview(apiKey,model,systemPrompt,studentText,studentNam
  return{status,feedback};
 }
 async function exportSgibuToExcel(classId){
- if(typeof ExcelJS==='undefined'){showToast(' 라이브러리 로딩 중... 잠시 후 다시 시도해주세요');return;}
+ if(!(await _loadLib('ExcelJS'))){showToast('⚠ 엑셀 도구를 불러오지 못했어요. 인터넷 연결을 확인해주세요');return;}
  const cls=DB.get('classes').find(c=>c.id===Number(classId));
  if(!cls){showToast(' 학급 정보를 찾을 수 없어요');return;}
  const records=DB.get('sgibuRecords')||{};
@@ -9842,7 +9838,7 @@ async function handleSgibuExcelFile(event,classId){
  const file=event.target.files[0];
  event.target.value='';
  if(!file)return;
- if(typeof ExcelJS==='undefined'){showToast(' 라이브러리 로딩 중... 잠시 후 다시 시도해주세요');return;}
+ if(!(await _loadLib('ExcelJS'))){showToast('⚠ 엑셀 도구를 불러오지 못했어요. 인터넷 연결을 확인해주세요');return;}
  const cls=DB.get('classes').find(c=>c.id===Number(classId));
  if(!cls){showToast(' 학급 정보를 찾을 수 없어요');return;}
  const cat=getSgibuCategories().find(c=>c.id===_sgibuCurrentCategory);
@@ -10459,12 +10455,25 @@ function _rerenderHrSubTab(){
  }catch(e){}
 }
 let _refreshFailCount=0,_lastRefreshFailToast=0;
+/* 20초마다 서버 데이터 전체(약 670KB)를 받아 해석하던 걸 줄인다: 먼저 저장 시각(숫자 하나)만 물어보고,
+   지난번에 처리한 시각과 같으면(서버에 새로 올라온 게 없으면) 전체를 받지 않는다. */
+let _lastRemoteStamp=null;
+async function fetchRemoteStamp(){
+ const res=await fetch(`${SUPA_URL}/rest/v1/kosick_data?user_id=eq.${SUPA_USER}&select=s:data->_savedAt`,{headers:SUPA_HEADERS,signal:AbortSignal.timeout(10000)});
+ if(!res.ok)throw new Error('stamp failed');
+ const rows=await res.json();
+ return rows[0]&&rows[0].s!=null?Number(rows[0].s):null;
+}
 function refreshIfNewer(){
  if(!_dbReady||_isSaving)return;
- fetchRemote().then(data=>{
+ (async()=>{
+  try{const st=await fetchRemoteStamp();if(st!=null&&st===_lastRemoteStamp)return null;}catch(e){}
+  return fetchRemote();
+ })().then(data=>{
  _refreshFailCount=0;
  if(!data)return;
  try{
+ _lastRemoteStamp=Number(data._savedAt||0);
  const localTime=Number(localStorage.getItem('_savedAt')||0);
  const remoteTime=Number(data._savedAt||0);
  if(remoteTime>localTime){
@@ -10491,6 +10500,7 @@ function refreshIfNewer(){
  clearTimeout(_debounceTimer);_debounceTimer=setTimeout(syncAll,1500);
  }
  }catch(e){
+ _lastRemoteStamp=null;
  console.error('새 데이터 처리 실패:',e);
  window._lastLoadError=String(e&&e.stack||e);
  showToast('⚠ 서버 데이터를 이 기기에서 처리하지 못했어요 ('+((e&&e.name)||'오류')+')');
