@@ -341,9 +341,9 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .cal-day.sunday .cal-day-num{color:#F87171;}
 .home-right{display:flex;flex-direction:column;gap:20px;min-width:0;overflow:hidden;}
 .home-right .card{margin-bottom:0;overflow:hidden;min-width:0;}
-/* 모바일 홈 맨 아래 달력(예전의 탭 바로가기 박스 자리). 넓은 화면에서는 오른쪽 .home-cal-col의 달력을 쓴다. */
-.home-cal-mobile{margin-top:12px;margin-bottom:96px;height:auto;}
-@media(min-width:769px){.home-cal-mobile{display:none;}}
+/* 모바일 홈 맨 아래 여백 — 하단 메뉴바에 마지막 카드가 가리지 않게 */
+.home-bottom-space{height:96px;}
+@media(min-width:769px){.home-bottom-space{display:none;}}
 /* ═══ 모바일 홈 히어로 (2a 스타일) ═══ */
 .m-hero{display:none;}
 .m-stat-row{display:none;}
@@ -1007,6 +1007,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
  <button class="m-hero-cal-btn" id="mHeroSaveBtn" onclick="manualSave()" title="저장"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg></button>
+ <button class="m-hero-cal-btn" onclick="openCalendarModal()" title="캘린더"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><div class="m-hero-cal-badges" id="mHeroCalBadges"></div></button>
  </div>
  </div>
  <div class="m-hero-card" id="mHeroCard" style="display:none;">
@@ -1038,14 +1039,7 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
  </div>
  </div>
- <div class="home-cal-card home-cal-mobile">
- <div class="calendar-nav">
- <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
- <div class="calendar-title"></div>
- <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
- </div>
- <div class="calendar-grid"></div>
- </div>
+ <div class="home-bottom-space"></div>
  </section>
 <div class="modal-overlay" id="calendarModal">
  <div class="modal" style="max-width:420px;">
@@ -2576,6 +2570,7 @@ function buildMobileHero(){
  const d=new Date();
  const days=['일','월','화','수','목','금','토'];
  let subText=`${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+ updateHeroCalBadges();
  const badgesEl=document.getElementById('mHeroBadges');
  const cardEl=document.getElementById('mHeroCard');
  const classNameEl=document.getElementById('mHeroClassName');
@@ -2632,6 +2627,25 @@ function buildMobileHero(){
  }
  const clsEl=document.getElementById('mStatClasses');
  if(clsEl)clsEl.innerHTML=`${classCnt}<small> 교시</small>`;
+}
+function updateHeroCalBadges(){
+ const wrap=document.getElementById('mHeroCalBadges');
+ if(!wrap)return;
+ const todayStr=_getLocalTodayStr();
+ const todaySchedules=DB.get('schedules').filter(s=>{
+ const start=s.date,end=s.dateEnd||s.date;
+ return start<=todayStr&&todayStr<=end;
+ });
+ if(!todaySchedules.length){wrap.innerHTML='';return;}
+ const types=getScheduleTypes();
+ const colorById={};types.forEach(t=>colorById[t.id]=t.color);
+ const countByType={};
+ todaySchedules.forEach(s=>{const tid=s.type||'none';countByType[tid]=(countByType[tid]||0)+1;});
+ wrap.innerHTML=Object.keys(countByType).map(tid=>{
+ const color=colorById[tid]||'#374151';
+ const count=countByType[tid];
+ return `<div class="m-hero-cal-badge" style="background:${color};">${count>9?'9+':count}</div>`;
+ }).join('');
 }
 function updateHeaderDate(){
  const el=document.getElementById('headerDateText');
