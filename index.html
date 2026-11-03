@@ -341,15 +341,9 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .cal-day.sunday .cal-day-num{color:#F87171;}
 .home-right{display:flex;flex-direction:column;gap:20px;min-width:0;overflow:hidden;}
 .home-right .card{margin-bottom:0;overflow:hidden;min-width:0;}
-.home-quicklinks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
-@media(min-width:769px){.home-quicklinks{display:none;}}
-@media(max-width:900px){.home-quicklinks{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:520px){.home-quicklinks{grid-template-columns:repeat(2,1fr);margin-bottom:96px;}}
-.home-quick-tile{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:16px 14px 14px;border-radius:18px;cursor:pointer;border:none;font-family:inherit;transition:transform 0.15s;text-align:left;min-height:92px;justify-content:space-between;}
-.home-quick-tile:hover{transform:translateY(-2px);}
-.home-quick-tile .hq-emoji{font-size:1.05rem;display:inline-flex;align-items:center;justify-content:center;}
-.home-quick-tile .hq-label{font-size:0.85rem;font-weight:800;line-height:1.2;}
-.home-quick-tile .hq-sub{font-size:0.72rem;font-weight:600;opacity:0.7;line-height:1.2;}
+/* 모바일 홈 맨 아래 달력(예전의 탭 바로가기 박스 자리). 넓은 화면에서는 오른쪽 .home-cal-col의 달력을 쓴다. */
+.home-cal-mobile{margin-top:12px;margin-bottom:96px;height:auto;}
+@media(min-width:769px){.home-cal-mobile{display:none;}}
 /* ═══ 모바일 홈 히어로 (2a 스타일) ═══ */
 .m-hero{display:none;}
 .m-stat-row{display:none;}
@@ -1013,7 +1007,6 @@ body.has-fav-bar .main{padding-bottom:100px;}
  </div>
  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
  <button class="m-hero-cal-btn" id="mHeroSaveBtn" onclick="manualSave()" title="저장"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg></button>
- <button class="m-hero-cal-btn" onclick="openCalendarModal()" title="캘린더"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><div class="m-hero-cal-badges" id="mHeroCalBadges"></div></button>
  </div>
  </div>
  <div class="m-hero-card" id="mHeroCard" style="display:none;">
@@ -1045,7 +1038,14 @@ body.has-fav-bar .main{padding-bottom:100px;}
  <div><div class="card-title" style="margin-bottom:8px;">오늘 시간표</div><div id="miniTimetable"></div></div>
  </div>
  </div>
- <div class="home-quicklinks" id="homeQuickLinks"></div>
+ <div class="home-cal-card home-cal-mobile">
+ <div class="calendar-nav">
+ <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+ <div class="calendar-title"></div>
+ <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+ </div>
+ <div class="calendar-grid"></div>
+ </div>
  </section>
 <div class="modal-overlay" id="calendarModal">
  <div class="modal" style="max-width:420px;">
@@ -2576,7 +2576,6 @@ function buildMobileHero(){
  const d=new Date();
  const days=['일','월','화','수','목','금','토'];
  let subText=`${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
- updateHeroCalBadges();
  const badgesEl=document.getElementById('mHeroBadges');
  const cardEl=document.getElementById('mHeroCard');
  const classNameEl=document.getElementById('mHeroClassName');
@@ -2633,58 +2632,6 @@ function buildMobileHero(){
  }
  const clsEl=document.getElementById('mStatClasses');
  if(clsEl)clsEl.innerHTML=`${classCnt}<small> 교시</small>`;
-}
-function updateHeroCalBadges(){
- const wrap=document.getElementById('mHeroCalBadges');
- if(!wrap)return;
- const todayStr=_getLocalTodayStr();
- const todaySchedules=DB.get('schedules').filter(s=>{
- const start=s.date,end=s.dateEnd||s.date;
- return start<=todayStr&&todayStr<=end;
- });
- if(!todaySchedules.length){wrap.innerHTML='';return;}
- const types=getScheduleTypes();
- const colorById={};types.forEach(t=>colorById[t.id]=t.color);
- const countByType={};
- todaySchedules.forEach(s=>{const tid=s.type||'none';countByType[tid]=(countByType[tid]||0)+1;});
- wrap.innerHTML=Object.keys(countByType).map(tid=>{
- const color=colorById[tid]||'#374151';
- const count=countByType[tid];
- return `<div class="m-hero-cal-badge" style="background:${color};">${count>9?'9+':count}</div>`;
- }).join('');
-}
-function buildHomeQuickLinks(){
- const wrap=document.getElementById('homeQuickLinks');
- if(!wrap)return;
- const items=DRAWER_SECTIONS.filter(t=>t.id!=='home');
- const palette=HOME_PALETTE;
- const today=new Date();today.setHours(0,0,0,0);
- const todayStr=today.toISOString().split('T')[0];
- const savedClassId=localStorage.getItem('homeroomMyClassId');
- const memoTotalCnt=DB.get('memoItems').filter(i=>!i.completed).length;
- const attCnt=DB.get('attendanceRecords').filter(r=>r.deadline===todayStr&&!r.documented&&!r.missedSubmission&&(!savedClassId||r.classId===Number(savedClassId))).length;
- const classCnt2=DB.get('classes').length;
- const noteCnt=DB.get('noteItems')?DB.get('noteItems').length:0;
- const bmCnt=DB.get('bookmarks').length;
- const tt2=DB.get('timetable');
- const dayIdx2=new Date().getDay()-1;
- let todayClassCnt=0;
- if(dayIdx2>=0&&dayIdx2<5){for(let p=1;p<=8;p++){if(tt2[`${dayIdx2}_${p}`])todayClassCnt++;}}
- const subMap={
- homeroom:attCnt>0?`오늘 출결 ${attCnt}`:'출결 없음',
- students:`${classCnt2}개 학급`,
- memos:memoTotalCnt>0?`${memoTotalCnt}개 남음`:'모두 완료',
- notepad:`메모 ${noteCnt}개`,
- bookmarks:`즐겨찾기 ${bmCnt}개`,
- timetable:todayClassCnt>0?`오늘 ${todayClassCnt}교시`:'오늘 수업 없음',
- };
- wrap.innerHTML=items.map((t,i)=>{
- return `<button class="home-quick-tile" style="background:${palette[i%palette.length]};color:#1E2B25;" onclick="showSection('${t.id}',null)">
- ${iconSvg(t.icon,22)}
- <span class="hq-label">${t.name}</span>
- <span class="hq-sub">${subMap[t.id]||''}</span>
- </button>`;
- }).join('');
 }
 function updateHeaderDate(){
  const el=document.getElementById('headerDateText');
@@ -2755,7 +2702,7 @@ function _memoStatsHtml(){
  `</div>`;
 }
 function updateHome(){
- renderCalendar();updateNavBadges();renderMiniTimetable();buildHomeQuickLinks();updateHeaderDate();buildMobileHero();buildHomeStats();
+ renderCalendar();updateNavBadges();renderMiniTimetable();updateHeaderDate();buildMobileHero();buildHomeStats();
  const allItems=DB.get('memoItems').filter(i=>!i.completed);
  const lists=DB.get('memoLists');
  const c=document.getElementById('recentMemos');
