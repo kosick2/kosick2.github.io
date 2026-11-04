@@ -7669,11 +7669,11 @@ function _setArcFabOpen(open){
  if(open===_arcFabOpen)return;
  const bd=document.getElementById('arcFabBackdrop'),main=document.getElementById('arcFabMain');
  if(open){
-  buildArcFab();   /* 닫힌 상태로 만든 다음(_arcFabOpen이 아직 false) 다음 프레임에 열어야 튀어나오는 애니메이션이 보인다 */
+  /* 탭 FAB들은 화면을 바꿀 때마다(showSection) 이미 닫힌 상태로 만들어져 있다 — 여는 순간에 다시 만들면
+     첫 탭이 느려지므로, 없을 때만 만든다. 닫힌 상태에서 클래스만 붙여야 튀어나오는 애니메이션이 보인다. */
+  if(!document.querySelector('.arc-fab-item'))buildArcFab();
   _arcFabOpen=true;
   if(bd)bd.classList.add('open');
-  const first=document.querySelector('.arc-fab-item');
-  if(first)first.getBoundingClientRect();
   setTimeout(()=>{if(_arcFabOpen)document.querySelectorAll('.arc-fab-item').forEach(el=>el.classList.add('open'));},30);
   if(main)main.innerHTML='<span style="font-size:22px;">✕</span>';
  }else{
@@ -7683,10 +7683,13 @@ function _setArcFabOpen(open){
   if(main)main.innerHTML=_HOME_FAB_SVG;
  }
 }
-let _arcFabLastTap=0;
-function arcFabTap(){
- const now=Date.now();
- if(now-_arcFabLastTap<320){_arcFabLastTap=0;_setArcFabOpen(false);showSection('home',null);return;}
+/* 더블탭 판정은 "핸들러가 실행된 시각"이 아니라 터치가 실제로 일어난 시각(e.timeStamp)으로 한다.
+ 메뉴를 처음 열 때(이모지 8개 첫 렌더링)는 폰에서 메인 스레드가 잠깐 멈춰서 두 번째 탭의 핸들러가
+ 늦게 실행되는데, 실행 시각으로 재면 빠르게 두 번 눌러도 간격이 길어 보여 홈으로 안 갔다. */
+let _arcFabLastTap=-1e9;
+function arcFabTap(e){
+ const now=(e&&typeof e.timeStamp==='number')?e.timeStamp:performance.now();
+ if(now-_arcFabLastTap<400){_arcFabLastTap=-1e9;_setArcFabOpen(false);showSection('home',null);return;}
  _arcFabLastTap=now;
  _setArcFabOpen(!_arcFabOpen);
 }
@@ -10511,7 +10514,7 @@ setInterval(() => {
 <div class="arc-fab-wrap">
  <div class="arc-fab-backdrop" id="arcFabBackdrop" onclick="closeArcFab()"></div>
  <div id="arcFabItems"></div>
- <button class="arc-fab-main" id="arcFabMain" onclick="arcFabTap()" title="메뉴 (두 번 누르면 홈)" aria-label="메뉴"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></button>
+ <button class="arc-fab-main" id="arcFabMain" onclick="arcFabTap(event)" title="메뉴 (두 번 누르면 홈)" aria-label="메뉴"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></button>
 </div>
 </body>
 </html>
