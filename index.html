@@ -348,7 +348,6 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
 .m-hero{display:none;}
 .m-stat-row{display:none;}
 .arc-fab-wrap{display:none;}
-.mobile-tabbar{display:none;}
 @media(max-width:768px){
  /* 하단에 항상 떠 있는 홈 아치 버튼(최대 bottom 38px+높이 58px)과 탭 고정 바가
  콘텐츠 위에 겹쳐 있어서, 마지막 카드까지 스크롤해도 그 밑에 가려 안 보이는
@@ -382,17 +381,12 @@ input[type="number"].adm-pred-input{width:4.4em;min-width:0;text-align:center;pa
  .arc-fab-wrap{display:block;}
  .arc-fab-backdrop{display:none;position:fixed;inset:0;background:rgba(20,30,25,0.45);z-index:495;}
  .arc-fab-backdrop.open{display:block;}
- .arc-fab-item{position:fixed;width:66px;height:66px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 6px 16px rgba(0,0,0,0.22);z-index:497;color:#1E2B25;border:none;cursor:pointer;font-family:inherit;opacity:0;transform:translateX(-50%) translateY(26px) scale(0.55);transition:opacity 0.32s cubic-bezier(0.34,1.56,0.64,1),transform 0.38s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;}
- .arc-fab-item.open{opacity:1;transform:translateX(-50%) translateY(0) scale(1);pointer-events:auto;}
+ #arcFabItems{position:fixed;right:calc(21px + env(safe-area-inset-right));bottom:calc(86px + env(safe-area-inset-bottom));display:flex;flex-direction:column-reverse;align-items:center;gap:10px;z-index:497;pointer-events:none;}
+ .arc-fab-item{width:48px;height:48px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,0.22);color:#1E2B25;border:none;cursor:pointer;font-family:inherit;padding:0;opacity:0;transform:translateX(90px) scale(0.5);transition:opacity 0.22s,transform 0.4s cubic-bezier(0.34,1.56,0.64,1);transition-delay:0s;pointer-events:none;-webkit-tap-highlight-color:transparent;}
+ .arc-fab-item.open{opacity:1;transform:none;pointer-events:auto;transition-delay:calc(var(--i) * 35ms);}
  .arc-fab-item.active{box-shadow:0 0 0 3px var(--primary),0 6px 16px rgba(0,0,0,0.22);}
- .arc-fab-item.drag-hover{transform:translateX(-50%) scale(1.14) !important;box-shadow:0 0 0 3px var(--primary),0 10px 22px rgba(0,0,0,0.32);}
- .arc-fab-item span:first-child{font-size:16px;display:flex;align-items:center;justify-content:center;}
- .arc-fab-item span:last-child{font-size:9.5px;font-weight:700;}
- .arc-fab-main{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(38px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--primary);color:#FFFDF7;border:none;cursor:pointer;z-index:498;box-shadow:0 10px 24px rgba(31,107,91,0.4);display:flex;align-items:center;justify-content:center;font-size:22px;user-select:none;-webkit-user-select:none;touch-action:manipulation;}
- .mobile-tabbar{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));width:min(320px,calc(100% - 32px));height:62px;background:var(--surface);border-radius:999px;box-shadow:0 10px 28px rgba(0,0,0,0.18);z-index:496;align-items:center;justify-content:space-between;padding:0 12px;}
- .mtb-btn{width:44px;height:44px;border-radius:50%;border:none;background:none;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s,color 0.15s;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
- .mtb-btn.active{color:var(--primary);background:var(--surface2);}
- .mtb-spacer{width:58px;flex-shrink:0;}
+ .arc-fab-main{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--primary);color:#FFFDF7;border:none;cursor:pointer;z-index:498;box-shadow:0 10px 24px rgba(31,107,91,0.4);display:flex;align-items:center;justify-content:center;font-size:22px;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform 0.15s;}
+ .arc-fab-main:active{transform:scale(0.93);}
 }
 .schedule-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:8px;}
 .schedule-type-bar{width:4px;height:36px;border-radius:4px;flex-shrink:0;}
@@ -889,7 +883,7 @@ textarea{resize:vertical;min-height:80px;}
  .notepad-layout{flex-direction:column;height:auto;}
  .notepad-sidebar{display:none;}
  .notepad-editor-area{flex:none;height:calc(100dvh - 200px);}
- .notepad-mobile-fab{display:flex;}
+ .notepad-mobile-fab{display:flex;right:auto;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));}
  .notepad-content-input{padding-bottom:24px;}
 }
 @media(min-width:769px){
@@ -2118,7 +2112,6 @@ const titleEl=document.getElementById('mobileTabTitle');
  if(id==='notepad'){_currentNoteId=null;_notepadActiveTab='all';}
 ({home:updateHome,bookmarks:renderBookmarks,memos:renderMemoSection,notepad:renderNotepadSection,students:renderStudentsSection,timetable:renderTimetable,homeroom:renderHomeroomSection,anecdotal:renderAnecdotalSection,settings:renderSettingsSection}[id])?.();
  if(wasAlreadyActive)_resetSectionSubNav(id);
- renderMobileTabbar();
  updateTabFab(id);
 }
 function _resetSectionSubNav(id){
@@ -7646,178 +7639,59 @@ function buildDrawerNav(){
 }
 
 let _arcFabOpen=false;
-/* 홈 버튼을 꾹 눌렀을 때 부채꼴로 펼쳐지는 위치를, 항목 개수에 맞춰 매번 계산한다.
- 하단 바에 고정된 탭은 이 목록에서 빠지므로, 고정 탭이 늘어날수록 부채꼴은 더
- 짧고 좁아진다(반대로 고정을 안 할수록 넓게 펼쳐짐). */
-function _computeArcOffsets(n){
- if(n<=0)return[];
- const R=140,centerY=51,itemHalf=33;
- const spread=Math.min(150,n===1?0:20*n);
- const startAngle=90+spread/2;
- const step=n===1?0:spread/(n-1);
- const out=[];
- for(let i=0;i<n;i++){
- const angle=n===1?90:startAngle-step*i;
- const rad=angle*Math.PI/180;
- const dx=Math.round(R*Math.cos(rad));
- const dy=R*Math.sin(rad);
- const bottom=Math.round(centerY+dy-itemHalf);
- out.push({left:dx>=0?`calc(50% + ${dx}px)`:`calc(50% - ${Math.abs(dx)}px)`,bottom:bottom+'px'});
- }
- return out;
-}
+/* 모바일 우하단 홈 FAB: 한 번 누르면 오른쪽에서 각 탭의 이모지 원형 FAB들이 쏙 나오고, 두 번 누르면 바로 홈으로 간다.
+ (예전의 하단 바와 "고정 탭" 설정은 없앴다 — 모든 탭이 이 메뉴에 들어 있다.) */
 function buildArcFab(){
  const wrap=document.getElementById('arcFabItems');
  if(!wrap)return;
  const activeId=document.querySelector('.section.active')?.id||'home';
- const items=DRAWER_SECTIONS.filter(t=>t.id!=='home'&&!_pinnedMobileTabs.includes(t.id));
- const offsets=_computeArcOffsets(items.length);
+ const items=DRAWER_SECTIONS.filter(t=>t.id!=='home');
  wrap.innerHTML=items.map((t,i)=>{
- const off=offsets[i];
- const isActive=activeId===t.id;
- const colorIdx=DRAWER_SECTIONS.findIndex(s=>s.id===t.id)-1;
- return `<button class="arc-fab-item${isActive?' active':''}" data-section-id="${t.id}" style="left:${off.left};bottom:${off.bottom};transition-delay:${i*0.035}s;background:${HOME_PALETTE[colorIdx]||'var(--surface2)'};" onclick="arcGoSection('${t.id}')"><span>${iconSvg(t.icon,22)}</span><span>${t.name}</span></button>`;
+  const colorIdx=DRAWER_SECTIONS.findIndex(s=>s.id===t.id)-1;
+  return `<button class="arc-fab-item${_arcFabOpen?' open':''}${activeId===t.id?' active':''}" data-section-id="${t.id}" title="${t.name}" aria-label="${t.name}" style="--i:${i};background:${HOME_PALETTE[colorIdx]||'var(--surface2)'};" onclick="arcGoSection('${t.id}')">${iconSvg(t.icon,22)}</button>`;
  }).join('');
 }
-/* ── 모바일 하단 고정 탭바 ── */
-let _pinnedMobileTabs=['homeroom','memos','notepad','anecdotal'];
 function initPinnedTabs(){
- try{
- const saved=JSON.parse(localStorage.getItem('pinnedMobileTabs')||'null');
- _pinnedMobileTabs=(Array.isArray(saved)&&saved.length)?saved.slice(0,4):['homeroom','memos','notepad','anecdotal'];
- }catch(e){_pinnedMobileTabs=['homeroom','memos','notepad','anecdotal'];}
- renderMobileTabbar();
  if(typeof buildArcFab==='function')buildArcFab();
-}
-function renderMobileTabbar(){
- const wrap=document.getElementById('mobileTabbar');
- if(!wrap)return;
- const activeId=document.querySelector('.section.active')?.id||'home';
- function btn(id){
- const t=DRAWER_SECTIONS.find(s=>s.id===id);
- if(!t)return'';
- const active=activeId===id;
- return `<button class="mtb-btn${active?' active':''}" onclick="showSection('${id}',null)" title="${t.name}">${iconSvg(t.icon,20)}</button>`;
- }
- const left=_pinnedMobileTabs.slice(0,2),right=_pinnedMobileTabs.slice(2,4);
- wrap.innerHTML=left.map(btn).join('')+'<span class="mtb-spacer"></span>'+right.map(btn).join('');
-}
-function toggleMobilePinnedTab(id){
- const idx=_pinnedMobileTabs.indexOf(id);
- if(idx>=0){
- _pinnedMobileTabs.splice(idx,1);
- }else{
- if(_pinnedMobileTabs.length>=4){showToast('⚠️ 하단 바에는 최대 4개까지 고정할 수 있어요');return;}
- _pinnedMobileTabs.push(id);
- }
- localStorage.setItem('pinnedMobileTabs',JSON.stringify(_pinnedMobileTabs));
- renderMobileTabbar();
- buildArcFab();
- renderSettingsSection();
- if(window._syncSettings)window._syncSettings();
 }
 function renderSettingsSection(){
  const wrap=document.getElementById('settingsBody');
  if(!wrap)return;
- const pinnable=DRAWER_SECTIONS.filter(t=>t.id!=='home');
- const pinnedHtml=pinnable.map(t=>{
- const checked=_pinnedMobileTabs.includes(t.id);
- return `<label class="settings-pin-row"><input type="checkbox" ${checked?'checked':''} onchange="toggleMobilePinnedTab('${t.id}')"><span class="settings-pin-icon">${iconSvg(t.icon,18)}</span><span>${t.name}</span></label>`;
- }).join('');
  wrap.innerHTML=`
  <div class="card">
  <div class="section-header" style="margin-bottom:12px;"><div style="font-size:1rem;font-weight:600;">앱 이름 · 색상</div></div>
  <button class="btn btn-secondary" onclick="openTitleEditor()">앱 이름/이모지/색상 편집</button>
  </div>
- <div class="card" style="margin-top:16px;">
- <div class="section-header" style="margin-bottom:6px;"><div style="font-size:1rem;font-weight:600;">모바일 하단 바 고정 탭</div></div>
- <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">최대 4개까지 고정할 수 있어요. 체크 안 한 나머지는 모바일에서 홈 버튼을 꾹 누르면 볼 수 있어요.</p>
- ${pinnedHtml}
- </div>
  `;
 }
-function toggleArcFab(){
- _arcFabOpen=!_arcFabOpen;
- const bd=document.getElementById('arcFabBackdrop');
- const main=document.getElementById('arcFabMain');
- const saveBtn=document.getElementById('saveBtn');
- if(_arcFabOpen){
-  buildArcFab();
+const _HOME_FAB_SVG='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>';
+function _setArcFabOpen(open){
+ if(open===_arcFabOpen)return;
+ const bd=document.getElementById('arcFabBackdrop'),main=document.getElementById('arcFabMain');
+ if(open){
+  buildArcFab();   /* 닫힌 상태로 만든 다음(_arcFabOpen이 아직 false) 다음 프레임에 열어야 튀어나오는 애니메이션이 보인다 */
+  _arcFabOpen=true;
   if(bd)bd.classList.add('open');
-  const _items=[...document.querySelectorAll('.arc-fab-item')];
-  if(_items.length)_items[0].getBoundingClientRect();
-  setTimeout(()=>{
-   _items.forEach(el=>el.classList.add('open'));
-  },20);
+  const first=document.querySelector('.arc-fab-item');
+  if(first)first.getBoundingClientRect();
+  setTimeout(()=>{if(_arcFabOpen)document.querySelectorAll('.arc-fab-item').forEach(el=>el.classList.add('open'));},30);
   if(main)main.innerHTML='<span style="font-size:22px;">✕</span>';
-  if(saveBtn){saveBtn.style.opacity='0';saveBtn.style.pointerEvents='none';saveBtn.style.transform='scale(0.7)';}
  }else{
+  _arcFabOpen=false;
   document.querySelectorAll('.arc-fab-item').forEach(el=>el.classList.remove('open'));
   if(bd)bd.classList.remove('open');
-  if(main)main.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>';
-  if(saveBtn){saveBtn.style.opacity='';saveBtn.style.pointerEvents='';saveBtn.style.transform='';}
+  if(main)main.innerHTML=_HOME_FAB_SVG;
  }
 }
-let _arcFabPressTimer=null,_arcFabLongPressed=false,_arcFabHoverId=null,_arcFabLastUpAt=0;
-function arcFabPointerDown(e){
- if(e&&e.cancelable)e.preventDefault();
- _arcFabLongPressed=false;
- _arcFabHoverId=null;
- clearTimeout(_arcFabPressTimer);
- _arcFabPressTimer=setTimeout(()=>{
- _arcFabLongPressed=true;
- if(!_arcFabOpen)toggleArcFab();
- },240);
-}
-function arcFabDragMove(e){
- if(!_arcFabLongPressed||!_arcFabOpen)return;
- const t=e.touches&&e.touches[0];
- if(!t)return;
- let hoverId=null;
- document.querySelectorAll('.arc-fab-item').forEach(el=>{
- /* 팝업 애니메이션(transform) 도중엔 getBoundingClientRect가 아직 최종 위치가 아니므로,
- 애니메이션 대상이 아닌 left/bottom+고정 크기로 최종 위치를 직접 계산해 판정한다 */
- const cs=getComputedStyle(el);
- const left=parseFloat(cs.left),width=el.offsetWidth;
- const bottom=parseFloat(cs.bottom),height=el.offsetHeight;
- const top=window.innerHeight-bottom-height;
- const inside=t.clientX>=left&&t.clientX<=left+width&&t.clientY>=top&&t.clientY<=top+height;
- el.classList.toggle('drag-hover',inside);
- if(inside)hoverId=el.dataset.sectionId;
- });
- _arcFabHoverId=hoverId;
-}
-function arcFabPointerUp(e){
- if(e&&e.cancelable)e.preventDefault();
+let _arcFabLastTap=0;
+function arcFabTap(){
  const now=Date.now();
- if(now-_arcFabLastUpAt<250){clearTimeout(_arcFabPressTimer);return;}
- _arcFabLastUpAt=now;
- clearTimeout(_arcFabPressTimer);
- if(_arcFabLongPressed){
- _arcFabLongPressed=false;
- document.querySelectorAll('.arc-fab-item').forEach(el=>el.classList.remove('drag-hover'));
- if(_arcFabHoverId){const id=_arcFabHoverId;_arcFabHoverId=null;arcGoSection(id);}
- return;
- }
- if(_arcFabOpen){closeArcFab();return;}
- showSection('home',null);
+ if(now-_arcFabLastTap<320){_arcFabLastTap=0;_setArcFabOpen(false);showSection('home',null);return;}
+ _arcFabLastTap=now;
+ _setArcFabOpen(!_arcFabOpen);
 }
-function arcFabPointerCancel(){
- clearTimeout(_arcFabPressTimer);
- document.querySelectorAll('.arc-fab-item').forEach(el=>el.classList.remove('drag-hover'));
- _arcFabHoverId=null;
-}
-function closeArcFab(){
- if(!_arcFabOpen)return;
- _arcFabOpen=false;
- document.querySelectorAll('.arc-fab-item').forEach(el=>el.classList.remove('open'));
- const bd=document.getElementById('arcFabBackdrop');
- if(bd)bd.classList.remove('open');
- const main=document.getElementById('arcFabMain');
- if(main)main.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>';
- const saveBtn=document.getElementById('saveBtn');
- if(saveBtn){saveBtn.style.opacity='';saveBtn.style.pointerEvents='';saveBtn.style.transform='';}
-}
+function closeArcFab(){_setArcFabOpen(false);}
+function arcGoSection(id){_setArcFabOpen(false);showSection(id,null);}
 function arcGoSection(id){closeArcFab();showSection(id,null);}
 
 function buildSidebarNav(){
@@ -9070,8 +8944,6 @@ function _scheduleAnkTabbarVisibility(hide){
  _ankKbConfirmTimer=setTimeout(()=>{
  _ankKbConfirmTimer=null;
  _ankKbHidden=hide;
- const tabbar=document.getElementById('mobileTabbar');
- if(tabbar){tabbar.style.visibility=hide?'hidden':'';tabbar.style.pointerEvents=hide?'none':'';}
  const homeBtn=document.getElementById('arcFabMain');
  if(homeBtn){homeBtn.style.visibility=hide?'hidden':'';homeBtn.style.pointerEvents=hide?'none':'';}
  },120);
@@ -9125,7 +8997,7 @@ function _scheduleBottomComposerHide(hide){
  _bcKbConfirmTimer=setTimeout(()=>{
  _bcKbConfirmTimer=null;
  _bcKbHidden=hide;
- ['mobileTabbar','saveBtn','arcFabMain','tabFabWrap'].forEach(elId=>{
+ ['saveBtn','arcFabMain','tabFabWrap'].forEach(elId=>{
  const el=document.getElementById(elId);
  if(el){el.style.visibility=hide?'hidden':'';el.style.pointerEvents=hide?'none':'';}
  });
@@ -10635,13 +10507,11 @@ setInterval(() => {
 </script>
 <!-- ── 즐겨찾기 바 ── -->
 <div class="fav-bar" id="favBar"></div>
-<!-- ── 모바일 하단 고정 탭바 ── -->
-<div class="mobile-tabbar" id="mobileTabbar"></div>
-<!-- ── 모바일 홈 FAB 반원 메뉴 ── -->
+<!-- ── 모바일 우하단 홈 FAB + 오른쪽에서 나오는 탭 FAB들 ── -->
 <div class="arc-fab-wrap">
  <div class="arc-fab-backdrop" id="arcFabBackdrop" onclick="closeArcFab()"></div>
  <div id="arcFabItems"></div>
- <button class="arc-fab-main" id="arcFabMain" onmousedown="arcFabPointerDown()" onmouseup="arcFabPointerUp()" onmouseleave="arcFabPointerCancel()" ontouchstart="arcFabPointerDown(event)" ontouchmove="arcFabDragMove(event)" ontouchend="arcFabPointerUp(event)" ontouchcancel="arcFabPointerCancel()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></button>
+ <button class="arc-fab-main" id="arcFabMain" onclick="arcFabTap()" title="메뉴 (두 번 누르면 홈)" aria-label="메뉴"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></button>
 </div>
 </body>
 </html>
